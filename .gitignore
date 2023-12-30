@@ -1,0 +1,17 @@
+# Ignore all pictures
+*.png
+
+# Ignore all data files and text files
+*.root
+*.txt
+*.pdf
+
+# Ignore vscode
+.vscode
+.git
+
+# Ignore meitner
+meitner
+
+# Ignore email
+sj622@meitner.wlab.yale.edu
