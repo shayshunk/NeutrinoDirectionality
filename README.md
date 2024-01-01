@@ -7,29 +7,27 @@
 
 <h1 align="center">
     <br>
-    Positron Mobility Analysis
+    (Anti)Neutrino Directionality Study
     <br>
 </h1>
 
 <h2 align="center">
-    Calculating the displacement of the positron from the annihilation point. Expected result is ~0.05 cm away from the neutrino direction (Reactor). <a href="https://arxiv.org/pdf/hep-ex/9906011.pdf">Source:</a> Page 3, Section 2.1: Positron displacement.
+    Calculating the average antineutrino direction in the PROSPECT detector. The source is the HFIR reactor. The reconstructed direction is achieved by tracking average delayed neutron displacement from the prompt positron in Cartesian before converting the coordinates to spherical. Paper in progress. 
 </h2>
 
 <h2>
     Summary
 </h2>
 
-The analysis code first creates two dataframes to read the .h5 file for the PG4 run. It inputs positron annihilation data (currently labeled NCapt), and the data of the primaries (Prim). All events that are not in positron annihilation are dropped from the primaries, as well as any events that are abnormal when it comes to capture time, annihilation products and energies, as well as segment numbers. These two dataframes are then combined and the difference between the *x*, *y*, and *z* values are calculated and averaged into a total vector. The two tables consider different axes as *x*, *y*, and *z* as well as the boundaries so cuts and offsets are applied. 
+The analysis code first reads analyzed PROSPECT data passed through the analysis framework PROSPECT2x and creates histograms to track the average displacement between the prompt and delayed events. The *x* and *y* positions are approximated as the midpoint of the segment in which the events occurred. The inoperative segments requires a more complex selection of events, which will be described in the paper. This also leads to a more complex error calculation which is outlined in the code. After the events are counted, the background subtraction is carried to get the IBD signal events which are then put through the error calculations and angle reconstructions. 
 
 <h2>
     Requirements
 </h2>
 
-* Python 3+
-    * pandas
-    * numpy
-    * matplotlib
-    * h5py
+* ROOT 5+
+* C++ compliler (I'm using g++ in the instructions)
+* Analyzed and calibrated PROSPECT data 
 
 <h2>
     How To Use (Debian)
@@ -37,16 +35,19 @@ The analysis code first creates two dataframes to read the .h5 file for the PG4 
 
 ```bash
 # Clone this repository
-git clone https://github.com/shayshunk/PositronMobilityAnalysis
+git clone https://github.com/shayshunk/NeutrinoDirectionality
 
 # Go into the repository
-cd PositronMobilityAnalysis
+cd NeutrinoDirectionality
 
 # Install dependencies
-sudo apt install python3-pandas python3-matplotlib python3-numpy python3-h5py
+sudo snap install root-framework
 
-# Run the code. Make sure you have the .h5 file in this directory and edit line 6 to your filename.
-python3 PostironAnnihilation.py
+# Run the code. Make sure you edit lines 199 and 219 to point to your PROSPECT data files
+g++ DeadSegmentCorrectionv5.cc -o DeadSeg `root-config --cflags --glibs`
+./DeadSeg
+g++ NeutrinoDirectionalityPlots.cc -o Plots `root-config --cflags --glibs`
+./Plots
 ```
 
 ---
