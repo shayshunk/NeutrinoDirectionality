@@ -15,3 +15,6 @@ meitner
 
 # Ignore email
 sj622@meitner.wlab.yale.edu
+
+# Don't ignore PROSPECT logo
+!PROSPECT.png
