@@ -1,6 +1,9 @@
 # Ignore all pictures
 *.png
 
+# Don't ignore PROSPECT logo
+!PROSPECT.png
+
 # Ignore all data files and text files
 *.root
 *.txt
@@ -16,5 +19,18 @@ meitner
 # Ignore email
 sj622@meitner.wlab.yale.edu
 
-# Don't ignore PROSPECT logo
-!PROSPECT.png
+# Ignore old versions of the code
+BiPoxyz.C
+DeadSeg_Jin.cc
+DataOvals.C
+DeadSegCorrection.cc
+DeadSegCorrectionv2.cc
+DeadSegCorrectionv3.cc
+DeadSegCorrectionv4.cc
+GeneralHeader_Jin.h
+neutrinoDir.h
+neutrinoDir.cc
+NeutrinoDirectionality.cc
+NeutrinoDirectionality TechNote.docx
+NeutrinoDirectionalityHists.cc
+UnbiasedSegCorrPRLHists.cc
