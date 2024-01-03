@@ -30,7 +30,6 @@ DeadSegCorrectionv4.cc
 GeneralHeader_Jin.h
 neutrinoDir.h
 neutrinoDir.cc
-NeutrinoDirectionality.cc
 NeutrinoDirectionality TechNote.docx
 NeutrinoDirectionalityHists.cc
 UnbiasedSegCorrPRLHists.cc
