@@ -1,7 +1,117 @@
 
 #include "NeutrinoDirectionality.h"
+#include "DetectorConfig.h"
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
+
+void FillDetectorConfig()
+{
+	// Filling values based on different periods
+	int noSegments = 154;
+	int noPeriods = 6;
+
+	for (int i = 0; i < noPeriods; i++) {
+
+		int excludeSize = excludeList[i].size();
+		int counter = 0, tmp = 0;
+		vector<int> period;
+
+		for (int j = 0; j < noSegments; j++) {
+			// Filling live segments by checking exclude list
+			tmp = excludeList[i][counter];
+
+			if (j == tmp) 
+			{
+				period.push_back(0);
+				if (counter + 1 < excludeSize) 
+				{
+					counter += 1;
+				}
+			}
+			else{
+				period.push_back(1);
+			}
+		}
+
+		detectorConfig.push_back(period);
+	}
+
+	cout << "Below is the detector configuration.\n";
+
+	for (int i = 0; i < detectorConfig.size(); i++) 
+	{
+		if (i != 5)
+			cout << "Detector configuration for period: " << i + 1 << '\n';
+		else
+			cout << "Detector configuration for simulation: \n";
+		
+		for (int j = 0; j < detectorConfig[i].size(); j++) 
+		{   
+			cout << detectorConfig[i][j] << " ";
+			if ((j + 1) % 14 == 0)
+				cout << '\n';
+		}
+		cout << '\n';
+	}
+}
+
+bool checkNeighbor(int periodNo, int segNo, char dir)
+{
+	// Used for dead segment calculations
+
+	bool neighbor = false;
+
+	periodNo = periodNo - 1;
+
+	switch(dir)
+	{
+	case 'r':
+		neighbor = detectorConfig[periodNo][segNo + 1];
+		break;
+	case 'l':
+		neighbor = detectorConfig[periodNo][segNo - 1];
+		break;
+	case 'u':
+		neighbor = detectorConfig[periodNo][segNo + 14];
+		break;
+	case 'd':
+		neighbor = detectorConfig[periodNo][segNo - 14];
+		break;
+	default:
+		cout << "Segment number: " << segNo << " has no live neighbor in direction " << dir << "!\n";
+		return false;
+	}
+
+	return neighbor;
+
+}
+
+bool FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, TreeValues &currentEntry, int signalSet)
+{
+	bool posDirection = false, negDirection = false;
+
+	// Check for live neighbors in different directions based on which axis we're filling
+	if (currentEntry.direction == x)
+	{
+		posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
+		negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
+	}
+	else if (currentEntry.direction == y)
+	{
+		posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
+		negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
+	}
+
+	// Dataset + 1 returns the unbiased version of that dataset
+	if (posDirection && !negDirection) 
+		histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(segmentWidth);
+	else if (!posDirection && negDirection)
+		histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(-segmentWidth);
+	else if (posDirection && negDirection)
+		histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0);
+		
+	return true;
+}
 
 bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, TreeValues &currentEntry)
 {
@@ -13,40 +123,44 @@ bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogra
 
 	// Calculate neutron displacement
 	double diffIndex = currentEntry.delayedPosition - currentEntry.promptPosition; 
-	int signalSet;
 
 	if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3)) // Correlated Dataset
 	{
 		// Figure out whether the reactor is on and assign signal index
+		int signalSet;
 		if (currentEntry.reactorOn)
 			{ signalSet = CorrelatedReactorOn; }
 		else
 			{ signalSet = CorrelatedReactorOff; }
-		
+
+		// Fill regular dataset with displacement
 		histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(diffIndex);
+
+		// Fill dead segment correction dataset
 		if (currentEntry.promptSegment == currentEntry.neutronSegment)
 		{
-			bool posDirection = false, negDirection = false;
-
-			if (currentEntry.direction == x)
-			{
-				posDirection = checkNeighbor(detectorConfig, currentEntry.period, currentEntry.promptSegment, 'r');
-				negDirection = checkNeighbor(detectorConfig, currentEntry.period, currentEntry.promptSegment, 'l');
-			}
-			else if (currentEntry.direction == y)
-			{
-				posDirection = checkNeighbor(detectorConfig, currentEntry.period, currentEntry.promptSegment, 'u');
-				negDirection = checkNeighbor(detectorConfig, currentEntry.period, currentEntry.promptSegment, 'd');
-			}
-
-			if (posDirection && !negDirection)
-				histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(segmentWidth);
-			else if (!posDirection && negDirection)
-				histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(-segmentWidth);
-			else if (posDirection && negDirection)
-				histogram[currentEntry.dataSet + 1[signalSet][currentEntry.direction]]->Fill(0.0);
+			FillHistogramUnbiased(histogram, currentEntry, signalSet);
 		}
 	}
+	else if (currentEntry.nCaptTime > pow(10, 6)) // Accidental Dataset
+	{
+		// Figure out whether the reactor is on and assign signal index
+		int signalSet;
+		if (currentEntry.reactorOn)
+			{ signalSet = AccidentalReactorOn; }
+		else
+			{ signalSet = AccidentalReactorOff; }
+
+		// Fill regular dataset with displacement
+		histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(diffIndex);
+		
+		// Fill dead segment correction dataset
+		if (currentEntry.promptSegment == currentEntry.neutronSegment)
+		{
+			FillHistogramUnbiased(histogram, currentEntry, signalSet);
+		}
+	}
+
 	return true;
 }
 
@@ -156,7 +270,9 @@ bool SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histog
 				FillHistogram(histogram, currentEntry);
 			}
 		}
-
+		// Returns the next character in the input sequence, without extracting it: The character is left as the next character to be extracted from the stream
+		file.peek();
+		rootFile->Close();
 	}
 
 	return true;
@@ -166,6 +282,9 @@ int main()
 {
 	// Ignore Warnings
 	gErrorIgnoreLevel = kError;
+
+	// Fill detector configuration
+	FillDetectorConfig();
 
 	// Set up what we're measuring. Check enums in header for what the ints are
 	array<float, 5> phi, phiError;
@@ -193,6 +312,9 @@ int main()
 			}
 		}
 	}
+
+	// Filling histograms
+	
 
 	// Set up our output file
 	auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");

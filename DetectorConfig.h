@@ -53,16 +53,5 @@ vector<int> excludeList6{0,1,2,3,4,5,6,7,8,9,10,11,12,13,
                         151,152,153};
 
 
-vector<vector<int>> excludeList;
-
-void fill()
-{
-    excludeList.push_back(excludeList1);
-    excludeList.push_back(excludeList2);
-    excludeList.push_back(excludeList3);
-    excludeList.push_back(excludeList4);
-    excludeList.push_back(excludeList5);
-    excludeList.push_back(excludeList6);
-}
-
-
+vector<vector<int>> excludeList = {excludeList1, excludeList2, excludeList3, excludeList4, excludeList5, excludeList6};
+vector<vector<int>> detectorConfig;

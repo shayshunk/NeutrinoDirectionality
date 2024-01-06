@@ -42,7 +42,7 @@ struct TreeValues
     int period;
     double promptPosition;
     double delayedPosition;
-    bool ReactorOn;
+    bool reactorOn;
 };
 
 std::string DatasetToString(int num)
@@ -90,3 +90,4 @@ std::string AxisToString(int num)
 
     return name;
 }
+
