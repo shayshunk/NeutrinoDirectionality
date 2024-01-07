@@ -19,6 +19,11 @@ meitner
 # Ignore email
 sj622@meitner.wlab.yale.edu
 
+# Ignore all debug files
+*.so
+*.d
+*.pcm
+
 # Ignore old versions of the code
 BiPoxyz.C
 DeadSeg_Jin.cc

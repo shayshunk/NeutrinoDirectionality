@@ -11,10 +11,15 @@
 #include <fstream>
 
 const int bins = 301; // Number of bins for our histograms
+int lineCounter = 0;
+const int totalDataLines = 4000;
+const int totalSimLines = 50;
 const float histogramMax = 150.5; // Maximum value of bin for histograms
 const float segmentWidth = 145.7; // Distance between segment centers in mm
-const char* dataPath = "/project/prospect/tmp/Analyzed/Analyzed_2022_IBD_DS_SEER_Data/DS_SEER_Data_NewCal/SEER_DS_period_%s/Period_%s_files.txt";
-const char* fileName = "/project/prospect/tmp/Analyzed/Analyzed_2022_IBD_DS_SEER_Data/DS_SEER_Data_NewCal/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
+const char* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/Period_%s_files.txt";
+const char* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
+const char* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
+const char* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
 
 enum Directions
 {
