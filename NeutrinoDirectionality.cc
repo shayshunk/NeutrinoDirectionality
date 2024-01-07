@@ -321,7 +321,6 @@ int main()
 			// No reactor off for simulations
 			if ((i == Sim || i == SimUnbiased) && (j == CorrelatedReactorOff || j == AccidentalReactorOff)) 
 			{
-				cout << "Not filling histograms for: " << i << " and: " << j << '\n';
 				continue;
 			}
 
