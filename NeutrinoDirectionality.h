@@ -23,17 +23,17 @@ const char* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/
 
 enum Directions
 {
-    x = 0, y, z
+    x = 0, y, z, DirectionSize
 };
 
 enum Datasets
 {
-    Data = 0, DataUnbiased, Sim, SimUnbiased, True
+    Data = 0, DataUnbiased, Sim, SimUnbiased, DatasetSize
 };
 
 enum Signals
 {
-    CorrelatedReactorOn = 0, CorrelatedReactorOff, AccidentalReactorOn, AccidentalReactorOff, TotalDifference
+    CorrelatedReactorOn = 0, CorrelatedReactorOff, AccidentalReactorOn, AccidentalReactorOff, TotalDifference, SignalSetSize
 };
 
 struct TreeValues

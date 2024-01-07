@@ -314,9 +314,9 @@ int main()
 	array<array<array<TH1D*, 3>, 5>, 4> histogram;
 
 	// Set up histograms for all 3 directions
-	for (int i = 0; i < 4; i++) // Dataset
+	for (int i = Data; i < DatasetSize; i++) // Dataset
 	{
-		for (int j = 0; j < 5; j++) // Signal set
+		for (int j = CorrelatedReactorOn; j < SignalSetSize; j++) // Signal set
 		{
 			// No reactor off for simulations
 			if ((i == Sim || i == SimUnbiased) && (j == CorrelatedReactorOff || j == AccidentalReactorOff)) 
@@ -324,7 +324,7 @@ int main()
 				continue;
 			}
 
-			for (int c = 0; c < 3; c++)
+			for (int c = x; c < DirectionSize; c++)
 			{
 				string dataset = DatasetToString(i);
 				string signalSet = SignalToString(j);
@@ -354,8 +354,8 @@ int main()
 		cout << "Successfully filled simulation histogram!\n";
 
 	// Set up our output file
-	auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");
-	outputFile->Close();
+	/* auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");
+	outputFile->Close(); */
 
 	return 0;
 }
