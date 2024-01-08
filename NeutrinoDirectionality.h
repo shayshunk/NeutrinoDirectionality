@@ -21,6 +21,7 @@ const char* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_p
 const char* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
 const char* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
 
+
 enum Directions
 {
     x = 0, y, z, DirectionSize
@@ -33,7 +34,7 @@ enum Datasets
 
 enum Signals
 {
-    CorrelatedReactorOn = 0, CorrelatedReactorOff, AccidentalReactorOn, AccidentalReactorOff, TotalDifference, SignalSetSize
+    CorrelatedReactorOn = 0, CorrelatedReactorOff, AccidentalReactorOn, AccidentalReactorOff, TotalDifference, SignalSize
 };
 
 struct TreeValues
