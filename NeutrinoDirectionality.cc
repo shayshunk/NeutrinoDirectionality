@@ -88,7 +88,7 @@ bool checkNeighbor(int periodNo, int segNo, char dir)
 	return neighbor;
 }
 
-bool FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, TreeValues &currentEntry, int signalSet)
+bool FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> &histogram, TreeValues &currentEntry, int signalSet)
 {
 	bool posDirection = false, negDirection = false, success = false;
 
@@ -117,7 +117,7 @@ bool FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &
 	return success;
 }
 
-bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, TreeValues &currentEntry)
+bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> &histogram, TreeValues &currentEntry)
 {
 	// Tracking flag
 	bool success = false;
@@ -181,7 +181,7 @@ bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogra
 	return success;
 }
 
-bool SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, int dataSet, int period = 0)
+bool SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> &histogram, int dataSet, int period = 0)
 {
 	// Declaring some variables for use later
 	int totalLines = 0;
@@ -310,8 +310,9 @@ bool SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histog
 	return success;
 }
 
-void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram)
+void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> &histogram)
 {
+
 }
 
 int main()
