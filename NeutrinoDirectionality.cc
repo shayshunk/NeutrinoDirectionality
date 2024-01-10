@@ -88,7 +88,7 @@ bool checkNeighbor(int periodNo, int segNo, char dir)
 	return neighbor;
 }
 
-bool FillHistogramUnbiased(array<array<array<TH1D *, 3>, 5>, 4> &histogram, TreeValues &currentEntry, int signalSet)
+bool FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, TreeValues &currentEntry, int signalSet)
 {
 	bool posDirection = false, negDirection = false, success = false;
 
@@ -117,7 +117,7 @@ bool FillHistogramUnbiased(array<array<array<TH1D *, 3>, 5>, 4> &histogram, Tree
 	return success;
 }
 
-bool FillHistogram(array<array<array<TH1D *, 3>, 5>, 4> &histogram, TreeValues &currentEntry)
+bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, TreeValues &currentEntry)
 {
 	// Tracking flag
 	bool success = false;
@@ -181,7 +181,7 @@ bool FillHistogram(array<array<array<TH1D *, 3>, 5>, 4> &histogram, TreeValues &
 	return success;
 }
 
-bool SetUpHistograms(array<array<array<TH1D *, 3>, 5>, 4> &histogram, int dataSet, int period = 0)
+bool SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram, int dataSet, int period = 0)
 {
 	// Declaring some variables for use later
 	int totalLines = 0;
@@ -256,9 +256,9 @@ bool SetUpHistograms(array<array<array<TH1D *, 3>, 5>, 4> &histogram, int dataSe
 
 		// Going into empty scope to let the pointers die out for safety
 		{
-			TVectorD *runtime = (TVectorD *)rootFile->Get("runtime");
-			TVectorD *promptVeto = (TVectorD *)rootFile->Get("accumulated/P2kIBDPlugin.tveto_prompt");	 // prompt veto deadtime
-			TVectorD *delayedVeto = (TVectorD *)rootFile->Get("accumulated/P2kIBDPlugin.tveto_delayed"); // delayed veto deadtime
+			TVectorD *runtime = (TVectorD*)rootFile->Get("runtime");
+			TVectorD *promptVeto = (TVectorD*)rootFile->Get("accumulated/P2kIBDPlugin.tveto_prompt");	 // prompt veto deadtime
+			TVectorD *delayedVeto = (TVectorD*)rootFile->Get("accumulated/P2kIBDPlugin.tveto_delayed"); // delayed veto deadtime
 			xRx = runtime->Max() / (runtime->Max() - promptVeto->Max()) * runtime->Max() / (runtime->Max() - delayedVeto->Max());
 
 			if (reactorOn && dataSet == Data)
@@ -267,12 +267,12 @@ bool SetUpHistograms(array<array<array<TH1D *, 3>, 5>, 4> &histogram, int dataSe
 			}
 			else if (dataSet == Data)
 			{
-				livetimeOff += runtime->Max() /xRx;
+				livetimeOff += runtime->Max() / xRx;
 			}
 		}
 
 		// Grab rootTree and cast to unique pointer
-		TTree *rootTree = (TTree *)rootFile->Get("P2kIBDPlugin/Tibd");
+		TTree *rootTree = (TTree*)rootFile->Get("P2kIBDPlugin/Tibd");
 
 		long nEntries = rootTree->GetEntries();
 
@@ -310,6 +310,10 @@ bool SetUpHistograms(array<array<array<TH1D *, 3>, 5>, 4> &histogram, int dataSe
 	return success;
 }
 
+void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, 3>, 5>, 4> &histogram)
+{
+}
+
 int main()
 {
 	// Ignore Warnings
@@ -324,7 +328,7 @@ int main()
 
 	// Need histograms for counting each variable. Check enums in header for what the ints are
 	// Don't need an array for the true reactor direction
-	array<array<array<TH1D *, DirectionSize>, SignalSize>, DatasetSize> histogram;
+	array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
 	// Set up histograms for all 3 directions
 	for (int i = Data; i < DatasetSize; i++) // Dataset
@@ -343,7 +347,7 @@ int main()
 				string signalSet = SignalToString(j);
 				string axis = AxisToString(c);
 				string histogramName = dataset + "_" + signalSet + "_" + axis;
-				histogram[i][j][c] = new TH1D(histogramName.c_str(), dataset.c_str(), bins, -histogramMax, histogramMax);
+				histogram[i][j][c] = std::make_shared<TH1D>(histogramName.c_str(), dataset.c_str(), bins, -histogramMax, histogramMax);
 			}
 		}
 	}
