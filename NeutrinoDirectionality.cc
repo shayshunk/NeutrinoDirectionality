@@ -186,7 +186,6 @@ bool SetUpHistograms(array<array<array<TH1D *, 3>, 5>, 4> &histogram, int dataSe
 	// Declaring some variables for use later
 	int totalLines = 0;
 	bool reactorOn = true, success = false;
-	double livetimeOff = 0, livetimeOn = 0;
 
 	// Figuring out dataset
 	const char *path;
@@ -262,13 +261,13 @@ bool SetUpHistograms(array<array<array<TH1D *, 3>, 5>, 4> &histogram, int dataSe
 			TVectorD *delayedVeto = (TVectorD *)rootFile->Get("accumulated/P2kIBDPlugin.tveto_delayed"); // delayed veto deadtime
 			xRx = runtime->Max() / (runtime->Max() - promptVeto->Max()) * runtime->Max() / (runtime->Max() - delayedVeto->Max());
 
-			if (reactorOn)
+			if (reactorOn && dataSet == Data)
 			{
 				livetimeOn += runtime->Max() / xRx;
 			}
-			else
+			else if (dataSet == Data)
 			{
-				livetimeOff += runtime->Max() / xRx;
+				livetimeOff += runtime->Max() /xRx;
 			}
 		}
 
@@ -358,14 +357,20 @@ int main()
 	}
 	lineCounter = 0;
 	if (dataFill)
+	{
 		cout << "Successfully filled data histogram!\n";
+		cout << "Total livetime for all Reactor Off events: " << livetimeOff << '\n';
+		cout << "Total livetime for all Reactor On events: " << livetimeOn << '\n';
+	}
 
 	for (int period = 1; period < 6; period++)
 	{
 		simFill = SetUpHistograms(histogram, Sim, period);
 	}
 	if (simFill)
+	{
 		cout << "Successfully filled simulation histogram!\n";
+	}
 
 	// Set up our output file
 	/* auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");

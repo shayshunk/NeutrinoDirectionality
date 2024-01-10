@@ -10,8 +10,8 @@
 #include <array>
 #include <fstream>
 
+// Invariables
 const int bins = 301; // Number of bins for our histograms
-int lineCounter = 0;
 const int totalDataLines = 4000;
 const int totalSimLines = 500;
 const float histogramMax = 150.5; // Maximum value of bin for histograms
@@ -20,6 +20,10 @@ const char* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_perio
 const char* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
 const char* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
 const char* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
+
+// Variables
+int lineCounter = 0;
+double livetimeOff = 0, livetimeOn = 0;
 
 
 enum Directions
