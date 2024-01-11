@@ -81,19 +81,16 @@ bool checkNeighbor(int periodNo, int segNo, char dir)
             neighbor = detectorConfig[periodNo][segNo - 14];
             break;
         default:
-            cout << "Segment number: " << segNo
-                 << " has no live neighbor in direction " << dir << "!\n";
+            cout << "Segment number: " << segNo << " has no live neighbor in direction " << dir << "!\n";
             return false;
     }
 
     return neighbor;
 }
 
-bool FillHistogramUnbiased(
-    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>,
-          DatasetSize>& histogram,
-    TreeValues& currentEntry,
-    int signalSet)
+bool FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+                           TreeValues& currentEntry,
+                           int signalSet)
 {
     bool posDirection = false, negDirection = false, success = false;
 
@@ -101,39 +98,30 @@ bool FillHistogramUnbiased(
     // we're filling
     if (currentEntry.direction == x)
     {
-        posDirection = checkNeighbor(
-            currentEntry.period, currentEntry.promptSegment, 'r');
-        negDirection = checkNeighbor(
-            currentEntry.period, currentEntry.promptSegment, 'l');
+        posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
+        negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
     }
     else if (currentEntry.direction == y)
     {
-        posDirection = checkNeighbor(
-            currentEntry.period, currentEntry.promptSegment, 'u');
-        negDirection = checkNeighbor(
-            currentEntry.period, currentEntry.promptSegment, 'd');
+        posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
+        negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
     }
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]
-            ->Fill(segmentWidth);
+        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(segmentWidth);
     else if (!posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]
-            ->Fill(-segmentWidth);
+        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(-segmentWidth);
     else if (posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]
-            ->Fill(0.0);
+        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0);
 
     success = true;
 
     return success;
 }
 
-bool FillHistogram(
-    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>,
-          DatasetSize>& histogram,
-    TreeValues& currentEntry)
+bool FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+                   TreeValues& currentEntry)
 {
     // Tracking flag
     bool success = false;
@@ -145,11 +133,9 @@ bool FillHistogram(
     }
 
     // Calculate neutron displacement
-    double diffIndex = currentEntry.delayedPosition
-                       - currentEntry.promptPosition;
+    double diffIndex = currentEntry.delayedPosition - currentEntry.promptPosition;
 
-    if (currentEntry.nCaptTime > pow(10, 3)
-        && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
+    if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
         // Figure out whether the reactor is on and assign signal index
         int signalSet;
@@ -163,8 +149,7 @@ bool FillHistogram(
         }
 
         // Fill regular dataset with displacement
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(
-            diffIndex);
+        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(diffIndex);
         success = true;
 
         // Fill dead segment correction dataset
@@ -187,8 +172,7 @@ bool FillHistogram(
         }
 
         // Fill regular dataset with displacement
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(
-            diffIndex);
+        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(diffIndex);
         success = true;
 
         // Fill dead segment correction dataset
@@ -201,11 +185,9 @@ bool FillHistogram(
     return success;
 }
 
-bool SetUpHistograms(
-    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>,
-          DatasetSize>& histogram,
-    int dataSet,
-    int period = 0)
+bool SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+                     int dataSet,
+                     int period = 0)
 {
     // Declaring some variables for use later
     int totalLines = 0;
@@ -226,8 +208,7 @@ bool SetUpHistograms(
     }
 
     // Combining names into file list name
-    string fileList = Form(
-        path, std::to_string(period).c_str(), std::to_string(period).c_str());
+    string fileList = Form(path, std::to_string(period).c_str(), std::to_string(period).c_str());
 
     // Opening and checking file list
     ifstream file;
@@ -247,14 +228,12 @@ bool SetUpHistograms(
         if (dataSet == Data || dataSet == DataUnbiased)
         {
             if (lineCounter % 200 == 0)
-                cout << "Looking at file: " << lineCounter << "/"
-                     << totalDataLines << '\n';
+                cout << "Looking at file: " << lineCounter << "/" << totalDataLines << '\n';
         }
         else if (dataSet == Sim || dataSet == SimUnbiased)
         {
             if (lineCounter % 50 == 0)
-                cout << "Looking at file: " << lineCounter << "/"
-                     << totalSimLines << '\n';
+                cout << "Looking at file: " << lineCounter << "/" << totalSimLines << '\n';
         }
 
         // Reading file list
@@ -262,8 +241,7 @@ bool SetUpHistograms(
         getline(file, line);
 
         // Combining names into root file name
-        TString rootFilename
-            = Form(fileName, std::to_string(period).c_str(), line.data());
+        TString rootFilename = Form(fileName, std::to_string(period).c_str(), line.data());
 
         if (rootFilename.Contains(" 0"))
         {
@@ -285,14 +263,11 @@ bool SetUpHistograms(
         // Going into empty scope to let the pointers die out for safety
         {
             TVectorD* runtime = (TVectorD*)rootFile->Get("runtime");
-            TVectorD* promptVeto = (TVectorD*)rootFile->Get(
-                "accumulated/P2kIBDPlugin.tveto_prompt");  // prompt veto
-                                                           // deadtime
-            TVectorD* delayedVeto = (TVectorD*)rootFile->Get(
-                "accumulated/P2kIBDPlugin.tveto_delayed");  // delayed veto
-                                                            // deadtime
-            xRx = runtime->Max() / (runtime->Max() - promptVeto->Max())
-                  * runtime->Max() / (runtime->Max() - delayedVeto->Max());
+            TVectorD* promptVeto = (TVectorD*)rootFile->Get("accumulated/P2kIBDPlugin.tveto_prompt");  // prompt veto
+                                                                                                       // deadtime
+            TVectorD* delayedVeto = (TVectorD*)rootFile->Get("accumulated/P2kIBDPlugin.tveto_delayed");  // delayed veto
+                                                                                                         // deadtime
+            xRx = runtime->Max() / (runtime->Max() - promptVeto->Max()) * runtime->Max() / (runtime->Max() - delayedVeto->Max());
 
             if (reactorOn && dataSet == Data)
             {
@@ -320,16 +295,11 @@ bool SetUpHistograms(
 
                 // Grabbing relevant values from the rootTree entry
                 currentEntry.Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
-                currentEntry.nCaptTime
-                    = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
-                currentEntry.promptSegment
-                    = rootTree->GetLeaf("maxseg")->GetValue(0);
-                currentEntry.neutronSegment
-                    = rootTree->GetLeaf("n_seg")->GetValue(0);
-                currentEntry.promptPosition
-                    = rootTree->GetLeaf("xyz")->GetValue(direction);
-                currentEntry.delayedPosition
-                    = rootTree->GetLeaf("n_xyz")->GetValue(direction);
+                currentEntry.nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
+                currentEntry.promptSegment = rootTree->GetLeaf("maxseg")->GetValue(0);
+                currentEntry.neutronSegment = rootTree->GetLeaf("n_seg")->GetValue(0);
+                currentEntry.promptPosition = rootTree->GetLeaf("xyz")->GetValue(direction);
+                currentEntry.delayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(direction);
 
                 // Copying some loop values into current entry
                 currentEntry.dataSet = dataSet;
@@ -350,9 +320,7 @@ bool SetUpHistograms(
     return success;
 }
 
-void CalculateAngles(
-    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>,
-          DatasetSize>& histogram)
+void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     // IBD events = (Correlated - Accidental/100)_{reactor on} +
     // (-livetimeOn/livetimeOff*Correlated +
@@ -362,7 +330,7 @@ void CalculateAngles(
 int main()
 {
     // Ignore Warnings
-    //gErrorIgnoreLevel = kError;
+    // gErrorIgnoreLevel = kError;
 
     // Fill detector configuration
     FillDetectorConfig();
@@ -373,9 +341,7 @@ int main()
 
     // Need histograms for counting each variable. Check enums in header for
     // what the ints are Don't need an array for the true reactor direction
-    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>,
-          DatasetSize>
-        histogram;
+    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
     // Set up histograms for all 3 directions
     for (int i = Data; i < DatasetSize; i++)  // Dataset
@@ -383,8 +349,7 @@ int main()
         for (int j = CorrelatedReactorOn; j < SignalSize; j++)  // Signal set
         {
             // No reactor off for simulations
-            if ((i == Sim || i == SimUnbiased)
-                && (j == CorrelatedReactorOff || j == AccidentalReactorOff))
+            if ((i == Sim || i == SimUnbiased) && (j == CorrelatedReactorOff || j == AccidentalReactorOff))
             {
                 continue;
             }
@@ -396,11 +361,7 @@ int main()
                 string axis = AxisToString(c);
                 string histogramName = dataset + "_" + signalSet + "_" + axis;
                 histogram[i][j][c]
-                    = std::make_shared<TH1D>(histogramName.c_str(),
-                                             dataset.c_str(),
-                                             bins,
-                                             -histogramMax,
-                                             histogramMax);
+                    = std::make_shared<TH1D>(histogramName.c_str(), dataset.c_str(), bins, -histogramMax, histogramMax);
             }
         }
     }
@@ -416,10 +377,8 @@ int main()
     if (dataFill)
     {
         cout << "Successfully filled data histogram!\n";
-        cout << "Total livetime for all Reactor Off events: " << livetimeOff
-             << '\n';
-        cout << "Total livetime for all Reactor On events: " << livetimeOn
-             << '\n';
+        cout << "Total livetime for all Reactor Off events: " << livetimeOff << '\n';
+        cout << "Total livetime for all Reactor On events: " << livetimeOn << '\n';
     }
 
     for (int period = 1; period < 6; period++)
