@@ -210,12 +210,18 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
         if (dataSet == Data || dataSet == DataUnbiased)
         {
             if (lineCounter % 200 == 0)
-                cout << "Reading file: " << lineCounter << "/" << totalDataLines << '\n';
+            {
+                cout << "Reading file: " << lineCounter << "/" << totalDataLines << '\r';
+                cout.flush();
+            }
         }
         else if (dataSet == Sim || dataSet == SimUnbiased)
         {
             if (lineCounter % 50 == 0)
-                cout << "Reading file: " << lineCounter << "/" << totalSimLines << '\n';
+            {
+                cout << "Reading file: " << lineCounter << "/" << totalSimLines << '\r';
+                cout.flush();
+            }
         }
 
         // Reading file list
