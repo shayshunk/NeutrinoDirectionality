@@ -313,7 +313,7 @@ void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
 {
 }
 
-void SubtractBackground(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
     livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
@@ -420,7 +420,7 @@ int main()
 
     cout << "Successfully filled simulation histogram!\n";
 
-    SubtractBackground(histogram);
+    SubtractBackgrounds(histogram);
 
     // Set up our output file
     /* auto outputFile = std::make_unique<TFile>("Directionality.root",

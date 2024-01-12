@@ -14,7 +14,6 @@
 int const bins = 301;  // Number of bins for our histograms
 int const totalDataLines = 4000;
 int const totalSimLines = 500;
-int corrCounter = 0, accCounter = 0, corrOn = 0, accOn = 0, filler = 0;
 float const histogramMax = 150.5;  // Maximum value of bin for histograms
 float const segmentWidth = 145.7;  // Distance between segment centers in mm
 float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coefficient for background subtraction
