@@ -79,13 +79,13 @@ std::string DatasetToString(int num)
             name = "Data";
             break;
         case 1:
-            name = "DataUnbiased";
+            name = "Data Unbiased";
             break;
         case 2:
-            name = "Sim";
+            name = "Simulation";
             break;
         case 3:
-            name = "SimUnbiased";
+            name = "Simulation Unbiased";
             break;
         case 4:
             name = "True";
@@ -104,22 +104,22 @@ std::string SignalToString(int num)
     switch (num)
     {
         case 0:
-            name = "CorrelatedReactorOn";
+            name = "Correlated Reactor On";
             break;
         case 1:
-            name = "CorrelatedReactorOff";
+            name = "Correlated Reactor Off";
             break;
         case 2:
-            name = "AccidentalReactorOn";
+            name = "Accidental Reactor On";
             break;
         case 3:
-            name = "AccidentalReactorOff";
+            name = "Accidental Reactor Off";
             break;
         case 4:
-            name = "TotalDifference";
+            name = "Total Difference";
             break;
         default:
-            name = "TotalDifference";
+            name = "Total Difference";
     }
 
     return name;
