@@ -109,7 +109,7 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
     }
 
     // Need to weight accidental datasets by deadtime correction factor
-    weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn)? currentEntry.xRx : 1;
+    weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
@@ -117,7 +117,7 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
     else if (!posDirection && negDirection)
         histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(-segmentWidth, weight);
     else if (posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0, weight);    
+        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0, weight);
 }
 
 void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
@@ -135,7 +135,7 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn? CorrelatedReactorOn : CorrelatedReactorOff;
+        int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
         // Fill regular dataset with displacement
         histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
@@ -152,7 +152,7 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn? AccidentalReactorOn : AccidentalReactorOff;
+        int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
         // Fill regular dataset with displacement
         histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
@@ -278,7 +278,8 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
                 currentEntry.delayedSegment = rootTree->GetLeaf("n_seg")->GetValue(0);
 
                 // We throw out events where the neutron moves in a direction we're not checking
-                if (currentEntry.promptSegment != currentEntry.delayedSegment && currentEntry.promptPosition == currentEntry.delayedPosition)
+                if (currentEntry.promptSegment != currentEntry.delayedSegment
+                    && currentEntry.promptPosition == currentEntry.delayedPosition)
                     continue;
 
                 // Copying some loop values into current entry
@@ -300,7 +301,7 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
     }
 }
 
-void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+void SubtractBackground(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
     livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
@@ -313,6 +314,7 @@ void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
+        cout << "Total IBD events for: " << DatasetToString(dataset) << '\n';
         for (int direction = x; direction < DirectionSize; direction++)
         {
             // Have to static cast raw pointer to shared pointer to keep up safety measures
@@ -333,8 +335,8 @@ void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
                 0, histogram[dataset][TotalDifference][direction]->GetNbinsX() + 1, totalIBDErr);
             effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
                                                                 // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
-            cout << "Total IBD events in " << AxisToString(direction) << " for " << DatasetToString(dataset) << ": " << totalIBDs
-                 << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs << '\n';
+            cout << AxisToString(direction) << ": " << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
+                 << '\n';
 
             effectiveIBD[dataset][direction] = effIBDs;
 
@@ -404,7 +406,7 @@ int main()
 
     cout << "Successfully filled simulation histogram!\n";
 
-    CalculateAngles(histogram);
+    SubtractBackground(histogram);
 
     // Set up our output file
     /* auto outputFile = std::make_unique<TFile>("Directionality.root",
