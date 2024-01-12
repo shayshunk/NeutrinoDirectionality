@@ -34,6 +34,7 @@ DeadSegCorrectionv3.cc
 DeadSegCorrectionv4.cc
 GeneralHeader_Jin.h
 Directionality
+DeadSeg
 neutrinoDir.h
 neutrinoDir.cc
 NeutrinoDirectionality TechNote.docx

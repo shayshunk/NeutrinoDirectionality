@@ -14,23 +14,14 @@
 int const bins = 301;  // Number of bins for our histograms
 int const totalDataLines = 4000;
 int const totalSimLines = 500;
+int corrCounter = 0, accCounter = 0, corrOn = 0, accOn = 0, filler = 0;
 float const histogramMax = 150.5;  // Maximum value of bin for histograms
 float const segmentWidth = 145.7;  // Distance between segment centers in mm
-float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling
-                                                    // coefficient for
-                                                    // background subtraction
-char const* dataPath
-    = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/"
-      "Period_%s_files.txt";
-char const* dataFileName
-    = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/"
-      "AD1_IBD_2022_DS_SEER.root";
-char const* simPath
-    = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/"
-      "period_%s.txt";
-char const* simFileName
-    = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/"
-      "AD1_IBD_2022_DS_SEER.root";
+float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coefficient for background subtraction
+char const* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/Period_%s_files.txt";
+char const* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
+char const* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
+char const* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
 
 // Variables
 int lineCounter = 0;
@@ -67,8 +58,9 @@ struct TreeValues
 {
     double Esmear;
     double nCaptTime;
+    double xRx;
     int promptSegment;
-    int neutronSegment;
+    int delayedSegment;
     int dataSet;
     int direction;
     int period;
