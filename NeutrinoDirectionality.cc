@@ -40,6 +40,7 @@ void FillDetectorConfig()
     }
 
     cout << "Below is the detector configuration.\n";
+    cout << "--------------------------------------------\n";
 
     for (int i = 0; i < detectorConfig.size(); i++)
     {
@@ -56,6 +57,7 @@ void FillDetectorConfig()
         }
         cout << '\n';
     }
+    cout << "--------------------------------------------\n";
 }
 
 bool checkNeighbor(int periodNo, int segment, char direction)
@@ -301,6 +303,10 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
     }
 }
 
+void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+{
+}
+
 void SubtractBackground(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
@@ -308,9 +314,11 @@ void SubtractBackground(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
 
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
-    array<array<double, DirectionSize>, DatasetSize> mean;
-    array<array<double, DirectionSize>, DatasetSize> sigma;
+    
     array<array<double, DirectionSize>, DatasetSize> effectiveIBD;
+
+    cout << "--------------------------------------------\n";
+    cout << "Subtracting backgrounds.\n";
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
@@ -339,13 +347,8 @@ void SubtractBackground(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
                  << '\n';
 
             effectiveIBD[dataset][direction] = effIBDs;
-
-            if (dataset == DataUnbiased || dataset == SimUnbiased)
-                continue;
-
-            mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
-            sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev();
         }
+        cout << "--------------------------------------------\n";
     }
 }
 
@@ -364,7 +367,6 @@ int main()
     // Need histograms for counting each variable. Check enums in header for
     // what the ints are Don't need an array for the true reactor direction
     array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> histogram;
-    cout << "Initialized histograms.\n";
 
     // Set up histograms for all 3 directions
     for (int i = Data; i < DatasetSize; i++)  // Dataset
@@ -388,6 +390,8 @@ int main()
     }
 
     // Filling data histograms
+    cout << "Filling data histograms!\n";
+    cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
     {
         SetUpHistograms(histogram, Data, period);
@@ -395,10 +399,14 @@ int main()
     lineCounter = 0;
 
     cout << "Successfully filled data histogram!\n";
+    cout << "--------------------------------------------\n";
     cout << "Total livetime for all Reactor Off events: " << livetimeOff << '\n';
     cout << "Total livetime for all Reactor On events: " << livetimeOn << '\n';
+    cout << "--------------------------------------------\n";
 
     // Filling simulation histograms
+    cout << "Filling simulation histograms!\n";
+    cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)
     {
         SetUpHistograms(histogram, Sim, period);
