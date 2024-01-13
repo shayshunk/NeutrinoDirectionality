@@ -313,6 +313,11 @@ void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
 {
 }
 
+void CalculateUnbiasing()
+{
+
+}
+
 void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
@@ -320,8 +325,8 @@ void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>
 
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
-    
-    array<array<double, DirectionSize>, DatasetSize> effectiveIBD;
+
+    AngleValues angles;
 
     cout << "--------------------------------------------\n";
     cout << "Subtracting backgrounds.\n";
@@ -352,7 +357,17 @@ void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>
             cout << AxisToString(direction) << ": " << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
                  << '\n';
 
-            effectiveIBD[dataset][direction] = effIBDs;
+            angles.effectiveIBD[dataset][direction] = effIBDs;
+            
+            if (dataset == Data || dataset == Sim)
+            {
+                angles.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
+                angles.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev();
+            }
+            else
+            {
+                CalculateUnbiasing();
+            }
         }
         cout << "--------------------------------------------\n";
     }
