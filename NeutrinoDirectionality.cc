@@ -309,13 +309,78 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
     }
 }
 
-void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram, IBDvalues& neutrinoCounts)
 {
 }
 
-void CalculateUnbiasing()
+void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram, IBDvalues& neutrinoCounts)
 {
+    // Defining variables used in calculation. Check the error propagation technote for details on the method
+    double rPlus = 0, rMinus = 0;
+    double p = 0, pError = 0;
+    double nPlus = 0, nPlusPlus = 0, nMinus = 0, nMinusMinus = 0, nPlusMinus = 0;
+    double nPlusError = 0, nPlusPlusError = 0, nMinusError = 0, nMinusMinusError = 0, nPlusMinusError = 0;
+    double rPlusError = 0, rMinusError = 0;
 
+    for (int dataset = DataUnbiased; dataset < DatasetSize; dataset+=2)
+    {   
+        for (int direction = x; direction < z; direction++)
+        {
+            // Dataset - 1 returns the biased dataset counts
+            nPlus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(296);
+            nPlusPlus = histogram[dataset][TotalDifference][direction]->GetBinContent(296);
+            nMinus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(6);
+            nMinusMinus = histogram[dataset][TotalDifference][direction]->GetBinContent(296);
+            nPlusMinus = histogram[dataset][TotalDifference][direction]->GetBinContent(151);
+
+            nPlusError = histogram[dataset - 1][TotalDifference][direction]->GetBinError(296);
+            nPlusPlusError = histogram[dataset][TotalDifference][direction]->GetBinError(296);
+            nMinusError = histogram[dataset - 1][TotalDifference][direction]->GetBinError(6);
+            nMinusMinusError = histogram[dataset][TotalDifference][direction]->GetBinError(296);
+            nPlusMinusError = histogram[dataset][TotalDifference][direction]->GetBinError(151);
+
+            double x1 = nPlus;
+            double x2 = nPlusPlus + nPlusMinus;
+            double x3 = nMinus;
+            double x4 = nMinus + nPlusMinus;
+            
+            rPlus = x1/x2;
+            rMinus = x3/x4;
+
+            double x1Error = nPlusError;
+            double x2Error = sqrt(pow(nPlusPlusError, 2) + pow(nPlusMinusError, 2));
+            double x3Error = nMinusError;
+            double x4Error = sqrt(pow(nMinusMinusError, 2) + pow(nPlusMinusError, 2));
+
+            rPlusError = rPlus * sqrt(pow((x2Error/x2), 2) + pow((x1Error/x1), 2));
+            rMinusError = rMinus * sqrt(pow((x4Error/x4), 2) + pow((x3Error/x3), 2));
+
+            p = segmentWidth * ((rPlus - rMinus) / (rPlus + rMinus + 1));
+
+            pError = segmentWidth * pow(1 / ((nMinus * (nMinus + nPlusPlus) + (nMinusMinus + nMinus) * (nPlus + nMinus + nPlusPlus))), 2) * sqrt(pow((nMinusMinus + nMinus) * (nMinus + nPlusPlus), 2) * (pow(nPlusError * (2 * nMinus + nMinusMinus + nMinus), 2)
+                                                                                                                                        + pow(nMinusError * (2 * nPlus + nPlusPlus + nMinus), 2))
+                                                                                                    + pow((nPlus * (nMinus + nMinusMinus) * (2 * nMinus + nMinusMinus + nMinus) * nPlusPlusError), 2)
+                                                                                                    + pow((nPlusMinusError * (nPlus * pow((nMinusMinus + nMinus), 2) + nMinus * (2 * nMinusMinus * nPlus - 2 * nPlus * nPlusPlus - pow((nMinus + nPlusPlus), 2)))), 2)
+                                                                                                    + pow((nMinus * (nMinus + nPlusPlus) * (2 * nPlus + nMinus + nPlusPlus) * nMinusMinusError), 2));
+            
+            neutrinoCounts.mean[dataset][direction] = p;
+            neutrinoCounts.sigma[dataset][direction] = pError;
+        }
+        neutrinoCounts.effectiveIBD[dataset][z] = neutrinoCounts.effectiveIBD[dataset - 1][z]; 
+        neutrinoCounts.mean[dataset][z] = neutrinoCounts.mean[dataset - 1][z];
+        neutrinoCounts.sigma[dataset][z] = neutrinoCounts.sigma[dataset - 1][z];
+    }
+
+    // Printing out values
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        cout << "Mean and sigma values for: " << DatasetToString(dataset) << '\n';
+        for (int direction = x; direction < DirectionSize; direction++)
+        {
+            cout << "p" << AxisToString(direction) << ": " << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
+        }
+        cout << "--------------------------------------------\n";
+    }
 }
 
 void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
@@ -326,7 +391,7 @@ void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
 
-    AngleValues angles;
+    IBDvalues neutrinoCounts;
 
     cout << "--------------------------------------------\n";
     cout << "Subtracting backgrounds.\n";
@@ -357,20 +422,18 @@ void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>
             cout << AxisToString(direction) << ": " << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
                  << '\n';
 
-            angles.effectiveIBD[dataset][direction] = effIBDs;
+            neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
             
             if (dataset == Data || dataset == Sim)
             {
-                angles.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
-                angles.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev();
-            }
-            else
-            {
-                CalculateUnbiasing();
+                neutrinoCounts.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
+                neutrinoCounts.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev();
             }
         }
         cout << "--------------------------------------------\n";
     }
+
+    CalculateUnbiasing(histogram, neutrinoCounts);
 }
 
 int main()

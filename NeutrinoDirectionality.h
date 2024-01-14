@@ -68,7 +68,7 @@ struct TreeValues
     bool reactorOn;
 };
 
-struct AngleValues
+struct IBDvalues
 {
     std::array<std::array<double, DirectionSize>, DatasetSize> effectiveIBD;
     std::array<std::array<double, DirectionSize>, DatasetSize> mean;
