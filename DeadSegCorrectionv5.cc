@@ -482,7 +482,7 @@ int main()
 				meanBias.push_back(px);
 				sigmaBias.push_back(pxErr);
 				cout << "Error for: p" << ivar << " " << pxErr << "\n";
-				/*
+				
 				cout << "Errors for variable: " << ivar << "\n";
 				cout << "rPlus Error: " << rPlusErr << "\n";
 				cout << "rMinus Error: " << rMinusErr << "\n";
@@ -505,7 +505,7 @@ int main()
 				cout << "nPlus: " << np << "\n";
 				cout << "nMinus: " << nm << "\n";
 				cout << "nPlusPlus: " << npp << "\n";
-				cout << "nMinusMinus: " << nmm << "\n"; */
+				cout << "nMinusMinus: " << nmm << "\n"; 
 			}
 			else{
 				meanBias.push_back(h_data_Diff[ivar]->GetMean());
