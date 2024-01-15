@@ -340,7 +340,7 @@ AngleValues CalculateAngles(IBDValues& neutrinoCounts)
 
         sigmaXSystematics = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
         sigmaYSystematics = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
-        sigmaZSystematics = sqrt(pow(sigmaZ, 2) + pow(-0.05, 2) + pow(0.09, 2));
+        sigmaZSystematics = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
 
         effIBDX = neutrinoCounts.effectiveIBD[dataset][X];
         effIBDY = neutrinoCounts.effectiveIBD[dataset][Y];
@@ -357,10 +357,10 @@ AngleValues CalculateAngles(IBDValues& neutrinoCounts)
         // theta = arctan(z / sqrt(x^2 + y^2))
         double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
         double theta = atan(tanTheta) * 180.0 / pi;
-        double tanThetaError = sqrt( (1 / (pow(px, 2) + pow(py, 2))) * (pow((px * pz * sigmaX) / (pow(px, 2) + pow(py, 2)), 2) + pow((py * pz * sigmaY / (pow(px, 2) + pow(py, 2))), 2) + pow(sigmaZ, 2))  );
+        double tanThetaError = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaX / (px*px + py*py)), 2) + pow((py*pz*sigmaY / (px*px + py*py)), 2 ) + pow(sigmaZ, 2)));
         double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
-        double tanThetaErrorSystematics = sqrt( (1 / (pow(px, 2) + pow(py, 2))) * (pow((px * pz * sigmaXSystematics) / (pow(px, 2) + pow(py, 2)), 2) + pow((py * pz * sigmaYSystematics / (pow(px, 2) + pow(py, 2))), 2) + pow(sigmaZSystematics, 2))  );
-        double thetaErrorSystematics = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
+        double tanThetaErrorSystematics = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaXSystematics / (px*px + py*py)), 2) + pow((py*pz*sigmaYSystematics / (px*px + py*py)), 2 ) + pow(sigmaZSystematics, 2)));
+        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
 
         // Storing values
         finalAngles.phi[dataset] = phi;
