@@ -10,6 +10,8 @@
 #include "TTree.h"
 #include "TVectorD.h"
 
+#define pi 3.14159265358979323846
+
 // Invariables
 int const bins = 301;  // Number of bins for our histograms
 int const totalDataLines = 4000;
@@ -28,9 +30,9 @@ double livetimeOff = 0, livetimeOn = 0;
 
 enum Directions
 {
-    x = 0,
-    y,
-    z,
+    X = 0,
+    Y,
+    Z,
     DirectionSize
 };
 
@@ -68,11 +70,21 @@ struct TreeValues
     bool reactorOn;
 };
 
-struct IBDvalues
+struct IBDValues
 {
     std::array<std::array<double, DirectionSize>, DatasetSize> effectiveIBD;
     std::array<std::array<double, DirectionSize>, DatasetSize> mean;
     std::array<std::array<double, DirectionSize>, DatasetSize> sigma;
+};
+
+struct AngleValues
+{
+    std::array<double, DatasetSize> phi;
+    std::array<double, DatasetSize> phiError;
+    std::array<double, DatasetSize> phiErrorSystematics;
+    std::array<double, DatasetSize> theta;
+    std::array<double, DatasetSize> thetaError;
+    std::array<double, DatasetSize> thetaErrorSystematics;
 };
 
 std::string DatasetToString(int num)

@@ -59,7 +59,7 @@ void FillDetectorConfig()
             {
                 cout << "\u25A1 ";
             }
-            //cout << detectorConfig[i][j] << " ";
+            // cout << detectorConfig[i][j] << " ";
             if ((j + 1) % 14 == 0)
                 cout << '\n';
         }
@@ -107,12 +107,12 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
 
     // Check for live neighbors in different directions based on which axis
     // we're filling
-    if (currentEntry.direction == x)
+    if (currentEntry.direction == X)
     {
         posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
         negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
     }
-    else if (currentEntry.direction == y)
+    else if (currentEntry.direction == Y)
     {
         posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
         negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
@@ -282,7 +282,7 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
         {
             rootTree->GetEntry(i);
 
-            for (int direction = x; direction < DirectionSize; direction++)
+            for (int direction = X; direction < DirectionSize; direction++)
             {
                 // Intializing struct of relevant values
                 TreeValues currentEntry;
@@ -317,11 +317,77 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
     }
 }
 
-void CalculateAngles(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram, IBDvalues& neutrinoCounts)
+AngleValues CalculateAngles(IBDValues& neutrinoCounts)
 {
+    AngleValues finalAngles;
+
+    // Defining variables for readability of code
+    double px, py, pz;
+    double sigmaX, sigmaY, sigmaZ;
+    double sigmaXSystematics, sigmaYSystematics, sigmaZSystematics;
+    double effIBDX, effIBDY, effIBDZ;
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        // Grabbing values from current dataset
+        px = neutrinoCounts.mean[dataset][X];
+        py = neutrinoCounts.mean[dataset][Y];
+        pz = neutrinoCounts.mean[dataset][Z];
+
+        sigmaX = neutrinoCounts.sigma[dataset][X];
+        sigmaY = neutrinoCounts.sigma[dataset][Y];
+        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+
+        sigmaXSystematics = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
+        sigmaYSystematics = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
+        sigmaZSystematics = sqrt(pow(sigmaZ, 2) + pow(-0.05, 2) + pow(0.09, 2));
+
+        effIBDX = neutrinoCounts.effectiveIBD[dataset][X];
+        effIBDY = neutrinoCounts.effectiveIBD[dataset][Y];
+        effIBDZ = neutrinoCounts.effectiveIBD[dataset][Z];
+
+        // phi = arctan(y / x)
+        double tanPhi = py / px;
+        double phi = atan(tanPhi) * 180.0 / pi;
+        double tanPhiError = sqrt( pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2) );
+        double phiError = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+        double tanPhiErrorSystematics = sqrt( pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2) );
+        double phiErrorSystematics = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+
+        // theta = arctan(z / sqrt(x^2 + y^2))
+        double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
+        double theta = atan(tanTheta) * 180.0 / pi;
+        double tanThetaError = sqrt( (1 / (pow(px, 2) + pow(py, 2))) * (pow((px * pz * sigmaX) / (pow(px, 2) + pow(py, 2)), 2) + pow((py * pz * sigmaY / (pow(px, 2) + pow(py, 2))), 2) + pow(sigmaZ, 2))  );
+        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
+        double tanThetaErrorSystematics = sqrt( (1 / (pow(px, 2) + pow(py, 2))) * (pow((px * pz * sigmaXSystematics) / (pow(px, 2) + pow(py, 2)), 2) + pow((py * pz * sigmaYSystematics / (pow(px, 2) + pow(py, 2))), 2) + pow(sigmaZSystematics, 2))  );
+        double thetaErrorSystematics = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
+
+        // Storing values
+        finalAngles.phi[dataset] = phi;
+        finalAngles.phiError[dataset] = phiError;
+        finalAngles.phiErrorSystematics[dataset] = phiErrorSystematics;
+        finalAngles.theta[dataset] = theta;
+        finalAngles.thetaError[dataset] = thetaError;
+        finalAngles.thetaErrorSystematics[dataset] = thetaErrorSystematics;
+    }
+
+    // Printing out values
+    cout << "Final Angles!\n";
+    cout << "--------------------------------------------\n";
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        cout << "Angle values for: " << DatasetToString(dataset) << '\n';
+        cout << "Phi: " << finalAngles.phi[dataset] << "\u00B0 ± " << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
+        cout << "Theta: " << finalAngles.theta[dataset] << "\u00B0 ± " << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n";
+        cout << "--------------------------------------------\n";
+    }
+
+    return finalAngles;
 }
 
-void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram, IBDvalues& neutrinoCounts)
+void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+                        IBDValues& neutrinoCounts)
 {
     // Defining variables used in calculation. Check the error propagation technote for details on the method
     double rPlus = 0, rMinus = 0;
@@ -329,11 +395,12 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
     double nPlus = 0, nPlusPlus = 0, nMinus = 0, nMinusMinus = 0, nPlusMinus = 0;
     double nPlusError = 0, nPlusPlusError = 0, nMinusError = 0, nMinusMinusError = 0, nPlusMinusError = 0;
 
-    for (int dataset = DataUnbiased; dataset < DatasetSize; dataset+=2)
-    {   
-        for (int direction = x; direction < z; direction++)
+    for (int dataset = DataUnbiased; dataset < DatasetSize; dataset += 2)
+    {
+        for (int direction = X; direction < Z; direction++)
         {
             // Dataset - 1 returns the biased dataset counts
+            // Grabbing data from filled bins, rest should be empty
             nPlus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(296);
             nPlusPlus = histogram[dataset][TotalDifference][direction]->GetBinContent(297);
             nMinus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(6);
@@ -351,41 +418,50 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
 
             p = segmentWidth * (rPlus - rMinus) / (rPlus + rMinus + 1);
 
-            pError = segmentWidth * pow(1 / ((nMinus * (nPlusMinus + nPlusPlus) + (nMinusMinus + nPlusMinus) * (nPlus + nPlusMinus + nPlusPlus))), 2) * sqrt(pow((nMinusMinus + nPlusMinus) * (nPlusMinus + nPlusPlus), 2) * (pow(nPlusError * (2 * nMinus + nMinusMinus + nPlusMinus), 2)
-                                                                                                                                        + pow(nMinusError * (2 * nPlus + nPlusPlus + nPlusMinus), 2))
-                                                                                                    + pow((nPlus * (nPlusMinus + nMinusMinus) * (2 * nMinus + nMinusMinus + nPlusMinus) * nPlusPlusError), 2)
-                                                                                                    + pow((nPlusMinusError * (nPlus * pow((nMinusMinus + nPlusMinus), 2) + nMinus * (2 * nMinusMinus * nPlus - 2 * nPlus * nPlusPlus - pow((nPlusMinus + nPlusPlus), 2)))), 2)
-                                                                                                    + pow((nMinus * (nPlusMinus + nPlusPlus) * (2 * nPlus + nPlusMinus + nPlusPlus) * nMinusMinusError), 2));
-            
+            pError
+                = segmentWidth
+                  * pow(1 / ((nMinus * (nPlusMinus + nPlusPlus) + (nMinusMinus + nPlusMinus) * (nPlus + nPlusMinus + nPlusPlus))),
+                        2)
+                  * sqrt(
+                      pow((nMinusMinus + nPlusMinus) * (nPlusMinus + nPlusPlus), 2)
+                          * (pow(nPlusError * (2 * nMinus + nMinusMinus + nPlusMinus), 2)
+                             + pow(nMinusError * (2 * nPlus + nPlusPlus + nPlusMinus), 2))
+                      + pow((nPlus * (nPlusMinus + nMinusMinus) * (2 * nMinus + nMinusMinus + nPlusMinus) * nPlusPlusError), 2)
+                      + pow((nPlusMinusError
+                             * (nPlus * pow((nMinusMinus + nPlusMinus), 2)
+                                + nMinus * (2 * nMinusMinus * nPlus - 2 * nPlus * nPlusPlus - pow((nPlusMinus + nPlusPlus), 2)))),
+                            2)
+                      + pow((nMinus * (nPlusMinus + nPlusPlus) * (2 * nPlus + nPlusMinus + nPlusPlus) * nMinusMinusError), 2));
+
             neutrinoCounts.mean[dataset][direction] = p;
             neutrinoCounts.sigma[dataset][direction] = pError;
         }
-        neutrinoCounts.effectiveIBD[dataset][z] = neutrinoCounts.effectiveIBD[dataset - 1][z]; 
-        neutrinoCounts.mean[dataset][z] = neutrinoCounts.mean[dataset - 1][z];
-        neutrinoCounts.sigma[dataset][z] = neutrinoCounts.sigma[dataset - 1][z];
+        neutrinoCounts.effectiveIBD[dataset][Z] = neutrinoCounts.effectiveIBD[dataset - 1][Z];
+        neutrinoCounts.mean[dataset][Z] = neutrinoCounts.mean[dataset - 1][Z];
+        neutrinoCounts.sigma[dataset][Z] = neutrinoCounts.sigma[dataset - 1][Z];
     }
 
     // Printing out values
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         cout << "Mean and sigma values for: " << DatasetToString(dataset) << '\n';
-        for (int direction = x; direction < DirectionSize; direction++)
+        for (int direction = X; direction < DirectionSize; direction++)
         {
-            cout << "p" << AxisToString(direction) << ": " << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
+            cout << "p" << AxisToString(direction) << ": " << neutrinoCounts.mean[dataset][direction] << " ± "
+                 << neutrinoCounts.sigma[dataset][direction] << '\n';
         }
         cout << "--------------------------------------------\n";
     }
 }
 
-void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
     livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
 
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
-
-    IBDvalues neutrinoCounts;
+    IBDValues neutrinoCounts;
 
     cout << "--------------------------------------------\n";
     cout << "Subtracting backgrounds.\n";
@@ -393,7 +469,7 @@ void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         cout << "Total IBD events for: " << DatasetToString(dataset) << '\n';
-        for (int direction = x; direction < DirectionSize; direction++)
+        for (int direction = X; direction < DirectionSize; direction++)
         {
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1D>(
@@ -416,18 +492,24 @@ void SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>
             cout << AxisToString(direction) << ": " << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
                  << '\n';
 
-            neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
-            
             if (dataset == Data || dataset == Sim)
             {
                 neutrinoCounts.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
-                neutrinoCounts.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev() / sqrt(effIBDs);
+                neutrinoCounts.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev()
+                                                           / sqrt(effIBDs);
+                neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
+            }
+            else
+            {
+                neutrinoCounts.effectiveIBD[dataset][direction] = neutrinoCounts.effectiveIBD[dataset - 1][direction];
             }
         }
         cout << "--------------------------------------------\n";
     }
 
     CalculateUnbiasing(histogram, neutrinoCounts);
+
+    return neutrinoCounts;
 }
 
 int main()
@@ -442,12 +524,11 @@ int main()
     cout << "Checking right neighbor for segment 44, period 4: " << checkNeighbor(4, 44, 'r') << '\n';
     cout << "Checking up neighbor for segment 82, period 3: " << checkNeighbor(3, 82, 'u') << '\n';
 
-    // Set up what we're measuring. Check enums in header for what the ints are
-    array<float, 5> phi, phiError;
-    array<float, 5> theta, thetaError;
+    // Set up what we're measuring
+    IBDValues neutrinoCounts;
+    AngleValues finalAngles;
 
-    // Need histograms for counting each variable. Check enums in header for
-    // what the ints are Don't need an array for the true reactor direction
+    // Need histograms for counting each variable
     array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
     // Set up histograms for all 3 directions
@@ -459,7 +540,7 @@ int main()
             if ((i == Sim || i == SimUnbiased) && (j == CorrelatedReactorOff || j == AccidentalReactorOff))
                 continue;
 
-            for (int c = x; c < DirectionSize; c++)
+            for (int c = X; c < DirectionSize; c++)
             {
                 string dataset = DatasetToString(i);
                 string signalSet = SignalToString(j);
@@ -496,7 +577,8 @@ int main()
 
     cout << "Successfully filled simulation histogram!\n";
 
-    SubtractBackgrounds(histogram);
+    neutrinoCounts = SubtractBackgrounds(histogram);
+    finalAngles = CalculateAngles(neutrinoCounts);
 
     // Set up our output file
     /* auto outputFile = std::make_unique<TFile>("Directionality.root",
