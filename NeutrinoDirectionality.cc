@@ -1,7 +1,7 @@
 
 #include "NeutrinoDirectionality.h"
-
 #include "DetectorConfig.h"
+#include "Formatting.h"
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
@@ -42,30 +42,29 @@ void FillDetectorConfig()
     cout << "Below is the detector configuration.\n";
     cout << "--------------------------------------------\n";
 
-    for (int i = 0; i < detectorConfig.size(); i++)
+    for (int i = 0; i < noPeriods; i++)
     {
-        if (i != 5)
-            cout << "Detector configuration for period: " << i + 1 << '\n';
-        else
-            cout << "Detector configuration for simulation: \n";
+        cout << "Detector configuration for period: " << i + 1 << '\n';
 
-        for (int j = 0; j < detectorConfig[i].size(); j++)
+        for (int j = 140; j >= 0; j -= 14)
         {
-            if (detectorConfig[i][j])
+            for (int k = 0; k < 14; k++)
             {
-                cout << "\u25A0 ";
+                if (detectorConfig[i][j + k])
+                {
+                    cout << "\u25A0 ";
+                }
+                else
+                {
+                    cout << "\u25A1 ";
+                }
             }
-            else
-            {
-                cout << "\u25A1 ";
-            }
-            // cout << detectorConfig[i][j] << " ";
-            if ((j + 1) % 14 == 0)
-                cout << '\n';
+
+            cout << '\n';
         }
         cout << '\n';
+        cout << "--------------------------------------------\n";
     }
-    cout << "--------------------------------------------\n";
 }
 
 bool checkNeighbor(int periodNo, int segment, char direction)
@@ -372,14 +371,15 @@ AngleValues CalculateAngles(IBDValues& neutrinoCounts)
     }
 
     // Printing out values
-    cout << "Final Angles!\n";
+    cout << boldOn << cyanOn << "Final Angles!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        cout << "Angle values for: " << DatasetToString(dataset) << '\n';
-        cout << "Phi: " << finalAngles.phi[dataset] << "\u00B0 ± " << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
-        cout << "Theta: " << finalAngles.theta[dataset] << "\u00B0 ± " << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n";
+        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats <<'\n';
+        cout << greenOn;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n" << resetFormats;
         cout << "--------------------------------------------\n";
     }
 
@@ -444,10 +444,10 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
     // Printing out values
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        cout << "Mean and sigma values for: " << DatasetToString(dataset) << '\n';
+        cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         for (int direction = X; direction < DirectionSize; direction++)
         {
-            cout << "p" << AxisToString(direction) << ": " << neutrinoCounts.mean[dataset][direction] << " ± "
+            cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.mean[dataset][direction] << " ± "
                  << neutrinoCounts.sigma[dataset][direction] << '\n';
         }
         cout << "--------------------------------------------\n";
@@ -464,11 +464,12 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
     IBDValues neutrinoCounts;
 
     cout << "--------------------------------------------\n";
-    cout << "Subtracting backgrounds.\n";
+    cout << boldOn << cyanOn << "Subtracting backgrounds.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        cout << "Total IBD events for: " << DatasetToString(dataset) << '\n';
+        cout << "Total IBD events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         for (int direction = X; direction < DirectionSize; direction++)
         {
             // Have to static cast raw pointer to shared pointer to keep up safety measures
@@ -489,7 +490,7 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
                 0, histogram[dataset][TotalDifference][direction]->GetNbinsX() + 1, totalIBDErr);
             effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
                                                                 // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
-            cout << AxisToString(direction) << ": " << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
+            cout << boldOn << AxisToString(direction) << ": " << resetFormats << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
                  << '\n';
 
             if (dataset == Data || dataset == Sim)
@@ -519,10 +520,6 @@ int main()
 
     // Fill detector configuration
     FillDetectorConfig();
-
-    // Check that configurations are properly set up
-    cout << "Checking right neighbor for segment 44, period 4: " << checkNeighbor(4, 44, 'r') << '\n';
-    cout << "Checking up neighbor for segment 82, period 3: " << checkNeighbor(3, 82, 'u') << '\n';
 
     // Set up what we're measuring
     IBDValues neutrinoCounts;
@@ -561,21 +558,21 @@ int main()
     }
     lineCounter = 0;
 
-    cout << "Successfully filled data histogram!\n";
+    cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
-    cout << "Total livetime for all Reactor Off events: " << livetimeOff << '\n';
-    cout << "Total livetime for all Reactor On events: " << livetimeOn << '\n';
+    cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
+    cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
     cout << "--------------------------------------------\n";
 
     // Filling simulation histograms
-    cout << "Filling simulation histograms!\n";
+    cout << "Filling simulation histograms!\n" << resetFormats;
     cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)
     {
         SetUpHistograms(histogram, Sim, period);
     }
 
-    cout << "Successfully filled simulation histogram!\n";
+    cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
 
     neutrinoCounts = SubtractBackgrounds(histogram);
     finalAngles = CalculateAngles(neutrinoCounts);
