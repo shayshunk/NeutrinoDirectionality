@@ -1,0 +1,46 @@
+# Ignore all pictures
+*.png
+# Don't ignore PROSPECT logo
+!PROSPECT.png
+
+# Ignore all hidden files
+.*
+# Don't ignore gitignore
+!.gitignore
+
+# Ignore all data files and text files
+*.root
+*.txt
+*.pdf
+
+# Ignore vscode
+.vscode
+.git
+
+# Ignore meitner
+meitner
+
+# Ignore email
+sj622@meitner.wlab.yale.edu
+
+# Ignore all debug files
+*.so
+*.d
+*.pcm
+
+# Ignore old versions of the code
+BiPoxyz.C
+DeadSeg_Jin.cc
+DataOvals.C
+DeadSegCorrection.cc
+DeadSegCorrectionv2.cc
+DeadSegCorrectionv3.cc
+DeadSegCorrectionv4.cc
+GeneralHeader_Jin.h
+Directionality
+DeadSeg
+neutrinoDir.h
+neutrinoDir.cc
+NeutrinoDirectionality TechNote.docx
+NeutrinoDirectionalityHists.cc
+UnbiasedSegCorrPRLHists.cc
