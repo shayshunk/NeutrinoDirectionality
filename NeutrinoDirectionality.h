@@ -72,19 +72,28 @@ struct TreeValues
 
 struct IBDValues
 {
-    std::array<std::array<double, DirectionSize>, DatasetSize> effectiveIBD;
-    std::array<std::array<double, DirectionSize>, DatasetSize> mean;
-    std::array<std::array<double, DirectionSize>, DatasetSize> sigma;
+    std::array<std::array<float, DirectionSize>, DatasetSize> effectiveIBD;
+    std::array<std::array<float, DirectionSize>, DatasetSize> mean;
+    std::array<std::array<float, DirectionSize>, DatasetSize> sigma;
+    std::array<std::array<float, DirectionSize>, DatasetSize> sigmaSystematics;
 };
 
 struct AngleValues
 {
-    std::array<double, DatasetSize> phi;
-    std::array<double, DatasetSize> phiError;
-    std::array<double, DatasetSize> phiErrorSystematics;
-    std::array<double, DatasetSize> theta;
-    std::array<double, DatasetSize> thetaError;
-    std::array<double, DatasetSize> thetaErrorSystematics;
+    std::array<float, DatasetSize> phi;
+    std::array<float, DatasetSize> phiError;
+    std::array<float, DatasetSize> phiErrorSystematics;
+    std::array<float, DatasetSize> theta;
+    std::array<float, DatasetSize> thetaError;
+    std::array<float, DatasetSize> thetaErrorSystematics;
+};
+
+struct CovarianceValues
+{
+    std::array<float, DatasetSize> phiError;
+    std::array<float, DatasetSize> phiErrorSystmatics;
+    std::array<float, DatasetSize> thetaError;
+    std::array<float, DatasetSize> thetaErrorSystematics;
 };
 
 std::string DatasetToString(int num)

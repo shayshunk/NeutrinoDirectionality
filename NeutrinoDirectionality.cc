@@ -443,7 +443,26 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
     return neutrinoCounts;
 }
 
-AngleValues CalculateAngles(IBDValues& neutrinoCounts)
+void AddSystematics(IBDValues& neutrinoCounts)
+{
+    // Systematics extracted from BiPo study
+
+    // Defining variables for readability of code
+    double sigmaX, sigmaY, sigmaZ;
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        sigmaX = neutrinoCounts.sigma[dataset][X];
+        sigmaY = neutrinoCounts.sigma[dataset][Y];
+        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+
+        neutrinoCounts.sigmaSystematics[dataset][X] = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
+        neutrinoCounts.sigmaSystematics[dataset][Y] = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
+        neutrinoCounts.sigmaSystematics[dataset][Z] = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
+    }
+}
+
+AngleValues CalculateAngles(const IBDValues& neutrinoCounts)
 {
     AngleValues finalAngles;
 
@@ -464,9 +483,9 @@ AngleValues CalculateAngles(IBDValues& neutrinoCounts)
         sigmaY = neutrinoCounts.sigma[dataset][Y];
         sigmaZ = neutrinoCounts.sigma[dataset][Z];
 
-        sigmaXSystematics = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
-        sigmaYSystematics = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
-        sigmaZSystematics = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
+        sigmaXSystematics = neutrinoCounts.sigmaSystematics[dataset][X];
+        sigmaYSystematics = neutrinoCounts.sigmaSystematics[dataset][Y];
+        sigmaZSystematics = neutrinoCounts.sigmaSystematics[dataset][Z];
 
         effIBDX = neutrinoCounts.effectiveIBD[dataset][X];
         effIBDY = neutrinoCounts.effectiveIBD[dataset][Y];
@@ -513,8 +532,10 @@ AngleValues CalculateAngles(IBDValues& neutrinoCounts)
     return finalAngles;
 }
 
-void FillOutputFile(AngleValues& finalAngles)
+CovarianceValues CalculateCovariances(IBDValues& neutrinoCounts, AngleValues& finalAngles)
 {
+    CovarianceValues oneSigmaEllipse;
+
     // Calculating "true" neutrino direction
     // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001 
     double xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
@@ -536,6 +557,13 @@ void FillOutputFile(AngleValues& finalAngles)
     cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError << "\u00B0.\n";
     cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError << "\u00B0.\n" << resetFormats;
     cout << "--------------------------------------------\n";
+
+    return oneSigmaEllipse;
+}
+
+void FillOutputFile(AngleValues& finalAngles)
+{
+    
 
 }
 
@@ -601,6 +629,7 @@ int main()
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
 
     neutrinoCounts = SubtractBackgrounds(histogram);
+    AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
     FillOutputFile(finalAngles);
 
