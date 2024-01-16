@@ -3,6 +3,8 @@
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
+#define COVARIANCE_VERBOSITY 0
+
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
 void FillDetectorConfig()
@@ -635,6 +637,23 @@ CovarianceValues CalculateCovariances(const IBDValues& neutrinoCounts, const Ang
         oneSigmaEllipse.thetaErrorSystematics[dataset] = thetaErrorSystematics;
     }
 
+    #if COVARIANCE_VERBOSITY
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
+        cout << greenOn;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << oneSigmaEllipse.phiErrorSystmatics[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n" << resetFormats;
+        cout << "--------------------------------------------\n";
+
+        cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
+        cout << greenOn;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n" << resetFormats;
+        cout << "--------------------------------------------\n";
+    }
+    #endif
+
     return oneSigmaEllipse;
 }
 
@@ -709,7 +728,7 @@ int main()
     neutrinoCounts = SubtractBackgrounds(histogram);
     AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
-    CalculateCovariances(neutrinoCounts, finalAngles);
+    oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);
     FillOutputFile(finalAngles, oneSigmaEllipse);
 
     // Set up our output file
