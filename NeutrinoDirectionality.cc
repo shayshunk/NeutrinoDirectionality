@@ -316,76 +316,6 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
     }
 }
 
-AngleValues CalculateAngles(IBDValues& neutrinoCounts)
-{
-    AngleValues finalAngles;
-
-    // Defining variables for readability of code
-    double px, py, pz;
-    double sigmaX, sigmaY, sigmaZ;
-    double sigmaXSystematics, sigmaYSystematics, sigmaZSystematics;
-    double effIBDX, effIBDY, effIBDZ;
-
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
-    {
-        // Grabbing values from current dataset
-        px = neutrinoCounts.mean[dataset][X];
-        py = neutrinoCounts.mean[dataset][Y];
-        pz = neutrinoCounts.mean[dataset][Z];
-
-        sigmaX = neutrinoCounts.sigma[dataset][X];
-        sigmaY = neutrinoCounts.sigma[dataset][Y];
-        sigmaZ = neutrinoCounts.sigma[dataset][Z];
-
-        sigmaXSystematics = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
-        sigmaYSystematics = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
-        sigmaZSystematics = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
-
-        effIBDX = neutrinoCounts.effectiveIBD[dataset][X];
-        effIBDY = neutrinoCounts.effectiveIBD[dataset][Y];
-        effIBDZ = neutrinoCounts.effectiveIBD[dataset][Z];
-
-        // phi = arctan(y / x)
-        double tanPhi = py / px;
-        double phi = atan(tanPhi) * 180.0 / pi;
-        double tanPhiError = sqrt( pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2) );
-        double phiError = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
-        double tanPhiErrorSystematics = sqrt( pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2) );
-        double phiErrorSystematics = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
-
-        // theta = arctan(z / sqrt(x^2 + y^2))
-        double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
-        double theta = atan(tanTheta) * 180.0 / pi;
-        double tanThetaError = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaX / (px*px + py*py)), 2) + pow((py*pz*sigmaY / (px*px + py*py)), 2 ) + pow(sigmaZ, 2)));
-        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
-        double tanThetaErrorSystematics = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaXSystematics / (px*px + py*py)), 2) + pow((py*pz*sigmaYSystematics / (px*px + py*py)), 2 ) + pow(sigmaZSystematics, 2)));
-        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
-
-        // Storing values
-        finalAngles.phi[dataset] = phi;
-        finalAngles.phiError[dataset] = phiError;
-        finalAngles.phiErrorSystematics[dataset] = phiErrorSystematics;
-        finalAngles.theta[dataset] = theta;
-        finalAngles.thetaError[dataset] = thetaError;
-        finalAngles.thetaErrorSystematics[dataset] = thetaErrorSystematics;
-    }
-
-    // Printing out values
-    cout << boldOn << cyanOn << "Final Angles!\n" << resetFormats;
-    cout << "--------------------------------------------\n";
-
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
-    {
-        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats <<'\n';
-        cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n" << resetFormats;
-        cout << "--------------------------------------------\n";
-    }
-
-    return finalAngles;
-}
-
 void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
                         IBDValues& neutrinoCounts)
 {
@@ -513,6 +443,102 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
     return neutrinoCounts;
 }
 
+AngleValues CalculateAngles(IBDValues& neutrinoCounts)
+{
+    AngleValues finalAngles;
+
+    // Defining variables for readability of code
+    double px, py, pz;
+    double sigmaX, sigmaY, sigmaZ;
+    double sigmaXSystematics, sigmaYSystematics, sigmaZSystematics;
+    double effIBDX, effIBDY, effIBDZ;
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        // Grabbing values from current dataset
+        px = neutrinoCounts.mean[dataset][X];
+        py = neutrinoCounts.mean[dataset][Y];
+        pz = neutrinoCounts.mean[dataset][Z];
+
+        sigmaX = neutrinoCounts.sigma[dataset][X];
+        sigmaY = neutrinoCounts.sigma[dataset][Y];
+        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+
+        sigmaXSystematics = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
+        sigmaYSystematics = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
+        sigmaZSystematics = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
+
+        effIBDX = neutrinoCounts.effectiveIBD[dataset][X];
+        effIBDY = neutrinoCounts.effectiveIBD[dataset][Y];
+        effIBDZ = neutrinoCounts.effectiveIBD[dataset][Z];
+
+        // phi = arctan(y / x)
+        double tanPhi = py / px;
+        double phi = atan(tanPhi) * 180.0 / pi;
+        double tanPhiError = sqrt( pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2) );
+        double phiError = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+        double tanPhiErrorSystematics = sqrt( pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2) );
+        double phiErrorSystematics = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+
+        // theta = arctan(z / sqrt(x^2 + y^2))
+        double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
+        double theta = atan(tanTheta) * 180.0 / pi;
+        double tanThetaError = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaX / (px*px + py*py)), 2) + pow((py*pz*sigmaY / (px*px + py*py)), 2 ) + pow(sigmaZ, 2)));
+        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
+        double tanThetaErrorSystematics = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaXSystematics / (px*px + py*py)), 2) + pow((py*pz*sigmaYSystematics / (px*px + py*py)), 2 ) + pow(sigmaZSystematics, 2)));
+        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
+
+        // Storing values
+        finalAngles.phi[dataset] = phi;
+        finalAngles.phiError[dataset] = phiError;
+        finalAngles.phiErrorSystematics[dataset] = phiErrorSystematics;
+        finalAngles.theta[dataset] = theta;
+        finalAngles.thetaError[dataset] = thetaError;
+        finalAngles.thetaErrorSystematics[dataset] = thetaErrorSystematics;
+    }
+
+    // Printing out values
+    cout << boldOn << cyanOn << "Final Angles!\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats <<'\n';
+        cout << greenOn;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n" << resetFormats;
+        cout << "--------------------------------------------\n";
+    }
+
+    return finalAngles;
+}
+
+void FillOutputFile(AngleValues& finalAngles)
+{
+    // Calculating "true" neutrino direction
+    // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001 
+    double xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
+    double xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
+
+    // Same angle calculation as above
+    double tanPhiTrue = yTrue / xTrue;
+    double phiTrue = atan(tanPhiTrue) * 180.0 / pi;
+    double tanPhiTrueError = sqrt( pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2) );
+    double phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
+
+    double tanThetaTrue = zTrue / sqrt(pow(xTrue, 2) + pow(yTrue, 2));
+    double thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
+    double tanThetaTrueError = sqrt( pow(1/sqrt(xTrue * xTrue + yTrue * yTrue), 2) * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2) + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)) );
+    double thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
+
+    cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats <<'\n';
+    cout << greenOn;
+    cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError << "\u00B0.\n";
+    cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError << "\u00B0.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
+}
+
 int main()
 {
     // Ignore Warnings
@@ -576,6 +602,7 @@ int main()
 
     neutrinoCounts = SubtractBackgrounds(histogram);
     finalAngles = CalculateAngles(neutrinoCounts);
+    FillOutputFile(finalAngles);
 
     // Set up our output file
     /* auto outputFile = std::make_unique<TFile>("Directionality.root",
