@@ -1,5 +1,6 @@
 
 #include "NeutrinoDirectionality.h"
+
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
@@ -379,8 +380,8 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
         cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         for (int direction = X; direction < DirectionSize; direction++)
         {
-            cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.mean[dataset][direction] << " ± "
-                 << neutrinoCounts.sigma[dataset][direction] << '\n';
+            cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.mean[dataset][direction]
+                 << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
         }
         cout << "--------------------------------------------\n";
     }
@@ -422,8 +423,8 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
                 0, histogram[dataset][TotalDifference][direction]->GetNbinsX() + 1, totalIBDErr);
             effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
                                                                 // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
-            cout << boldOn << AxisToString(direction) << ": " << resetFormats << totalIBDs << " ± " << totalIBDErr << ". Effective IBD counts: " << effIBDs
-                 << '\n';
+            cout << boldOn << AxisToString(direction) << ": " << resetFormats << totalIBDs << " ± " << totalIBDErr
+                 << ". Effective IBD counts: " << effIBDs << '\n';
 
             if (dataset == Data || dataset == Sim)
             {
@@ -464,7 +465,7 @@ void AddSystematics(IBDValues& neutrinoCounts)
     }
 }
 
-AngleValues CalculateAngles(const IBDValues& neutrinoCounts)
+AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
 {
     AngleValues finalAngles;
 
@@ -496,18 +497,23 @@ AngleValues CalculateAngles(const IBDValues& neutrinoCounts)
         // phi = arctan(y / x)
         double tanPhi = py / px;
         double phi = atan(tanPhi) * 180.0 / pi;
-        double tanPhiError = sqrt( pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2) );
+        double tanPhiError = sqrt(pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2));
         double phiError = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
-        double tanPhiErrorSystematics = sqrt( pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2) );
+        double tanPhiErrorSystematics = sqrt(pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2));
         double phiErrorSystematics = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
 
         // theta = arctan(z / sqrt(x^2 + y^2))
         double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
         double theta = atan(tanTheta) * 180.0 / pi;
-        double tanThetaError = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaX / (px*px + py*py)), 2) + pow((py*pz*sigmaY / (px*px + py*py)), 2 ) + pow(sigmaZ, 2)));
-        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
-        double tanThetaErrorSystematics = sqrt( (1 / (px*px + py*py)) * ( pow((px*pz*sigmaXSystematics / (px*px + py*py)), 2) + pow((py*pz*sigmaYSystematics / (px*px + py*py)), 2 ) + pow(sigmaZSystematics, 2)));
-        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi; 
+        double tanThetaError = sqrt((1 / (px * px + py * py))
+                                    * (pow((px * pz * sigmaX / (px * px + py * py)), 2)
+                                       + pow((py * pz * sigmaY / (px * px + py * py)), 2) + pow(sigmaZ, 2)));
+        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi;
+        double tanThetaErrorSystematics
+            = sqrt((1 / (px * px + py * py))
+                   * (pow((px * pz * sigmaXSystematics / (px * px + py * py)), 2)
+                      + pow((py * pz * sigmaYSystematics / (px * px + py * py)), 2) + pow(sigmaZSystematics, 2)));
+        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi;
 
         // Storing values
         finalAngles.phi[dataset] = phi;
@@ -524,40 +530,49 @@ AngleValues CalculateAngles(const IBDValues& neutrinoCounts)
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats <<'\n';
+        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n" << resetFormats;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+             << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+             << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n"
+             << resetFormats;
         cout << "--------------------------------------------\n";
     }
 
     return finalAngles;
 }
 
-CovarianceValues CalculateCovariances(const IBDValues& neutrinoCounts, const AngleValues& finalAngles)
+CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValues const& finalAngles)
 {
     CovarianceValues oneSigmaEllipse;
 
     // Calculating "true" neutrino direction
-    // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001 
+    // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001
     float xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
     float xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
 
     // Same angle calculation as above
     float tanPhiTrue = yTrue / xTrue;
     float phiTrue = atan(tanPhiTrue) * 180.0 / pi;
-    float tanPhiTrueError = sqrt( pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2) );
+    float tanPhiTrueError = sqrt(pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2));
     float phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 
     float tanThetaTrue = zTrue / sqrt(pow(xTrue, 2) + pow(yTrue, 2));
     float thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
-    float tanThetaTrueError = sqrt( pow(1/sqrt(xTrue * xTrue + yTrue * yTrue), 2) * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2) + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)) );
+    float tanThetaTrueError
+        = sqrt(pow(1 / sqrt(xTrue * xTrue + yTrue * yTrue), 2)
+               * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2)
+                  + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)));
     float thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 
-    cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats <<'\n';
+    cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats << '\n';
     cout << greenOn;
-    cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError << "\u00B0.\n";
-    cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError << "\u00B0.\n" << resetFormats;
+    cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError
+         << "\u00B0.\n";
+    cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError
+         << "\u00B0.\n"
+         << resetFormats;
     cout << "--------------------------------------------\n";
 
     // Calculating covariances
@@ -569,7 +584,6 @@ CovarianceValues CalculateCovariances(const IBDValues& neutrinoCounts, const Ang
     float sigmaX, sigmaY, sigmaZ;
     float sigmaXSystematics, sigmaYSystematics, sigmaZSystematics;
     float phi, theta;
-    
 
     // From error propagation document
     for (int dataset = Data; dataset < DatasetSize; dataset++)
@@ -592,36 +606,53 @@ CovarianceValues CalculateCovariances(const IBDValues& neutrinoCounts, const Ang
 
         // Filling out first matrix
         covarianceMatrix[0][0] = (pow(sigmaX, 2) * pow(py, 2) / (pow(px, 4))) + pow(sigmaY, 2) / pow(px, 2);
-        covarianceMatrix[0][1] = (pow(pz, 2) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaY, 2) - pow(sigmaX, 2));
-        covarianceMatrix[1][0] = ((py * pz) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaY, 2) - pow(sigmaX, 2)); 
-        covarianceMatrix[1][1] = ((pow(px, 2) * pow(pz, 2) * pow(sigmaX, 2) + pow(py, 2) * pow(pz, 2) * pow(sigmaY, 2))/ (pow(pow(px, 2) + pow(py, 2), 3))) + (pow(sigmaZ, 2)) / (pow(px, 2) + pow(py, 2));
+        covarianceMatrix[0][1] = (pow(pz, 2) / (px * pow(pow(px, 2) + pow(py, 2), (3. / 2.))))
+                                 * (pow(sigmaY, 2) - pow(sigmaX, 2));
+        covarianceMatrix[1][0] = ((py * pz) / (px * pow(pow(px, 2) + pow(py, 2), (3. / 2.)))) * (pow(sigmaY, 2) - pow(sigmaX, 2));
+        covarianceMatrix[1][1] = ((pow(px, 2) * pow(pz, 2) * pow(sigmaX, 2) + pow(py, 2) * pow(pz, 2) * pow(sigmaY, 2))
+                                  / (pow(pow(px, 2) + pow(py, 2), 3)))
+                                 + (pow(sigmaZ, 2)) / (pow(px, 2) + pow(py, 2));
 
-        covarianceMatrixSystematics[0][0] = (pow(sigmaXSystematics, 2) * pow(py, 2) / (pow(px, 4))) + pow(sigmaYSystematics, 2) / pow(px, 2);
-        covarianceMatrixSystematics[0][1] = (pow(pz, 2) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaYSystematics, 2) - pow(sigmaXSystematics, 2));
-        covarianceMatrixSystematics[1][0] = ((py * pz) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaYSystematics, 2) - pow(sigmaXSystematics, 2)); 
-        covarianceMatrixSystematics[1][1] = ((pow(px, 2) * pow(pz, 2) * pow(sigmaXSystematics, 2) + pow(py, 2) * pow(pz, 2) * pow(sigmaYSystematics, 2))/ (pow(pow(px, 2) + pow(py, 2), 3))) + (pow(sigmaZSystematics, 2)) / (pow(px, 2) + pow(py, 2));
+        covarianceMatrixSystematics[0][0] = (pow(sigmaXSystematics, 2) * pow(py, 2) / (pow(px, 4)))
+                                            + pow(sigmaYSystematics, 2) / pow(px, 2);
+        covarianceMatrixSystematics[0][1] = (pow(pz, 2) / (px * pow(pow(px, 2) + pow(py, 2), (3. / 2.))))
+                                            * (pow(sigmaYSystematics, 2) - pow(sigmaXSystematics, 2));
+        covarianceMatrixSystematics[1][0] = ((py * pz) / (px * pow(pow(px, 2) + pow(py, 2), (3. / 2.))))
+                                            * (pow(sigmaYSystematics, 2) - pow(sigmaXSystematics, 2));
+        covarianceMatrixSystematics[1][1]
+            = ((pow(px, 2) * pow(pz, 2) * pow(sigmaXSystematics, 2) + pow(py, 2) * pow(pz, 2) * pow(sigmaYSystematics, 2))
+               / (pow(pow(px, 2) + pow(py, 2), 3)))
+              + (pow(sigmaZSystematics, 2)) / (pow(px, 2) + pow(py, 2));
 
         // Including angles
-        covarianceMatrix[0][0] = covarianceMatrix[0][0] * pow(cos(phi * pi/180), 4);
-        covarianceMatrix[0][1] = covarianceMatrix[0][1] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
-        covarianceMatrix[1][0] = covarianceMatrix[1][0] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
-        covarianceMatrix[1][1] = covarianceMatrix[1][1] * pow(cos(theta * pi/180), 4);
+        covarianceMatrix[0][0] = covarianceMatrix[0][0] * pow(cos(phi * pi / 180), 4);
+        covarianceMatrix[0][1] = covarianceMatrix[0][1] * pow(cos(phi * pi / 180), 2) * pow(cos(theta * pi / 180), 2);
+        covarianceMatrix[1][0] = covarianceMatrix[1][0] * pow(cos(phi * pi / 180), 2) * pow(cos(theta * pi / 180), 2);
+        covarianceMatrix[1][1] = covarianceMatrix[1][1] * pow(cos(theta * pi / 180), 4);
 
-        covarianceMatrixSystematics[0][0] = covarianceMatrixSystematics[0][0] * pow(cos(phi * pi/180), 4);
-        covarianceMatrixSystematics[0][1] = covarianceMatrixSystematics[0][1] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
-        covarianceMatrixSystematics[1][0] = covarianceMatrixSystematics[1][0] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
-        covarianceMatrixSystematics[1][1] = covarianceMatrixSystematics[1][1] * pow(cos(theta * pi/180), 4);
+        covarianceMatrixSystematics[0][0] = covarianceMatrixSystematics[0][0] * pow(cos(phi * pi / 180), 4);
+        covarianceMatrixSystematics[0][1] = covarianceMatrixSystematics[0][1] * pow(cos(phi * pi / 180), 2)
+                                            * pow(cos(theta * pi / 180), 2);
+        covarianceMatrixSystematics[1][0] = covarianceMatrixSystematics[1][0] * pow(cos(phi * pi / 180), 2)
+                                            * pow(cos(theta * pi / 180), 2);
+        covarianceMatrixSystematics[1][1] = covarianceMatrixSystematics[1][1] * pow(cos(theta * pi / 180), 4);
 
         // Eigenvalues
         float a = covarianceMatrix[0][0], aSystematics = covarianceMatrixSystematics[0][0];
         float b = covarianceMatrix[1][1], bSystematics = covarianceMatrixSystematics[1][1];
         float c = covarianceMatrix[0][1], cSystematics = covarianceMatrixSystematics[0][1];
 
-        float lambda1 = ((a + b) + sqrt( (pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
-        float lambda2 = ((a + b) - sqrt( (pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
-        
-        float lambda1Sytematics = ((aSystematics + bSystematics) + sqrt( (pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2))))) / 2;
-        float lambda2Sytematics = ((aSystematics + bSystematics) - sqrt( (pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2))))) / 2;
+        float lambda1 = ((a + b) + sqrt((pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
+        float lambda2 = ((a + b) - sqrt((pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
+
+        float lambda1Sytematics
+            = ((aSystematics + bSystematics)
+               + sqrt((pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2)))))
+              / 2;
+        float lambda2Sytematics
+            = ((aSystematics + bSystematics)
+               - sqrt((pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2)))))
+              / 2;
 
         // Calculating final angle errors
         float phiError = sqrt(2.291 * lambda1) * 180.0 / pi;
@@ -637,31 +668,35 @@ CovarianceValues CalculateCovariances(const IBDValues& neutrinoCounts, const Ang
         oneSigmaEllipse.thetaErrorSystematics[dataset] = thetaErrorSystematics;
     }
 
-    #if COVARIANCE_VERBOSITY
+    // Prints out the 1 sigma values if COVARIANCE_VERBOSITY is set to 1
+    // Change at top of file
+#if COVARIANCE_VERBOSITY
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
         cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << oneSigmaEllipse.phiErrorSystmatics[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n" << resetFormats;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+             << oneSigmaEllipse.phiErrorSystmatics[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+             << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n"
+             << resetFormats;
         cout << "--------------------------------------------\n";
 
         cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
         cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± " << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± " << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n" << resetFormats;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+             << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+             << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n"
+             << resetFormats;
         cout << "--------------------------------------------\n";
     }
-    #endif
+#endif
 
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(const AngleValues& finalAngles, const CovarianceValues& oneSigmaEllipse)
-{
-    
-
-}
+void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneSigmaEllipse) {}
 
 int main()
 {
