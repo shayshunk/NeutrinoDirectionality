@@ -532,25 +532,25 @@ AngleValues CalculateAngles(const IBDValues& neutrinoCounts)
     return finalAngles;
 }
 
-CovarianceValues CalculateCovariances(IBDValues& neutrinoCounts, AngleValues& finalAngles)
+CovarianceValues CalculateCovariances(const IBDValues& neutrinoCounts, const AngleValues& finalAngles)
 {
     CovarianceValues oneSigmaEllipse;
 
     // Calculating "true" neutrino direction
     // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001 
-    double xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
-    double xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
+    float xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
+    float xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
 
     // Same angle calculation as above
-    double tanPhiTrue = yTrue / xTrue;
-    double phiTrue = atan(tanPhiTrue) * 180.0 / pi;
-    double tanPhiTrueError = sqrt( pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2) );
-    double phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
+    float tanPhiTrue = yTrue / xTrue;
+    float phiTrue = atan(tanPhiTrue) * 180.0 / pi;
+    float tanPhiTrueError = sqrt( pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2) );
+    float phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 
-    double tanThetaTrue = zTrue / sqrt(pow(xTrue, 2) + pow(yTrue, 2));
-    double thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
-    double tanThetaTrueError = sqrt( pow(1/sqrt(xTrue * xTrue + yTrue * yTrue), 2) * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2) + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)) );
-    double thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
+    float tanThetaTrue = zTrue / sqrt(pow(xTrue, 2) + pow(yTrue, 2));
+    float thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
+    float tanThetaTrueError = sqrt( pow(1/sqrt(xTrue * xTrue + yTrue * yTrue), 2) * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2) + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)) );
+    float thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 
     cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats <<'\n';
     cout << greenOn;
@@ -558,10 +558,87 @@ CovarianceValues CalculateCovariances(IBDValues& neutrinoCounts, AngleValues& fi
     cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError << "\u00B0.\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
+    // Calculating covariances
+    array<array<float, 2>, 2> covarianceMatrix;
+    array<array<float, 2>, 2> covarianceMatrixSystematics;
+
+    // Defining variables for readability
+    float px, py, pz;
+    float sigmaX, sigmaY, sigmaZ;
+    float sigmaXSystematics, sigmaYSystematics, sigmaZSystematics;
+    float phi, theta;
+    
+
+    // From error propagation document
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        // Grabbing values of current dataset from struct
+        px = neutrinoCounts.mean[dataset][X];
+        py = neutrinoCounts.mean[dataset][Y];
+        pz = neutrinoCounts.mean[dataset][Z];
+
+        sigmaX = neutrinoCounts.sigma[dataset][X];
+        sigmaY = neutrinoCounts.sigma[dataset][Y];
+        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+
+        sigmaXSystematics = neutrinoCounts.sigmaSystematics[dataset][X];
+        sigmaYSystematics = neutrinoCounts.sigmaSystematics[dataset][Y];
+        sigmaZSystematics = neutrinoCounts.sigmaSystematics[dataset][Z];
+
+        phi = finalAngles.phi[dataset];
+        theta = finalAngles.theta[dataset];
+
+        // Filling out first matrix
+        covarianceMatrix[0][0] = (pow(sigmaX, 2) * pow(py, 2) / (pow(px, 4))) + pow(sigmaY, 2) / pow(px, 2);
+        covarianceMatrix[0][1] = (pow(pz, 2) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaY, 2) - pow(sigmaX, 2));
+        covarianceMatrix[1][0] = ((py * pz) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaY, 2) - pow(sigmaX, 2)); 
+        covarianceMatrix[1][1] = ((pow(px, 2) * pow(pz, 2) * pow(sigmaX, 2) + pow(py, 2) * pow(pz, 2) * pow(sigmaY, 2))/ (pow(pow(px, 2) + pow(py, 2), 3))) + (pow(sigmaZ, 2)) / (pow(px, 2) + pow(py, 2));
+
+        covarianceMatrixSystematics[0][0] = (pow(sigmaXSystematics, 2) * pow(py, 2) / (pow(px, 4))) + pow(sigmaYSystematics, 2) / pow(px, 2);
+        covarianceMatrixSystematics[0][1] = (pow(pz, 2) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaYSystematics, 2) - pow(sigmaXSystematics, 2));
+        covarianceMatrixSystematics[1][0] = ((py * pz) / (px * pow(pow(px, 2) + pow(py, 2), (3./2.)))) * (pow(sigmaYSystematics, 2) - pow(sigmaXSystematics, 2)); 
+        covarianceMatrixSystematics[1][1] = ((pow(px, 2) * pow(pz, 2) * pow(sigmaXSystematics, 2) + pow(py, 2) * pow(pz, 2) * pow(sigmaYSystematics, 2))/ (pow(pow(px, 2) + pow(py, 2), 3))) + (pow(sigmaZSystematics, 2)) / (pow(px, 2) + pow(py, 2));
+
+        // Including angles
+        covarianceMatrix[0][0] = covarianceMatrix[0][0] * pow(cos(phi * pi/180), 4);
+        covarianceMatrix[0][1] = covarianceMatrix[0][1] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
+        covarianceMatrix[1][0] = covarianceMatrix[1][0] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
+        covarianceMatrix[1][1] = covarianceMatrix[1][1] * pow(cos(theta * pi/180), 4);
+
+        covarianceMatrixSystematics[0][0] = covarianceMatrixSystematics[0][0] * pow(cos(phi * pi/180), 4);
+        covarianceMatrixSystematics[0][1] = covarianceMatrixSystematics[0][1] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
+        covarianceMatrixSystematics[1][0] = covarianceMatrixSystematics[1][0] * pow(cos(phi * pi/180), 2) * pow(cos(theta * pi/180), 2);
+        covarianceMatrixSystematics[1][1] = covarianceMatrixSystematics[1][1] * pow(cos(theta * pi/180), 4);
+
+        // Eigenvalues
+        float a = covarianceMatrix[0][0], aSystematics = covarianceMatrixSystematics[0][0];
+        float b = covarianceMatrix[1][1], bSystematics = covarianceMatrixSystematics[1][1];
+        float c = covarianceMatrix[0][1], cSystematics = covarianceMatrixSystematics[0][1];
+
+        float lambda1 = ((a + b) + sqrt( (pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
+        float lambda2 = ((a + b) - sqrt( (pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
+        
+        float lambda1Sytematics = ((aSystematics + bSystematics) + sqrt( (pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2))))) / 2;
+        float lambda2Sytematics = ((aSystematics + bSystematics) - sqrt( (pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2))))) / 2;
+
+        // Calculating final angle errors
+        float phiError = sqrt(2.291 * lambda1) * 180.0 / pi;
+        float thetaError = sqrt(2.291 * lambda2) * 180.0 / pi;
+
+        float phiErrorSystematics = sqrt(2.291 * lambda1Sytematics) * 180.0 / pi;
+        float thetaErrorSystematics = sqrt(2.291 * lambda2Sytematics) * 180.0 / pi;
+
+        // Filling struct
+        oneSigmaEllipse.phiError[dataset] = phiError;
+        oneSigmaEllipse.phiErrorSystmatics[dataset] = phiErrorSystematics;
+        oneSigmaEllipse.thetaError[dataset] = thetaError;
+        oneSigmaEllipse.thetaErrorSystematics[dataset] = thetaErrorSystematics;
+    }
+
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(AngleValues& finalAngles)
+void FillOutputFile(const AngleValues& finalAngles, const CovarianceValues& oneSigmaEllipse)
 {
     
 
@@ -578,6 +655,7 @@ int main()
     // Set up what we're measuring
     IBDValues neutrinoCounts;
     AngleValues finalAngles;
+    CovarianceValues oneSigmaEllipse;
 
     // Need histograms for counting each variable
     array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> histogram;
@@ -631,7 +709,8 @@ int main()
     neutrinoCounts = SubtractBackgrounds(histogram);
     AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
-    FillOutputFile(finalAngles);
+    CalculateCovariances(neutrinoCounts, finalAngles);
+    FillOutputFile(finalAngles, oneSigmaEllipse);
 
     // Set up our output file
     /* auto outputFile = std::make_unique<TFile>("Directionality.root",
