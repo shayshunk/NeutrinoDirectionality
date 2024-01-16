@@ -663,7 +663,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
 
         // Filling struct
         oneSigmaEllipse.phiError[dataset] = phiError;
-        oneSigmaEllipse.phiErrorSystmatics[dataset] = phiErrorSystematics;
+        oneSigmaEllipse.phiErrorSystematics[dataset] = phiErrorSystematics;
         oneSigmaEllipse.thetaError[dataset] = thetaError;
         oneSigmaEllipse.thetaErrorSystematics[dataset] = thetaErrorSystematics;
     }
@@ -676,7 +676,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
         cout << greenOn;
         cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.phiErrorSystmatics[dataset] << "\u00B0.\n";
+             << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
         cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
              << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n"
              << resetFormats;
@@ -696,7 +696,39 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneSigmaEllipse) {}
+void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneSigmaEllipse) 
+{
+    // Set up our output file
+    auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate"); 
+
+    outputFile->cd();
+
+    TVector3* angleOutput;
+    TVector2* ellipseOutput;
+    string outputName;
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        angleOutput = new TVector3(finalAngles.phi[dataset], finalAngles.phiError[dataset], finalAngles.phiErrorSystematics[dataset]);
+        outputName = DatasetToString(dataset) + " Phi";
+        outputFile->WriteTObject(angleOutput, outputName.c_str());
+
+        ellipseOutput = new TVector2(oneSigmaEllipse.phiError[dataset], oneSigmaEllipse.phiErrorSystematics[dataset]);
+        outputName = DatasetToString(dataset) + " Ellipse Phi";
+        outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+
+        angleOutput = new TVector3(finalAngles.theta[dataset], finalAngles.thetaError[dataset], finalAngles.thetaErrorSystematics[dataset]);
+        outputName = DatasetToString(dataset) + " Theta";
+        outputFile->WriteTObject(angleOutput, outputName.c_str());
+
+        ellipseOutput = new TVector2(oneSigmaEllipse.thetaError[dataset], oneSigmaEllipse.thetaErrorSystematics[dataset]);
+        outputName = DatasetToString(dataset) + " Ellipse Theta";
+        outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+    }
+
+    cout << boldOn << cyanOn << "Filled output file: " << resetFormats << blueOn << boldOn << "Directionality.root!\n" << resetFormats;
+    outputFile->Close();
+}
 
 int main()
 {

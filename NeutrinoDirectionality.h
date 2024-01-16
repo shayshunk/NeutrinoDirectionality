@@ -9,6 +9,8 @@
 #include "TLeaf.h"
 #include "TTree.h"
 #include "TVectorD.h"
+#include "TVector2.h"
+#include "TVector3.h"
 
 #define pi 3.14159265358979323846
 
@@ -91,7 +93,7 @@ struct AngleValues
 struct CovarianceValues
 {
     std::array<float, DatasetSize> phiError;
-    std::array<float, DatasetSize> phiErrorSystmatics;
+    std::array<float, DatasetSize> phiErrorSystematics;
     std::array<float, DatasetSize> thetaError;
     std::array<float, DatasetSize> thetaErrorSystematics;
 };
