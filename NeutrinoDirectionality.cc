@@ -1,10 +1,11 @@
-
 #include "NeutrinoDirectionality.h"
 
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
-#define COVARIANCE_VERBOSITY 1
+#define COVARIANCE_VERBOSITY 0
+#define IBDCOUNT_VERBOSITY 0
+#define MEAN_VERBOSITY 0
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
@@ -402,7 +403,6 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        cout << "Total IBD events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         for (int direction = X; direction < DirectionSize; direction++)
         {
             // Have to static cast raw pointer to shared pointer to keep up safety measures
@@ -423,8 +423,10 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
                 0, histogram[dataset][TotalDifference][direction]->GetNbinsX() + 1, totalIBDErr);
             effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
                                                                 // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
-            cout << boldOn << AxisToString(direction) << ": " << resetFormats << totalIBDs << " ± " << totalIBDErr
-                 << ". Effective IBD counts: " << effIBDs << '\n';
+
+            neutrinoCounts.totalIBD[dataset][direction] = totalIBDs;
+            neutrinoCounts.totalIBDError[dataset][direction] = totalIBDErr;
+            
 
             if (dataset == Data || dataset == Sim)
             {
@@ -438,8 +440,21 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
                 neutrinoCounts.effectiveIBD[dataset][direction] = neutrinoCounts.effectiveIBD[dataset - 1][direction];
             }
         }
+    }
+#if IBDCOUNT_VERBOSITY
+    // Printing out values
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        cout << "Total and Effective IBD Events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
+        
+        for (int direction = X; direction < DirectionSize; direction++)
+        {
+            cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction] << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
+        }
+
         cout << "--------------------------------------------\n";
     }
+#endif
 
     CalculateUnbiasing(histogram, neutrinoCounts);
 
@@ -530,12 +545,24 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
+        float phiError, thetaError;
+        if (dataset == Sim || dataset == SimUnbiased)
+        {
+            phiError = finalAngles.phiError[dataset];
+            thetaError = finalAngles.thetaError[dataset];
+        }
+        else
+        {
+            phiError = finalAngles.phiErrorSystematics[dataset];
+            thetaError = finalAngles.thetaErrorSystematics[dataset];
+        }
+
         cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         cout << greenOn;
         cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-             << finalAngles.phiErrorSystematics[dataset] << "\u00B0.\n";
+             << phiError << "\u00B0.\n";
         cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << finalAngles.thetaErrorSystematics[dataset] << "\u00B0.\n"
+             << thetaError << "\u00B0.\n"
              << resetFormats;
         cout << "--------------------------------------------\n";
     }
@@ -646,8 +673,14 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         float lambda1 = ((a + d) + sqrt(pow(a, 2) - 2 * a * d + 4 * b * c + pow(d, 2))) / 2;
         float lambda2 = ((a + d) - sqrt(pow(a, 2) - 2 * a * d + 4 * b * c + pow(d, 2))) / 2;
 
-        float lambda1Sytematics = ((aSystematics + dSystematics) + sqrt(pow(aSystematics, 2) - 2 * aSystematics * dSystematics + 4 * bSystematics * cSystematics + pow(dSystematics, 2))) / 2;
-        float lambda2Sytematics = ((aSystematics + dSystematics) - sqrt(pow(aSystematics, 2) - 2 * aSystematics * dSystematics + 4 * bSystematics * cSystematics + pow(dSystematics, 2))) / 2;
+        float lambda1Sytematics = ((aSystematics + dSystematics)
+                                   + sqrt(pow(aSystematics, 2) - 2 * aSystematics * dSystematics
+                                          + 4 * bSystematics * cSystematics + pow(dSystematics, 2)))
+                                  / 2;
+        float lambda2Sytematics = ((aSystematics + dSystematics)
+                                   - sqrt(pow(aSystematics, 2) - 2 * aSystematics * dSystematics
+                                          + 4 * bSystematics * cSystematics + pow(dSystematics, 2)))
+                                  / 2;
 
         // Eigenvector to calculate tilt
         float vector1_1 = lambda1 - d;
@@ -697,7 +730,9 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
              << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
         cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
              << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n" << resetFormats;
+        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tiltSystematics[dataset]
+             << "\u00B0.\n"
+             << resetFormats;
         cout << "--------------------------------------------\n";
 
         cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
@@ -706,7 +741,9 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
              << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
         cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
              << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset] << "\u00B0.\n" << resetFormats;
+        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
+             << "\u00B0.\n"
+             << resetFormats;
         cout << "--------------------------------------------\n";
     }
 #endif
@@ -714,10 +751,10 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneSigmaEllipse) 
+void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneSigmaEllipse)
 {
     // Set up our output file
-    auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate"); 
+    auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");
 
     outputFile->cd();
 
@@ -727,7 +764,8 @@ void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneS
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        angleOutput = new TVector3(finalAngles.phi[dataset], finalAngles.phiError[dataset], finalAngles.phiErrorSystematics[dataset]);
+        angleOutput
+            = new TVector3(finalAngles.phi[dataset], finalAngles.phiError[dataset], finalAngles.phiErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Phi";
         outputFile->WriteTObject(angleOutput, outputName.c_str());
 
@@ -735,7 +773,8 @@ void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneS
         outputName = DatasetToString(dataset) + " Ellipse Phi";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
 
-        angleOutput = new TVector3(finalAngles.theta[dataset], finalAngles.thetaError[dataset], finalAngles.thetaErrorSystematics[dataset]);
+        angleOutput = new TVector3(
+            finalAngles.theta[dataset], finalAngles.thetaError[dataset], finalAngles.thetaErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Theta";
         outputFile->WriteTObject(angleOutput, outputName.c_str());
 
@@ -748,7 +787,8 @@ void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneS
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
     }
 
-    cout << boldOn << cyanOn << "Filled output file: " << resetFormats << blueOn << boldOn << "Directionality.root!\n" << resetFormats;
+    cout << boldOn << cyanOn << "Filled output file: " << resetFormats << blueOn << boldOn << "Directionality.root!\n"
+         << resetFormats;
     outputFile->Close();
 }
 

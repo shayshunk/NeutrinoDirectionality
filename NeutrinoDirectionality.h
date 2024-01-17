@@ -75,6 +75,8 @@ struct TreeValues
 struct IBDValues
 {
     std::array<std::array<float, DirectionSize>, DatasetSize> effectiveIBD;
+    std::array<std::array<float, DirectionSize>, DatasetSize> totalIBD;
+    std::array<std::array<float, DirectionSize>, DatasetSize> totalIBDError;
     std::array<std::array<float, DirectionSize>, DatasetSize> mean;
     std::array<std::array<float, DirectionSize>, DatasetSize> sigma;
     std::array<std::array<float, DirectionSize>, DatasetSize> sigmaSystematics;
