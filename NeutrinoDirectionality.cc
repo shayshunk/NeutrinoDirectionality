@@ -6,6 +6,7 @@
 #define COVARIANCE_VERBOSITY 0
 #define IBDCOUNT_VERBOSITY 0
 #define MEAN_VERBOSITY 0
+#define LIVETIME_VERBOSITY 0
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
@@ -850,9 +851,12 @@ int main()
 
     cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
+
+#if LIVETIME_VERBOSITY
     cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
     cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
     cout << "--------------------------------------------\n";
+#endif
 
     // Filling simulation histograms
     cout << "Filling simulation histograms!\n" << resetFormats;
