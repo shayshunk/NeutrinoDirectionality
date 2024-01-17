@@ -375,6 +375,7 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
         neutrinoCounts.sigma[dataset][Z] = neutrinoCounts.sigma[dataset - 1][Z];
     }
 
+#if MEAN_VERBOSITY
     // Printing out values
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
@@ -386,6 +387,11 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
         }
         cout << "--------------------------------------------\n";
     }
+#endif
+
+    cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
 }
 
 IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
@@ -396,10 +402,6 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
     IBDValues neutrinoCounts;
-
-    cout << "--------------------------------------------\n";
-    cout << boldOn << cyanOn << "Subtracting backgrounds.\n" << resetFormats;
-    cout << "--------------------------------------------\n";
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
@@ -456,6 +458,9 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
     }
 #endif
 
+    cout << boldOn << cyanOn << "Subtracted backgrounds.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
     CalculateUnbiasing(histogram, neutrinoCounts);
 
     return neutrinoCounts;
@@ -478,6 +483,9 @@ void AddSystematics(IBDValues& neutrinoCounts)
         neutrinoCounts.sigmaSystematics[dataset][Y] = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
         neutrinoCounts.sigmaSystematics[dataset][Z] = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
     }
+
+    cout << boldOn << cyanOn << "Added Systematics.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
 }
 
 AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
@@ -789,6 +797,8 @@ void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneS
 
     cout << boldOn << cyanOn << "Filled output file: " << resetFormats << blueOn << boldOn << "Directionality.root!\n"
          << resetFormats;
+    cout << "--------------------------------------------\n";
+
     outputFile->Close();
 }
 
@@ -853,6 +863,7 @@ int main()
     }
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
+    cout << "--------------------------------------------\n";
 
     neutrinoCounts = SubtractBackgrounds(histogram);
     AddSystematics(neutrinoCounts);
