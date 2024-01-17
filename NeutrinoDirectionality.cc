@@ -7,6 +7,7 @@
 #define IBDCOUNT_VERBOSITY 0
 #define MEAN_VERBOSITY 0
 #define LIVETIME_VERBOSITY 0
+#define DETECTOR_VERBOSITY 0
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
@@ -44,6 +45,7 @@ void FillDetectorConfig()
         detectorConfig.push_back(period);
     }
 
+#if DETECTOR_VERBOSITY
     cout << "Below is the detector configuration.\n";
     cout << "--------------------------------------------\n";
 
@@ -68,8 +70,8 @@ void FillDetectorConfig()
             cout << '\n';
         }
         cout << '\n';
-        cout << "--------------------------------------------\n";
     }
+#endif
 }
 
 bool checkNeighbor(int periodNo, int segment, char direction)
@@ -841,6 +843,7 @@ int main()
     }
 
     // Filling data histograms
+    cout << "--------------------------------------------\n";
     cout << "Filling data histograms!\n";
     cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
