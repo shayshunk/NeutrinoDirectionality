@@ -4,7 +4,7 @@
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
-#define COVARIANCE_VERBOSITY 0
+#define COVARIANCE_VERBOSITY 1
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
@@ -639,20 +639,36 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
 
         // Eigenvalues
         float a = covarianceMatrix[0][0], aSystematics = covarianceMatrixSystematics[0][0];
-        float b = covarianceMatrix[1][1], bSystematics = covarianceMatrixSystematics[1][1];
-        float c = covarianceMatrix[0][1], cSystematics = covarianceMatrixSystematics[0][1];
+        float b = covarianceMatrix[0][1], bSystematics = covarianceMatrixSystematics[0][1];
+        float c = covarianceMatrix[1][0], cSystematics = covarianceMatrixSystematics[1][0];
+        float d = covarianceMatrix[1][1], dSystematics = covarianceMatrixSystematics[1][1];
 
-        float lambda1 = ((a + b) + sqrt((pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
-        float lambda2 = ((a + b) - sqrt((pow((a + b), 2) - 4 * (a * b - c * c)))) / 2;
+        float lambda1 = ((a + d) + sqrt(pow(a, 2) - 2 * a * d + 4 * b * c + pow(d, 2))) / 2;
+        float lambda2 = ((a + d) - sqrt(pow(a, 2) - 2 * a * d + 4 * b * c + pow(d, 2))) / 2;
 
-        float lambda1Sytematics
-            = ((aSystematics + bSystematics)
-               + sqrt((pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2)))))
-              / 2;
-        float lambda2Sytematics
-            = ((aSystematics + bSystematics)
-               - sqrt((pow((aSystematics + bSystematics), 2) - 4 * (aSystematics * bSystematics - pow(cSystematics, 2)))))
-              / 2;
+        float lambda1Sytematics = ((aSystematics + dSystematics) + sqrt(pow(aSystematics, 2) - 2 * aSystematics * dSystematics + 4 * bSystematics * cSystematics + pow(dSystematics, 2))) / 2;
+        float lambda2Sytematics = ((aSystematics + dSystematics) - sqrt(pow(aSystematics, 2) - 2 * aSystematics * dSystematics + 4 * bSystematics * cSystematics + pow(dSystematics, 2))) / 2;
+
+        // Eigenvector to calculate tilt
+        float vector1_1 = lambda1 - d;
+        float vector1_2 = c;
+
+        float normalizer = 1.0 / c;
+        vector1_1 *= normalizer;
+        vector1_2 *= normalizer;
+
+        float tilt = atan(vector1_1) * 180.0 / pi;
+        tilt = 360 - tilt;
+
+        float vector1_1Systematics = lambda1Sytematics - dSystematics;
+        float vector1_2Systematics = cSystematics;
+
+        float normalizerSystematics = 1.0 / cSystematics;
+        vector1_1Systematics *= normalizerSystematics;
+        vector1_2Systematics *= normalizerSystematics;
+
+        float tiltSystematics = atan(vector1_1Systematics) * 180.0 / pi;
+        tiltSystematics = 360 - tiltSystematics;
 
         // Calculating final angle errors
         float phiError = sqrt(2.291 * lambda1) * 180.0 / pi;
@@ -666,6 +682,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         oneSigmaEllipse.phiErrorSystematics[dataset] = phiErrorSystematics;
         oneSigmaEllipse.thetaError[dataset] = thetaError;
         oneSigmaEllipse.thetaErrorSystematics[dataset] = thetaErrorSystematics;
+        oneSigmaEllipse.tilt[dataset] = tilt;
+        oneSigmaEllipse.tiltSystematics[dataset] = tiltSystematics;
     }
 
     // Prints out the 1 sigma values if COVARIANCE_VERBOSITY is set to 1
@@ -678,8 +696,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
              << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
         cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n"
-             << resetFormats;
+             << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n" << resetFormats;
         cout << "--------------------------------------------\n";
 
         cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
@@ -687,8 +705,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
              << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
         cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n"
-             << resetFormats;
+             << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset] << "\u00B0.\n" << resetFormats;
         cout << "--------------------------------------------\n";
     }
 #endif
@@ -723,6 +741,10 @@ void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneS
 
         ellipseOutput = new TVector2(oneSigmaEllipse.thetaError[dataset], oneSigmaEllipse.thetaErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Ellipse Theta";
+        outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+
+        ellipseOutput = new TVector2(oneSigmaEllipse.tilt[dataset], oneSigmaEllipse.tiltSystematics[dataset]);
+        outputName = DatasetToString(dataset) + " Ellipse Tilt";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
     }
 

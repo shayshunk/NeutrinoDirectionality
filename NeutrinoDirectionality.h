@@ -96,6 +96,8 @@ struct CovarianceValues
     std::array<float, DatasetSize> phiErrorSystematics;
     std::array<float, DatasetSize> thetaError;
     std::array<float, DatasetSize> thetaErrorSystematics;
+    std::array<float, DatasetSize> tilt;
+    std::array<float, DatasetSize> tiltSystematics;
 };
 
 std::string DatasetToString(int num)

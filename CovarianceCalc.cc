@@ -64,10 +64,10 @@ void CovarianceCalc()
         }
     }
 
-    double a = Cov[0][0], b = Cov[1][1], c = Cov[0][1];
+    double a = Cov[0][0], b = Cov[0][1], c = Cov[1][0], d = Cov[1][1];
 
-    double lambda1 = ((a + b) + sqrt( (pow( (a + b), 2) - 4 * (a*b - c * c)))) / 2;
-    double lambda2 = ((a + b) - sqrt( (pow( (a + b), 2) - 4 * (a*b - c * c)))) / 2;
+    double lambda1 = ((a + d) + sqrt(pow(a, 2) - 2 * a * d + 4 * b * c + pow(d, 2))) / 2;
+    double lambda2 = ((a + d) - sqrt(pow(a, 2) - 2 * a * d + 4 * b * c + pow(d, 2))) / 2;
 
     cout << "Eigenvalue 1: " << lambda1 << "\n";
     cout << "Eigenvalue 2: " << lambda2 << "\n";
@@ -76,5 +76,19 @@ void CovarianceCalc()
     double thetaErr = sqrt(2.291 * lambda2) * 180/pi;
 
     cout << "Phi error: " << phiErr << " and theta error: " << thetaErr << "\n";
+
+    float v1 = lambda1 - d;
+    float v2 = c;
+
+    float scaler = 1.0 / c;
+    v1 = v1 * scaler;
+    v2 = v2 * scaler;
+
+    float tilt = atan(v1 / v2) * 180.0 / pi;
+    tilt = 360 - tilt;
+
+    cout << "v1: " << v1 << '\n';
+    cout << "v2: " << v2 << '\n';
+    cout << "Tilt: " << tilt << '\n';
 
 }
