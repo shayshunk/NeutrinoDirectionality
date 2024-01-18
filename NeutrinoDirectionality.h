@@ -90,6 +90,7 @@ struct AngleValues
     std::array<float, DatasetSize> theta;
     std::array<float, DatasetSize> thetaError;
     std::array<float, DatasetSize> thetaErrorSystematics;
+    float phiTrue, phiTrueError, thetaTrue, thetaTrueError;
 };
 
 struct CovarianceValues

@@ -578,13 +578,6 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
         cout << "--------------------------------------------\n";
     }
 
-    return finalAngles;
-}
-
-CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValues const& finalAngles)
-{
-    CovarianceValues oneSigmaEllipse;
-
     // Calculating "true" neutrino direction
     // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001
     float xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
@@ -612,6 +605,18 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
          << "\u00B0.\n"
          << resetFormats;
     cout << "--------------------------------------------\n";
+
+    finalAngles.phiTrue = phiTrue;
+    finalAngles.phiTrueError = phiTrueError;
+    finalAngles.thetaTrue = thetaTrue;
+    finalAngles.thetaTrueError = thetaTrueError;
+
+    return finalAngles;
+}
+
+CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValues const& finalAngles)
+{
+    CovarianceValues oneSigmaEllipse;
 
     // Calculating covariances
     array<array<float, 2>, 2> covarianceMatrix;
@@ -799,6 +804,14 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sig
         outputName = DatasetToString(dataset) + " Ellipse Tilt";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
     }
+
+    ellipseOutput = new TVector2(finalAngles.phiTrue, finalAngles.phiTrueError);
+    outputName = "True Phi";
+    outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+
+    ellipseOutput = new TVector2(finalAngles.thetaTrue, finalAngles.thetaTrueError);
+    outputName = "True Theta";
+    outputFile->WriteTObject(ellipseOutput, outputName.c_str());
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {

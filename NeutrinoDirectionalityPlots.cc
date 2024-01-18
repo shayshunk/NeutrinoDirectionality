@@ -1,4 +1,5 @@
-#include "GeneralHeader.h"
+#include "NeutrinoDirectionality.h"
+#include "Formatting.h"
 #include "Plotter.h"
 
 
@@ -35,43 +36,33 @@ int main()
     }
 
     // Get angles
-    TVector2 *read_phi_data = (TVector2*)f_input->Get("phiDeg_dataBias");
+    TVector2 *read_phi_data = (TVector3*)f_input->Get("Data Phi");
     double phi_data = read_phi_data->X();
-    double phiErr_data = read_phi_data->Y();
 
-    TVector2 *read_theta_data = (TVector2*)f_input->Get("thetaDeg_dataBias");
+    TVector2 *read_theta_data = (TVector2*)f_input->Get("Data Theta");
     double theta_data = read_theta_data->X();
-    double thetaErr_data = read_theta_data->Y();
 
-    TVector2 *read_phi_realsimBias = (TVector2*)f_input->Get("phiDeg_realsimBias");
+    TVector2 *read_phi_realsimBias = (TVector2*)f_input->Get("Simulation Unbiased Phi");
     double phi_realsimBias = read_phi_realsimBias->X();
-    double phiErr_realsimBias = read_phi_realsimBias->Y();
+    //double phiErr_realsimBias = read_phi_realsimBias->Y();
 
-    TVector2 *read_theta_realsimBias = (TVector2*)f_input->Get("thetaDeg_realsimBias");
+    TVector2 *read_theta_realsimBias = (TVector2*)f_input->Get("Simulated Unbiased Theta");
     double theta_realsimBias = read_theta_realsimBias->X();
-    double thetaErr_realsimBias = read_theta_realsimBias->Y();
+    //double thetaErr_realsimBias = read_theta_realsimBias->Y();
 
-    TVector2 *read_phi_perfsim = (TVector2*)f_input->Get("phiDeg_perfsim");
-    double phi_perfsim = read_phi_perfsim->X();
-    double phiErr_perfsim = read_phi_perfsim->Y();
-
-    TVector2 *read_theta_perfsim = (TVector2*)f_input->Get("thetaDeg_perfsim");
-    double theta_perfsim = read_theta_perfsim->X();
-    double thetaErr_perfsim = read_theta_perfsim->Y();
-
-    TVector2 *read_phi_true = (TVector2*)f_input->Get("phiDeg_true");
+    TVector2 *read_phi_true = (TVector2*)f_input->Get("True Phi");
     double phi_true = read_phi_true->X();
     double phiErr_true = read_phi_true->Y();
 
-    TVector2 *read_theta_true = (TVector2*)f_input->Get("thetaDeg_true");
+    TVector2 *read_theta_true = (TVector2*)f_input->Get("True Theta");
     double theta_true = read_theta_true->X();
     double thetaErr_true = read_theta_true->Y();
 
-    TVector2 *read_phi_realsim = (TVector2*)f_input->Get("phiDeg_realsim");
+    TVector2 *read_phi_realsim = (TVector2*)f_input->Get("Simulation Phi");
     double phi_realsim = read_phi_realsim->X();
-    double phiErr_realsim = read_phi_realsim->Y();
+    //double phiErr_realsim = read_phi_realsim->Y();
 
-    TVector2 *read_theta_realsim = (TVector2*)f_input->Get("thetaDeg_realsim");
+    TVector2 *read_theta_realsim = (TVector2*)f_input->Get("Simulation Theta");
     double theta_realsim = read_theta_realsim->X();
     double thetaErr_realsim = read_theta_realsim->Y();
 
