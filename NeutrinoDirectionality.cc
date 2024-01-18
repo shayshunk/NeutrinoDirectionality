@@ -394,7 +394,6 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
 
     cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
     cout << "--------------------------------------------\n";
-
 }
 
 IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
@@ -431,7 +430,6 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
 
             neutrinoCounts.totalIBD[dataset][direction] = totalIBDs;
             neutrinoCounts.totalIBDError[dataset][direction] = totalIBDErr;
-            
 
             if (dataset == Data || dataset == Sim)
             {
@@ -451,10 +449,12 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         cout << "Total and Effective IBD Events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
-        
+
         for (int direction = X; direction < DirectionSize; direction++)
         {
-            cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction] << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
+            cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction]
+                 << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn
+                 << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
         }
 
         cout << "--------------------------------------------\n";
@@ -762,7 +762,9 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneSigmaEllipse)
+void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+                    AngleValues const& finalAngles,
+                    CovarianceValues const& oneSigmaEllipse)
 {
     // Set up our output file
     auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");
@@ -796,6 +798,21 @@ void FillOutputFile(AngleValues const& finalAngles, CovarianceValues const& oneS
         ellipseOutput = new TVector2(oneSigmaEllipse.tilt[dataset], oneSigmaEllipse.tiltSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Ellipse Tilt";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+    }
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)
+        {
+            // No reactor off for simulations
+            if ((dataset == Sim || dataset == SimUnbiased) && (signalSet == CorrelatedReactorOff || signalSet == AccidentalReactorOff))
+                continue;
+            
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                histogram[dataset][signalSet][direction]->Write();
+            }
+        }
     }
 
     cout << boldOn << cyanOn << "Filled output file: " << resetFormats << blueOn << boldOn << "Directionality.root!\n"
@@ -876,11 +893,7 @@ int main()
     AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
     oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);
-    FillOutputFile(finalAngles, oneSigmaEllipse);
-
-    // Set up our output file
-    /* auto outputFile = std::make_unique<TFile>("Directionality.root",
-    "recreate"); outputFile->Close(); */
+    FillOutputFile(histogram, finalAngles, oneSigmaEllipse);
 
     return 0;
 }
