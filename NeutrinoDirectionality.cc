@@ -3,9 +3,9 @@
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
-#define COVARIANCE_VERBOSITY 0
-#define IBDCOUNT_VERBOSITY 0
-#define MEAN_VERBOSITY 0
+#define COVARIANCE_VERBOSITY 1
+#define IBDCOUNT_VERBOSITY 1
+#define MEAN_VERBOSITY 1
 #define LIVETIME_VERBOSITY 0
 #define DETECTOR_VERBOSITY 0
 
@@ -109,7 +109,9 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
                            int signalSet)
 {
     bool posDirection = false, negDirection = false, success = false;
-    double weight = 0;
+
+    // Need to weight accidental datasets by deadtime correction factor
+    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
 
     // Check for live neighbors in different directions based on which axis
     // we're filling
@@ -123,9 +125,11 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
         posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
         negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
     }
-
-    // Need to weight accidental datasets by deadtime correction factor
-    weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
+    else
+    {
+        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
+        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, weight);
+    }
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
@@ -154,7 +158,8 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
         // Fill regular dataset with displacement
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
+        if (currentEntry.direction != Z)
+            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
 
         // Fill dead segment correction dataset
         if (currentEntry.promptSegment == currentEntry.delayedSegment)
@@ -171,7 +176,8 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
         // Fill regular dataset with displacement
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
+        if (currentEntry.direction != Z)
+            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
 
         // Fill dead segment correction dataset
         if (currentEntry.promptSegment == currentEntry.delayedSegment)
@@ -407,8 +413,10 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
+
         for (int direction = X; direction < DirectionSize; direction++)
         {
+
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1D>(
                 static_cast<TH1D*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone("Displacements")));
@@ -431,6 +439,12 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
             neutrinoCounts.totalIBD[dataset][direction] = totalIBDs;
             neutrinoCounts.totalIBDError[dataset][direction] = totalIBDErr;
 
+            if (direction == Z)
+            {
+                neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
+                continue;
+            }
+
             if (dataset == Data || dataset == Sim)
             {
                 neutrinoCounts.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
@@ -443,6 +457,26 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
                 neutrinoCounts.effectiveIBD[dataset][direction] = neutrinoCounts.effectiveIBD[dataset - 1][direction];
             }
         }
+
+        if (dataset == DataUnbiased || dataset == SimUnbiased)
+            continue;
+        
+        //TCanvas canvas("Gaussian", "Z", 2000, 1600);
+        TF1* gaussian = new TF1("Fit", "gaus", -140, 140);
+
+        //histogram[dataset][TotalDifference][Z]->Draw();
+        histogram[dataset][TotalDifference][Z]->Fit("Fit", "RQ");
+
+        float zMean = gaussian->GetParameter(1);
+        float zSigma = gaussian->GetParameter(2);
+
+        float zError = zSigma / sqrt(neutrinoCounts.effectiveIBD[dataset][Z]);
+
+        neutrinoCounts.mean[dataset][Z] = zMean;
+        neutrinoCounts.sigma[dataset][Z] = zError;
+
+        /* string fitname = DatasetToString(dataset) + "_ZFit.png";
+        canvas.SaveAs(fitname.c_str()); */
     }
 #if IBDCOUNT_VERBOSITY
     // Printing out values
@@ -767,7 +801,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> const& histogram,
                     AngleValues const& finalAngles,
                     CovarianceValues const& oneSigmaEllipse)
 {
@@ -903,6 +937,7 @@ int main()
     cout << "--------------------------------------------\n";
 
     neutrinoCounts = SubtractBackgrounds(histogram);
+
     AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
     oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);

@@ -11,6 +11,8 @@
 #include "TVectorD.h"
 #include "TVector2.h"
 #include "TVector3.h"
+#include "TCanvas.h"
+#include "TF1.h"
 
 #define pi 3.14159265358979323846
 
