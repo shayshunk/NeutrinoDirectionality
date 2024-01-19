@@ -3,9 +3,9 @@
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
-#define COVARIANCE_VERBOSITY 1
-#define IBDCOUNT_VERBOSITY 1
-#define MEAN_VERBOSITY 1
+#define COVARIANCE_VERBOSITY 0
+#define IBDCOUNT_VERBOSITY 0
+#define MEAN_VERBOSITY 0
 #define LIVETIME_VERBOSITY 0
 #define DETECTOR_VERBOSITY 0
 
@@ -461,10 +461,8 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
         if (dataset == DataUnbiased || dataset == SimUnbiased)
             continue;
         
-        //TCanvas canvas("Gaussian", "Z", 2000, 1600);
         TF1* gaussian = new TF1("Fit", "gaus", -140, 140);
 
-        //histogram[dataset][TotalDifference][Z]->Draw();
         histogram[dataset][TotalDifference][Z]->Fit("Fit", "RQ");
 
         float zMean = gaussian->GetParameter(1);
@@ -474,9 +472,6 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
 
         neutrinoCounts.mean[dataset][Z] = zMean;
         neutrinoCounts.sigma[dataset][Z] = zError;
-
-        /* string fitname = DatasetToString(dataset) + "_ZFit.png";
-        canvas.SaveAs(fitname.c_str()); */
     }
 #if IBDCOUNT_VERBOSITY
     // Printing out values
@@ -937,7 +932,6 @@ int main()
     cout << "--------------------------------------------\n";
 
     neutrinoCounts = SubtractBackgrounds(histogram);
-
     AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
     oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);
