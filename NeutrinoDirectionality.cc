@@ -707,7 +707,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         vector1_2 *= normalizer;
 
         float tilt = atan(vector1_1) * 180.0 / pi;
-        tilt = 360 - tilt;
+        tilt = 90 + tilt;
 
         float vector1_1Systematics = lambda1Sytematics - dSystematics;
         float vector1_2Systematics = cSystematics;
@@ -717,7 +717,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         vector1_2Systematics *= normalizerSystematics;
 
         float tiltSystematics = atan(vector1_1Systematics) * 180.0 / pi;
-        tiltSystematics = 360 - tiltSystematics;
+        tiltSystematics = 90 + tiltSystematics;
 
         // Calculating final angle errors
         float phiError = sqrt(2.291 * lambda1) * 180.0 / pi;

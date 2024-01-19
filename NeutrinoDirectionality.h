@@ -84,23 +84,23 @@ struct IBDValues
 
 struct AngleValues
 {
-    std::array<float, DatasetSize> phi;
-    std::array<float, DatasetSize> phiError;
-    std::array<float, DatasetSize> phiErrorSystematics;
-    std::array<float, DatasetSize> theta;
-    std::array<float, DatasetSize> thetaError;
-    std::array<float, DatasetSize> thetaErrorSystematics;
-    float phiTrue, phiTrueError, thetaTrue, thetaTrueError;
+    std::array<double, DatasetSize> phi;
+    std::array<double, DatasetSize> phiError;
+    std::array<double, DatasetSize> phiErrorSystematics;
+    std::array<double, DatasetSize> theta;
+    std::array<double, DatasetSize> thetaError;
+    std::array<double, DatasetSize> thetaErrorSystematics;
+    double phiTrue, phiTrueError, thetaTrue, thetaTrueError;
 };
 
 struct CovarianceValues
 {
-    std::array<float, DatasetSize> phiError;
-    std::array<float, DatasetSize> phiErrorSystematics;
-    std::array<float, DatasetSize> thetaError;
-    std::array<float, DatasetSize> thetaErrorSystematics;
-    std::array<float, DatasetSize> tilt;
-    std::array<float, DatasetSize> tiltSystematics;
+    std::array<double, DatasetSize> phiError;
+    std::array<double, DatasetSize> phiErrorSystematics;
+    std::array<double, DatasetSize> thetaError;
+    std::array<double, DatasetSize> thetaErrorSystematics;
+    std::array<double, DatasetSize> tilt;
+    std::array<double, DatasetSize> tiltSystematics;
 };
 
 std::string DatasetToString(int num)

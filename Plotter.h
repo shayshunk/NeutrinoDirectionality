@@ -1,5 +1,6 @@
 
 #include "TDecompSVD.h"
+#include "GeneralHeader.h"
 
 bool ApplyAxisStyle( TH1 *h, bool centerXTitle = true, bool centerYTitle = true, bool centerZTitle = true );
 double Chi2DataMC( const TH1 *dataHist, const TH1 *mcHist, int & ndf, bool useOnlyShapeErrors = false );

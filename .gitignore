@@ -43,4 +43,5 @@ neutrinoDir.h
 neutrinoDir.cc
 NeutrinoDirectionality TechNote.docx
 NeutrinoDirectionalityHists.cc
+Plots
 UnbiasedSegCorrPRLHists.cc
