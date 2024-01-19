@@ -3,9 +3,9 @@
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
-#define COVARIANCE_VERBOSITY 0
-#define IBDCOUNT_VERBOSITY 0
-#define MEAN_VERBOSITY 0
+#define COVARIANCE_VERBOSITY 1
+#define IBDCOUNT_VERBOSITY 1
+#define MEAN_VERBOSITY 1
 #define LIVETIME_VERBOSITY 0
 #define DETECTOR_VERBOSITY 0
 
@@ -109,7 +109,9 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
                            int signalSet)
 {
     bool posDirection = false, negDirection = false, success = false;
-    double weight = 0;
+
+    // Need to weight accidental datasets by deadtime correction factor
+    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
 
     // Check for live neighbors in different directions based on which axis
     // we're filling
@@ -123,9 +125,11 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
         posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
         negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
     }
-
-    // Need to weight accidental datasets by deadtime correction factor
-    weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
+    else
+    {
+        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
+        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, weight);
+    }
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
@@ -154,7 +158,8 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
         // Fill regular dataset with displacement
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
+        if (currentEntry.direction != Z)
+            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
 
         // Fill dead segment correction dataset
         if (currentEntry.promptSegment == currentEntry.delayedSegment)
@@ -171,7 +176,8 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
         // Fill regular dataset with displacement
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
+        if (currentEntry.direction != Z)
+            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
 
         // Fill dead segment correction dataset
         if (currentEntry.promptSegment == currentEntry.delayedSegment)
