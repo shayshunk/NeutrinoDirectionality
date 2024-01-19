@@ -3,7 +3,7 @@
 #include "Plotter.h"
 #include "GeneralHeader.h"
 
-int NeutrinoDirectionalityPlots()
+int main()
 {
     TH1::AddDirectory(kFALSE);
 

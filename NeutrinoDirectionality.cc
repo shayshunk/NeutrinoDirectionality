@@ -310,6 +310,17 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
                     && currentEntry.promptPosition == currentEntry.delayedPosition)
                     continue;
 
+                if (direction != Z)
+                {
+                    float zPromptPosition = rootTree->GetLeaf("xyz")->GetValue(Z);
+                    float zDelayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(Z);
+
+                    float displacement = zPromptPosition - zDelayedPosition;
+
+                    if (displacement > 60)
+                        continue;
+                }
+
                 // Copying some loop values into current entry
                 currentEntry.Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
                 currentEntry.nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
@@ -463,12 +474,10 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
         
         TF1* gaussian = new TF1("Fit", "gaus", -140, 140);
 
-        histogram[dataset][TotalDifference][Z]->Fit("Fit", "RQ");
+        histogram[dataset][TotalDifference][Z]->Fit("Fit", "R");
 
         float zMean = gaussian->GetParameter(1);
-        float zSigma = gaussian->GetParameter(2);
-
-        float zError = zSigma / sqrt(neutrinoCounts.effectiveIBD[dataset][Z]);
+        float zError = gaussian->GetParError(1);
 
         neutrinoCounts.mean[dataset][Z] = zMean;
         neutrinoCounts.sigma[dataset][Z] = zError;
