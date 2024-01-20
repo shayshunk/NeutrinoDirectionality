@@ -883,9 +883,12 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sig
 
 int main()
 {
-    // Ignore Warnings
+    // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
 
+    // Take ownership of histograms
+    TH1::AddDirectory(kFALSE);
+    
     // Fill detector configuration
     FillDetectorConfig();
 
