@@ -17,8 +17,8 @@
 #define pi 3.14159265358979323846
 
 // Invariables
-int const xBins = 13;
-int const yBins = 11;
+int const xBins = 12;
+int const yBins = 9;
 int const zBins = 301;  // Number of bins for our histograms
 int const totalDataLines = 4000;
 int const totalSimLines = 500;
@@ -43,9 +43,7 @@ enum Directions
 enum Signals
 {
     CorrelatedReactorOn = 0,
-    CorrelatedReactorOff,
     AccidentalReactorOn,
-    AccidentalReactorOff,
     TotalDifference,
     SignalSize
 };

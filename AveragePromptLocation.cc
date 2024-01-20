@@ -200,7 +200,7 @@ void SubtractBackgrounds(array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
     }
 }
 
-int AveragePromptLocation()
+int main()
 {
     // Ignore Warnings
     gErrorIgnoreLevel = kError;
@@ -224,13 +224,13 @@ int AveragePromptLocation()
             {
                 case X:
                     bins = xBins;
-                    histogramMin = 0;
-                    histogramMax = xBins;
+                    histogramMin = 0.5;
+                    histogramMax = xBins + 0.5;
                     break;
                 case Y:
                     bins = yBins;
-                    histogramMin = 0;
-                    histogramMax = yBins;
+                    histogramMin = 0.5;
+                    histogramMax = yBins + 0.5;
                     break;
                 case Z:
                     bins = zBins;
@@ -255,37 +255,7 @@ int AveragePromptLocation()
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-#if LIVETIME_VERBOSITY
-    cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
-    cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
-    cout << "--------------------------------------------\n";
-#endif
-
     SubtractBackgrounds(histogram);
-
-    TCanvas canvas1 = new TCanvas("X", "X", 2000, 1600);
-    histogram[TotalDifference][Y]->Draw();
-    canvas1.SaveAs("Y average.png");
-
-    double entries = 0, segs = 0;
-    for (int x = 1; x <= xBins; x++)
-    {
-        entries += histogram[TotalDifference][X]->GetBinContent(x);
-        segs += x * histogram[TotalDifference][X]->GetBinContent(x);
-    }
-
-    cout << "Manual X average: " << segs / entries << '\n';
-
-    entries = 0, segs = 0;
-    for (int x = 1; x <= yBins; x++)
-    {
-        entries += histogram[TotalDifference][Y]->GetBinContent(x);
-        segs += x * histogram[TotalDifference][Y]->GetBinContent(x);
-    }
-
-    cout << "Manual Y average: " << segs / entries << '\n';
-
-    std::cin.get();
 
     return 0;
 }
