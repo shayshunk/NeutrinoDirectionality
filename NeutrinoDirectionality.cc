@@ -125,7 +125,7 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
         posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
         negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
     }
-    else
+    else // Fill Z with same segment events
     {
         double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
         histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, weight);
@@ -157,7 +157,7 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         // Figure out whether the reactor is on and assign signal index
         int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
-        // Fill regular dataset with displacement
+        // Fill regular dataset with displacement but Z only takes same segment
         if (currentEntry.direction != Z)
             histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
 
@@ -175,7 +175,7 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
         // Figure out whether the reactor is on and assign signal index
         int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
-        // Fill regular dataset with displacement
+        // Fill regular dataset with displacement but Z only takes same segment
         if (currentEntry.direction != Z)
             histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
 
@@ -310,7 +310,7 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
                     && currentEntry.promptPosition == currentEntry.delayedPosition)
                     continue;
 
-                if (direction != Z)
+                if (direction != Z) // Cubical distance cuts in Z for X and Y
                 {
                     float zPromptPosition = rootTree->GetLeaf("xyz")->GetValue(Z);
                     float zDelayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(Z);
@@ -424,9 +424,9 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-
         for (int direction = X; direction < DirectionSize; direction++)
         {
+            string histogramName;
 
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1D>(
@@ -471,10 +471,12 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
 
         if (dataset == DataUnbiased || dataset == SimUnbiased)
             continue;
-        
+
+        // Z is fit to a Guassian and only takes same segment inputs
+        // Possible thanks to 1mm resolution in Z
         TF1* gaussian = new TF1("Fit", "gaus", -140, 140);
 
-        histogram[dataset][TotalDifference][Z]->Fit("Fit", "R");
+        histogram[dataset][TotalDifference][Z]->Fit("Fit", "RQ");
 
         float zMean = gaussian->GetParameter(1);
         float zError = gaussian->GetParError(1);
@@ -622,7 +624,7 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
     float xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
 
     // Scaling by average prompt location
-    xTrue += 64.61/ 1000;
+    xTrue += 64.61 / 1000;
     yTrue += 13.11 / 1000;
     zTrue += 0.73 / 1000;
 
@@ -861,9 +863,10 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sig
         for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)
         {
             // No reactor off for simulations
-            if ((dataset == Sim || dataset == SimUnbiased) && (signalSet == CorrelatedReactorOff || signalSet == AccidentalReactorOff))
+            if ((dataset == Sim || dataset == SimUnbiased)
+                && (signalSet == CorrelatedReactorOff || signalSet == AccidentalReactorOff))
                 continue;
-            
+
             for (int direction = X; direction < DirectionSize; direction++)
             {
                 histogram[dataset][signalSet][direction]->Write();

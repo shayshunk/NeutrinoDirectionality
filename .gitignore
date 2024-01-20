@@ -30,12 +30,14 @@ sj622@meitner.wlab.yale.edu
 
 # Ignore old versions of the code
 BiPoxyz.C
+CovarianceCalc.cc
 DeadSeg_Jin.cc
 DataOvals.C
 DeadSegCorrection.cc
 DeadSegCorrectionv2.cc
 DeadSegCorrectionv3.cc
 DeadSegCorrectionv4.cc
+DeadSegCorrectionv5.cc
 GeneralHeader_Jin.h
 Directionality
 DeadSeg
@@ -43,6 +45,7 @@ neutrinoDir.h
 neutrinoDir.cc
 NeutrinoDirectionality TechNote.docx
 NeutrinoDirectionalityHists.cc
+NeutrinoDirectionalityPlots_Adrian.cc
 Plots
 PromptLocation
 UnbiasedSegCorrPRLHists.cc
