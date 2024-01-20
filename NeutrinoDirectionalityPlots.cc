@@ -232,7 +232,7 @@ int main()
 
     {
         TString cName = Form("Neutrino_Angles_Unbiased");
-        TCanvas c(cName, cName, 2000, 1600);
+        TCanvas c(cName, cName, 2000, 1700);
 
         TMultiGraph* mg = new TMultiGraph();
         mg->GetXaxis()->SetLimits(93.5, 108.5);

@@ -621,6 +621,11 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
     float xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
     float xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
 
+    // Scaling by average prompt location
+    xTrue -= 81.82/ 1000;
+    yTrue -= 132.61 / 1000;
+    zTrue += 0.73 / 1000;
+
     // Same angle calculation as above
     float tanPhiTrue = yTrue / xTrue;
     float phiTrue = atan(tanPhiTrue) * 180.0 / pi;
