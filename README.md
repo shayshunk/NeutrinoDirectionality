@@ -57,6 +57,8 @@ g++ NeutrinoDirectionalityPlots.cc -o Plots `root-config --cflags --glibs`
 ./Plots
 ```
 
+The above is an explanation on how to run the two main programs that calculate the average antineutrino angles and then plot them. The other piece of code `AveragePromptLocation.cc`
+attempts to calculate the average prompt location in the detector by using a simulation with no missing segments. It requires a bit more tweaking to run and is less refined.
 <h2>
 Customization Options
 </h2>
