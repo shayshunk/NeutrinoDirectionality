@@ -1,7 +1,9 @@
 # Ignore all pictures
 *.png
-# Don't ignore PROSPECT logo
+# Don't ignore README images
 !PROSPECT.png
+!SampleOutput.png
+!Neutrino_Angles_Unbiased_PaperFinalPlot.png
 
 # Ignore all hidden files
 .*
