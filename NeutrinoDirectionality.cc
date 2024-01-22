@@ -3,12 +3,6 @@
 #include "DetectorConfig.h"
 #include "Formatting.h"
 
-#define COVARIANCE_VERBOSITY 0
-#define IBDCOUNT_VERBOSITY 0
-#define MEAN_VERBOSITY 0
-#define LIVETIME_VERBOSITY 0
-#define DETECTOR_VERBOSITY 0
-
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
 void FillDetectorConfig()
@@ -45,33 +39,35 @@ void FillDetectorConfig()
         detectorConfig.push_back(period);
     }
 
-#if DETECTOR_VERBOSITY
-    cout << "Below is the detector configuration.\n";
-    cout << "--------------------------------------------\n";
-
-    for (int i = 0; i < noPeriods; i++)
+    if (DETECTOR_VERBOSITY)
     {
-        cout << "Detector configuration for period: " << i + 1 << '\n';
+        cout << "--------------------------------------------\n";
+        cout << "Below is the detector configuration.\n";
+        cout << "--------------------------------------------\n";
 
-        for (int j = 140; j >= 0; j -= 14)
+        for (int i = 0; i < noPeriods; i++)
         {
-            for (int k = 0; k < 14; k++)
-            {
-                if (detectorConfig[i][j + k])
-                {
-                    cout << "\u25A0 ";
-                }
-                else
-                {
-                    cout << "\u25A1 ";
-                }
-            }
+            cout << "Detector configuration for period: " << i + 1 << '\n';
 
+            for (int j = 140; j >= 0; j -= 14)
+            {
+                for (int k = 0; k < 14; k++)
+                {
+                    if (detectorConfig[i][j + k])
+                    {
+                        cout << "\u25A0 ";
+                    }
+                    else
+                    {
+                        cout << "\u25A1 ";
+                    }
+                }
+
+                cout << '\n';
+            }
             cout << '\n';
         }
-        cout << '\n';
     }
-#endif
 }
 
 bool checkNeighbor(int periodNo, int segment, char direction)
@@ -395,22 +391,23 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
         neutrinoCounts.sigma[dataset][Z] = neutrinoCounts.sigma[dataset - 1][Z];
     }
 
-#if MEAN_VERBOSITY
-    // Printing out values
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
-    {
-        cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
-        for (int direction = X; direction < DirectionSize; direction++)
-        {
-            cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.mean[dataset][direction]
-                 << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
-        }
-        cout << "--------------------------------------------\n";
-    }
-#endif
-
     cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
     cout << "--------------------------------------------\n";
+
+    // Printing out values
+    if (MEAN_VERBOSITY)
+    {
+        for (int dataset = Data; dataset < DatasetSize; dataset++)
+        {
+            cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.mean[dataset][direction]
+                    << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
+            }
+            cout << "--------------------------------------------\n";
+        }
+    }
 }
 
 IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
@@ -484,22 +481,24 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
         neutrinoCounts.mean[dataset][Z] = zMean;
         neutrinoCounts.sigma[dataset][Z] = zError;
     }
-#if IBDCOUNT_VERBOSITY
+    
     // Printing out values
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    if (IBDCOUNT_VERBOSITY)
     {
-        cout << "Total and Effective IBD Events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
-
-        for (int direction = X; direction < DirectionSize; direction++)
+        for (int dataset = Data; dataset < DatasetSize; dataset++)
         {
-            cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction]
-                 << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn
-                 << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
-        }
+            cout << "Total and Effective IBD Events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
 
-        cout << "--------------------------------------------\n";
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction]
+                    << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn
+                    << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
+            }
+
+            cout << "--------------------------------------------\n";
+        }
     }
-#endif
 
     cout << boldOn << cyanOn << "Subtracted backgrounds.\n" << resetFormats;
     cout << "--------------------------------------------\n";
@@ -598,6 +597,11 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
     {
         float phiError, thetaError;
         if (dataset == Sim || dataset == SimUnbiased)
+        {
+            phiError = finalAngles.phiError[dataset];
+            thetaError = finalAngles.thetaError[dataset];
+        }
+        else if (ANGLES_STATISTICS)
         {
             phiError = finalAngles.phiError[dataset];
             thetaError = finalAngles.thetaError[dataset];
@@ -782,32 +786,33 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
 
     // Prints out the 1 sigma values if COVARIANCE_VERBOSITY is set to 1
     // Change at top of file
-#if COVARIANCE_VERBOSITY
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    if (COVARIANCE_VERBOSITY)
     {
-        cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
-        cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tiltSystematics[dataset]
-             << "\u00B0.\n"
-             << resetFormats;
-        cout << "--------------------------------------------\n";
+        for (int dataset = Data; dataset < DatasetSize; dataset++)
+        {
+            cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
+            cout << greenOn;
+            cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+                << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+                << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tiltSystematics[dataset]
+                << "\u00B0.\n"
+                << resetFormats;
+            cout << "--------------------------------------------\n";
 
-        cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
-        cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
-             << "\u00B0.\n"
-             << resetFormats;
-        cout << "--------------------------------------------\n";
+            cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
+            cout << greenOn;
+            cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+                << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+                << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
+                << "\u00B0.\n"
+                << resetFormats;
+            cout << "--------------------------------------------\n";
+        }
     }
-#endif
 
     return oneSigmaEllipse;
 }
@@ -881,10 +886,27 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sig
     outputFile->Close();
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
+
+    // Using command line arguments for verbosity control
+    for (int i = 1; i < argc; i++)
+    {
+        if (string(argv[i]) == "-D")
+            DETECTOR_VERBOSITY = 1;
+        else if (string(argv[i]) == "-L")
+            LIVETIME_VERBOSITY = 1;
+        else if (string(argv[i]) == "-I")
+            IBDCOUNT_VERBOSITY = 1;
+        else if (string(argv[i]) == "-M")
+            MEAN_VERBOSITY = 1;
+        else if (string(argv[i]) == "-S")
+            ANGLES_STATISTICS = 1;    
+        else if (string(argv[i]) == "-C")
+            COVARIANCE_VERBOSITY = 1;            
+    }
 
     // Take ownership of histograms
     TH1::AddDirectory(kFALSE);
@@ -934,11 +956,12 @@ int main()
     cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-#if LIVETIME_VERBOSITY
-    cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
-    cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
-    cout << "--------------------------------------------\n";
-#endif
+    if (LIVETIME_VERBOSITY)
+    {
+        cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
+        cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
+        cout << "--------------------------------------------\n";
+    }
 
     // Filling simulation histograms
     cout << "Filling simulation histograms!\n" << resetFormats;

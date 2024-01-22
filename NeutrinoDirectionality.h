@@ -32,6 +32,14 @@ char const* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/
 int lineCounter = 0;
 double livetimeOff = 0, livetimeOn = 0;
 
+// Print flags
+bool DETECTOR_VERBOSITY = 0; 
+bool LIVETIME_VERBOSITY = 0;
+bool IBDCOUNT_VERBOSITY = 0;
+bool MEAN_VERBOSITY = 0;
+bool ANGLES_STATISTICS = 0;
+bool COVARIANCE_VERBOSITY = 0;
+
 enum Directions
 {
     X = 0,
