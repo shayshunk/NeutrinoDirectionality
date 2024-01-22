@@ -121,7 +121,7 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
         posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
         negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
     }
-    else // Fill Z with same segment events
+    else  // Fill Z with same segment events
     {
         double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
         histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, weight);
@@ -306,7 +306,7 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
                     && currentEntry.promptPosition == currentEntry.delayedPosition)
                     continue;
 
-                if (direction != Z) // Cubical distance cuts in Z for X and Y
+                if (direction != Z)  // Cubical distance cuts in Z for X and Y
                 {
                     float zPromptPosition = rootTree->GetLeaf("xyz")->GetValue(Z);
                     float zDelayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(Z);
@@ -402,8 +402,8 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
             cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
             for (int direction = X; direction < DirectionSize; direction++)
             {
-                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.mean[dataset][direction]
-                    << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats
+                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
             }
             cout << "--------------------------------------------\n";
         }
@@ -481,7 +481,7 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
         neutrinoCounts.mean[dataset][Z] = zMean;
         neutrinoCounts.sigma[dataset][Z] = zError;
     }
-    
+
     // Printing out values
     if (IBDCOUNT_VERBOSITY)
     {
@@ -492,8 +492,8 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
             for (int direction = X; direction < DirectionSize; direction++)
             {
                 cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction]
-                    << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn
-                    << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
+                     << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn
+                     << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
             }
 
             cout << "--------------------------------------------\n";
@@ -793,26 +793,39 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
             cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
             cout << greenOn;
             cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-                << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-                << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tiltSystematics[dataset]
-                << "\u00B0.\n"
-                << resetFormats;
+                 << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
+                 << "\u00B0 ± " << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " "
+                 << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n"
+                 << resetFormats;
             cout << "--------------------------------------------\n";
 
-            cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " without systematics.\n";
+            cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats
+                 << " without systematics.\n";
             cout << greenOn;
             cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-                << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-                << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
+                 << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
+                 << "\u00B0 ± " << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
-                << "\u00B0.\n"
-                << resetFormats;
+                 << "\u00B0.\n"
+                 << resetFormats;
             cout << "--------------------------------------------\n";
         }
     }
+
+    // Final cone of uncertainty
+    float a = oneSigmaEllipse.phiErrorSystematics[DataUnbiased];
+    float b = oneSigmaEllipse.thetaErrorSystematics[DataUnbiased];
+    theta = 90 - finalAngles.theta[DataUnbiased];
+    float solidAngle = pi * a * b * sin(theta * pi / 180.0);
+    float solidAngleRadians = solidAngle * pow((pi / 180.0), 2);
+    float coneAngle = acos(1 - (solidAngleRadians / (2 * pi))) * 180.0 / pi;
+
+    cout << boldOn << greenOn << underlineOn << "Cone of Uncertainty:" << resetFormats << greenOn << " " << coneAngle << "\u00B0"
+         << '\n';
+    cout << "--------------------------------------------\n";
 
     return oneSigmaEllipse;
 }
@@ -903,14 +916,14 @@ int main(int argc, char* argv[])
         else if (string(argv[i]) == "-M")
             MEAN_VERBOSITY = 1;
         else if (string(argv[i]) == "-S")
-            ANGLES_STATISTICS = 1;    
+            ANGLES_STATISTICS = 1;
         else if (string(argv[i]) == "-C")
-            COVARIANCE_VERBOSITY = 1;            
+            COVARIANCE_VERBOSITY = 1;
     }
 
     // Take ownership of histograms
     TH1::AddDirectory(kFALSE);
-    
+
     // Fill detector configuration
     FillDetectorConfig();
 
