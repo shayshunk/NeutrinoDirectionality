@@ -481,6 +481,9 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, Direction
 
         neutrinoCounts.mean[dataset][Z] = zMean;
         neutrinoCounts.sigma[dataset][Z] = zError;
+
+        // Deleting fit because we don't want the plot options stuck here
+        delete histogram[dataset][TotalDifference][Z]->GetListOfFunctions()->FindObject("Fit");
     }
 
     // Printing out values
