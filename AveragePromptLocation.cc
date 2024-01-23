@@ -4,7 +4,7 @@
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
-void FillHistogram(array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>& histogram, TreeValues& currentEntry)
+void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram, TreeValues& currentEntry)
 {
     // Applying energy cut
     if (currentEntry.Esmear < 0.8 || currentEntry.Esmear > 7.4)
@@ -50,7 +50,7 @@ void FillHistogram(array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize
     }
 }
 
-void SetUpHistograms(array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>& histogram)
+void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram)
 {
     // Declaring some variables for use later
     int totalLines = 0;
@@ -171,7 +171,7 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSi
     }
 }
 
-void SubtractBackgrounds(array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>& histogram)
+void SubtractBackgrounds(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
     livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
@@ -183,7 +183,7 @@ void SubtractBackgrounds(array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
     {
         // Have to static cast raw pointer to shared pointer to keep up safety measures
         histogram[TotalDifference][direction]
-            = std::shared_ptr<TH1D>(static_cast<TH1D*>(histogram[CorrelatedReactorOn][direction]->Clone("Displacements")));
+            = std::shared_ptr<TH1F>(static_cast<TH1F*>(histogram[CorrelatedReactorOn][direction]->Clone("Displacements")));
         histogram[TotalDifference][direction]->Add(histogram[AccidentalReactorOn][direction].get(), -1. / 100.);
 
         totalIBDs = histogram[TotalDifference][direction]->IntegralAndError(
@@ -206,7 +206,7 @@ int main()
     gErrorIgnoreLevel = kError;
 
     // Need histograms for counting each variable
-    array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize> histogram;
+    array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize> histogram;
 
     // Set up histograms for all 3 directions
     for (int j = CorrelatedReactorOn; j < SignalSize; j++)  // Signal set
@@ -241,7 +241,7 @@ int main()
                     cout << "Mistake!\n";
             }
 
-            histogram[j][c] = std::make_shared<TH1D>(histogramName.c_str(), signalSet.c_str(), bins, histogramMin, histogramMax);
+            histogram[j][c] = std::make_shared<TH1F>(histogramName.c_str(), signalSet.c_str(), bins, histogramMin, histogramMax);
         }
     }
 

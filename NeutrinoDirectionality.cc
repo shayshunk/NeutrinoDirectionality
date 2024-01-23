@@ -100,7 +100,7 @@ bool checkNeighbor(int periodNo, int segment, char direction)
     return neighbor;
 }
 
-void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
                            TreeValues& currentEntry,
                            int signalSet)
 {
@@ -136,7 +136,7 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1D>, DirectionSiz
         histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0, weight);
 }
 
-void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+void FillHistogram(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
                    TreeValues& currentEntry)
 {
     // Applying energy cut
@@ -183,7 +183,7 @@ void FillHistogram(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Sign
     }
 }
 
-void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
                      int dataSet,
                      int period = 0)
 {
@@ -336,7 +336,7 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, Si
     }
 }
 
-void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
+void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
                         IBDValues& neutrinoCounts)
 {
     // Defining variables used in calculation. Check the error propagation technote for details on the method
@@ -410,7 +410,7 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1D>, DirectionSize>,
     }
 }
 
-IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
     livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
@@ -426,8 +426,8 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1D>, Direction
             string histogramName;
 
             // Have to static cast raw pointer to shared pointer to keep up safety measures
-            histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1D>(
-                static_cast<TH1D*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone("Displacements")));
+            histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1F>(
+                static_cast<TH1F*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone("Displacements")));
             histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOn][direction].get(),
                                                                 -1. / 100.);
 
@@ -830,7 +830,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     return oneSigmaEllipse;
 }
 
-void FillOutputFile(array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> const& histogram,
+void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> const& histogram,
                     AngleValues const& finalAngles,
                     CovarianceValues const& oneSigmaEllipse)
 {
@@ -933,7 +933,7 @@ int main(int argc, char* argv[])
     CovarianceValues oneSigmaEllipse;
 
     // Need histograms for counting each variable
-    array<array<array<std::shared_ptr<TH1D>, DirectionSize>, SignalSize>, DatasetSize> histogram;
+    array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
     // Set up histograms for all 3 directions
     for (int i = Data; i < DatasetSize; i++)  // Dataset
@@ -951,7 +951,7 @@ int main(int argc, char* argv[])
                 string axis = AxisToString(c);
                 string histogramName = dataset + "_" + signalSet + "_" + axis;
                 histogram[i][j][c]
-                    = std::make_shared<TH1D>(histogramName.c_str(), dataset.c_str(), bins, -histogramMax, histogramMax);
+                    = std::make_shared<TH1F>(histogramName.c_str(), dataset.c_str(), bins, -histogramMax, histogramMax);
             }
         }
     }

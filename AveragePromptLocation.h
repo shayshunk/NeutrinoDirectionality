@@ -5,7 +5,7 @@
 
 #include "TError.h"
 #include "TFile.h"
-#include "TH1D.h"
+#include "TH1F.h"
 #include "TLeaf.h"
 #include "TTree.h"
 #include "TVectorD.h"
