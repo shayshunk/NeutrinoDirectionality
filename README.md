@@ -12,7 +12,7 @@
 </h1>
 
 <h2 align="center">
-    Calculating the average antineutrino direction in the PROSPECT detector. The source is the HFIR reactor. The reconstructed direction is achieved by tracking average delayed neutron displacement from the prompt positron in Cartesian before converting the coordinates to spherical. Paper in progress. 
+    Calculating the average antineutrino direction in the PROSPECT detector of antineturinos produced in the HFIR core. Paper in progress. 
 </h2>
 
 <h2>
@@ -63,22 +63,24 @@ attempts to calculate the average prompt location in the detector by using a sim
 Customization Options
 </h2>
 
-A few preprocessor options are available for customizing the output of the code. The lines (6-10) in `NeutrinoDirectionality.cc` let you define how verbose you want the output of the values calculated to be.
+A few command line options are available for customizing the output of the code. The follwing variables in `NeutrinoDirectionality.cc` let you define how verbose you want the output of the values calculated to be.
 
 ```C++
-#define COVARIANCE_VERBOSITY 0
-#define IBDCOUNT_VERBOSITY 0
-#define MEAN_VERBOSITY 0
-#define LIVETIME_VERBOSITY 0
-#define DETECTOR_VERBOSITY 0
+DETECTOR_VERBOSITY 
+LIVETIME_VERBOSITY 
+IBDCOUNT_VERBOSITY 
+MEAN_VERBOSITY 
+ANGLES_STATISTICS
+COVARIANCE_VERBOSITY
 ```
-With all options set to 0, the output will only print what step it's currently on. Set to 1, the options do as follows:
+Each option is accessed by adding a flag after the executable while running in the terminal. Example: `./Directionality -M -C -S`. The options are are as follows:
 
- * `COVARIANCE_VERBOSITY 1` will print out the semi-major axes of the 1-sigma ellipse that the plots show. Note that these are not the errors on the angles individually but due to covariance in the angle calculations, the 68% C.L. ellipse combining both angles is a different shape and size than just using the errors on the angles as the semi-major axes. 
- * `IBD_COUNT VERBOSITY 1` will print the total and effective IBDs in each direction for each dataset. Effective IBDs are calculated through Poisson statistics. 
- * `MEAN_VERBOSITY 1` will print the *p* components and respective errors that are calculated prior to the addition of systematics. These components are then used to calculate the tangents of the angles. More details in the paper. 
- * `LIVETIME_VERBOSITY 1` will print the total livetime for all Reactor On and Reactor Off events. 
- * `DETECTOR_VERBOSITY 1` will print the detector configurations for each period of PROSPECT data. These are available on the PROSPECT docdb. 
+ * `-D` will set `DETECTOR_VERBOSITY` to true. It will print the detector configurations for each period of PROSPECT data. These are available on the PROSPECT docdb. 
+ * `-L` sets `LIVETIME_VERBOSITY` to true. It will print the total livetime for all Reactor On and Reactor Off events. 
+ * `-I` sets `IBD_COUNT VERBOSITY` to true. It will print the total and effective IBDs in each direction for each dataset. Effective IBDs are calculated through Poisson statistics. 
+ * `-M` sets `MEAN_VERBOSITY` to true. It will print the *p* components and respective errors that are calculated prior to the addition of systematics. These components are then used to calculate the tangents of the angles. More details in the paper. 
+ * `-S` sets `ANGLE_STATISTICS` to true. It will print only the statistical errors for all angles.
+ * `-C` sets `COVARIANCE_VERBOSITY` to true. It will print out the semi-major axes of the 1-sigma ellipse that the plots show. Note that these are not the errors on the angles individually but due to covariance in the angle calculations, the 68% C.L. ellipse combining both angles is a different shape and size than just using the errors on the angles as the semi-major axes. 
 
 The other option is contained in `Formatting.h`. I added a few quick functions that return a certain formatting (bold/underline) or color for more aesthetically pleasing output. These only work on Linux terminals. If working on another platform or the output simply looks jumbled or unpleasant, turn off the special formatting on line 4 by setting it to 0.
 
