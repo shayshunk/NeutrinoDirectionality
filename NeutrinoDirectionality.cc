@@ -851,7 +851,7 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Sig
         outputFile->WriteTObject(angleOutput, outputName.c_str());
 
         ellipseOutput = new TVector2(oneSigmaEllipse.phiError[dataset], oneSigmaEllipse.phiErrorSystematics[dataset]);
-        outputName = DatasetToString(dataset) + " Ellipse Phi";
+        outputName = DatasetToString(dataset) + " Phi Ellipse";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
 
         angleOutput = new TVector3(
@@ -860,11 +860,11 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Sig
         outputFile->WriteTObject(angleOutput, outputName.c_str());
 
         ellipseOutput = new TVector2(oneSigmaEllipse.thetaError[dataset], oneSigmaEllipse.thetaErrorSystematics[dataset]);
-        outputName = DatasetToString(dataset) + " Ellipse Theta";
+        outputName = DatasetToString(dataset) + " Theta Ellipse";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
 
         ellipseOutput = new TVector2(oneSigmaEllipse.tilt[dataset], oneSigmaEllipse.tiltSystematics[dataset]);
-        outputName = DatasetToString(dataset) + " Ellipse Tilt";
+        outputName = DatasetToString(dataset) + " Tilt Ellipse";
         outputFile->WriteTObject(ellipseOutput, outputName.c_str());
     }
 
