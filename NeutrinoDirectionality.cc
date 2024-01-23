@@ -424,10 +424,11 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, Direction
         for (int direction = X; direction < DirectionSize; direction++)
         {
             string histogramName;
+            histogramName = DatasetToString(dataset) + " Total Difference " + AxisToString(direction);
 
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1F>(
-                static_cast<TH1F*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone("Displacements")));
+                static_cast<TH1F*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone(histogramName.c_str())));
             histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOn][direction].get(),
                                                                 -1. / 100.);
 
@@ -936,22 +937,23 @@ int main(int argc, char* argv[])
     array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
     // Set up histograms for all 3 directions
-    for (int i = Data; i < DatasetSize; i++)  // Dataset
+    for (int dataset = Data; dataset < DatasetSize; dataset++)  // Dataset
     {
-        for (int j = CorrelatedReactorOn; j < SignalSize; j++)  // Signal set
+        for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)  // Signal set
         {
             // No reactor off for simulations
-            if ((i == Sim || i == SimUnbiased) && (j == CorrelatedReactorOff || j == AccidentalReactorOff))
+            if ((dataset == Sim || dataset == SimUnbiased)
+                && (signalSet == CorrelatedReactorOff || signalSet == AccidentalReactorOff))
                 continue;
 
-            for (int c = X; c < DirectionSize; c++)
+            for (int direction = X; direction < DirectionSize; direction++)
             {
-                string dataset = DatasetToString(i);
-                string signalSet = SignalToString(j);
-                string axis = AxisToString(c);
-                string histogramName = dataset + "_" + signalSet + "_" + axis;
-                histogram[i][j][c]
-                    = std::make_shared<TH1F>(histogramName.c_str(), dataset.c_str(), bins, -histogramMax, histogramMax);
+                string data = DatasetToString(dataset);
+                string signal = SignalToString(signalSet);
+                string axis = AxisToString(direction);
+                string histogramName = data + " " + signal + " " + axis;
+                histogram[dataset][signalSet][direction]
+                    = std::make_shared<TH1F>(histogramName.c_str(), data.c_str(), bins, -histogramMax, histogramMax);
             }
         }
     }
