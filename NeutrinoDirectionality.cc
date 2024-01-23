@@ -590,39 +590,6 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
         finalAngles.thetaErrorSystematics[dataset] = thetaErrorSystematics;
     }
 
-    // Printing out values
-    cout << boldOn << cyanOn << "Final Angles!\n" << resetFormats;
-    cout << "--------------------------------------------\n";
-
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
-    {
-        float phiError, thetaError;
-        if (dataset == Sim || dataset == SimUnbiased)
-        {
-            phiError = finalAngles.phiError[dataset];
-            thetaError = finalAngles.thetaError[dataset];
-        }
-        else if (ANGLES_STATISTICS)
-        {
-            phiError = finalAngles.phiError[dataset];
-            thetaError = finalAngles.thetaError[dataset];
-        }
-        else
-        {
-            phiError = finalAngles.phiErrorSystematics[dataset];
-            thetaError = finalAngles.thetaErrorSystematics[dataset];
-        }
-
-        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
-        cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-             << phiError << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << thetaError << "\u00B0.\n"
-             << resetFormats;
-        cout << "--------------------------------------------\n";
-    }
-
     // Calculating "true" neutrino direction
     // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001
     float xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
@@ -646,15 +613,6 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
                * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2)
                   + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)));
     float thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
-
-    cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats << '\n';
-    cout << greenOn;
-    cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError
-         << "\u00B0.\n";
-    cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError
-         << "\u00B0.\n"
-         << resetFormats;
-    cout << "--------------------------------------------\n";
 
     finalAngles.phiTrue = phiTrue;
     finalAngles.phiTrueError = phiTrueError;
@@ -798,8 +756,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
             cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
                  << "\u00B0 ± " << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " "
-                 << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n"
-                 << resetFormats;
+                 << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n" << resetFormats;
             cout << "--------------------------------------------\n";
 
             cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats
@@ -810,8 +767,7 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
             cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
                  << "\u00B0 ± " << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
-                 << "\u00B0.\n"
-                 << resetFormats;
+                 << "\u00B0.\n" << resetFormats;
             cout << "--------------------------------------------\n";
         }
     }
@@ -825,10 +781,63 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     float coneAngle = acos(1 - (solidAngleRadians / (2 * pi))) * 180.0 / pi;
 
     cout << boldOn << greenOn << underlineOn << "Cone of Uncertainty:" << resetFormats << greenOn << " " << coneAngle << "\u00B0"
-         << '\n';
+         << '\n' << resetFormats; 
     cout << "--------------------------------------------\n";
 
     return oneSigmaEllipse;
+}
+
+void OffsetTheta(AngleValues& finalAngles)
+{
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        finalAngles.theta[dataset] = 90 - finalAngles.theta[dataset];
+    }
+
+    finalAngles.thetaTrue = 90 - finalAngles.thetaTrue;
+}
+
+void PrintAngles(AngleValues const& finalAngles)
+{
+    cout << boldOn << cyanOn << "Final Angles!\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        float phiError, thetaError;
+        if (dataset == Sim || dataset == SimUnbiased)
+        {
+            phiError = finalAngles.phiError[dataset];
+            thetaError = finalAngles.thetaError[dataset];
+        }
+        else if (ANGLES_STATISTICS)
+        {
+            phiError = finalAngles.phiError[dataset];
+            thetaError = finalAngles.thetaError[dataset];
+        }
+        else
+        {
+            phiError = finalAngles.phiErrorSystematics[dataset];
+            thetaError = finalAngles.thetaErrorSystematics[dataset];
+        }
+
+        cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
+        cout << greenOn;
+        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+             << phiError << "\u00B0.\n";
+        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+             << thetaError << "\u00B0.\n"
+             << resetFormats;
+        cout << "--------------------------------------------\n";
+    }
+
+    cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats << '\n';
+    cout << greenOn;
+    cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phiTrue << "\u00B0 ± "
+         << finalAngles.phiTrueError << "\u00B0.\n";
+    cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.thetaTrue << "\u00B0 ± "
+         << finalAngles.thetaTrueError << "\u00B0.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
 }
 
 void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> const& histogram,
@@ -993,6 +1002,8 @@ int main(int argc, char* argv[])
     AddSystematics(neutrinoCounts);
     finalAngles = CalculateAngles(neutrinoCounts);
     oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);
+    OffsetTheta(finalAngles);
+    PrintAngles(finalAngles);
     FillOutputFile(histogram, finalAngles, oneSigmaEllipse);
 
     return 0;
