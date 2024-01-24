@@ -98,7 +98,7 @@ This is the final output of `NeutrinoDirectionality.cc` with the current dataset
 
 
 <p align="center">
-    <img src="SampleOutput.png" width="330">
+    <img src="SampleOutput.png" width="350">
 </p>
 
 This the final plot as of now, though it is to subject to change as the paper develops.
