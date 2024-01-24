@@ -49,12 +49,14 @@ sudo snap install root-framework
 
 # Run the code
 # I'm using g++ because it's straightforward but you can configure another compiler
+# You can also run in macro mode but it'll be slower
 g++ NeutrinoDirectionality.cc -o Directionality `root-config --cflags --glibs`
 ./Directionality
 
 # Make the plots
-g++ NeutrinoDirectionalityPlots.cc -o Plots `root-config --cflags --glibs`
-./Plots
+# Just use macro mode, it's fast enough that there's no time lost
+# Compiling changes the plot aspect ratio for some reason
+root NeutrinoDirectionalityPlots.cc
 ```
 
 The above is an explanation on how to run the two main programs that calculate the average antineutrino angles and then plot them. The other piece of code `AveragePromptLocation.cc`
