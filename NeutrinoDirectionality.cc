@@ -595,7 +595,7 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
 
     // Calculating "true" neutrino direction
     // Based on Figure 1, https://doi.org/10.1103/PhysRevD.103.032001
-    float xTrue = 5.97, yTrue = 5.09, zTrue = -1.19;
+    float xTrue = -5.97, yTrue = -5.09, zTrue = 1.19;
     float xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
 
     // Scaling by average prompt location
@@ -797,7 +797,7 @@ void OffsetTheta(AngleValues& finalAngles)
         finalAngles.theta[dataset] = 90 - finalAngles.theta[dataset];
     }
 
-    finalAngles.thetaTrue = 90 - finalAngles.thetaTrue;
+    finalAngles.thetaTrue = 90 + finalAngles.thetaTrue;
 }
 
 void PrintAngles(AngleValues const& finalAngles)
