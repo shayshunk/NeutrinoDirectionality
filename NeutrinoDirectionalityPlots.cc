@@ -88,7 +88,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         string histName = DatasetToString(dataset);
         TCanvas canvas(plotName.c_str(), plotName.c_str(), 2000, 1700);
 
-        auto tempHist = (TH1F*)histogram[dataset][TotalDifference][Z]->Clone();
+        auto tempHist = std::unique_ptr<TH1F>(static_cast<TH1F*>(histogram[dataset][TotalDifference][Z]->Clone()));
 
         // Setting up titles and draw styles
         string histTitle = "Delayed - Prompt Positions: ";
@@ -104,20 +104,20 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         tempHist->SetMarkerColor(kRed);
 
         // Applying header function
-        SetTitleStyles(tempHist);
+        SetTitleStyles(tempHist.get());
 
         // Setting up fit
-        TF1* gaussian = new TF1("Fit", "gaus", -140, 140);
-        gaussian->SetLineColor(kBlue);
-        gaussian->SetLineWidth(2);
-        gaussian->SetLineStyle(1);
+        TF1 gaussian("Fit", "gaus", -140, 140);
+        gaussian.SetLineColor(kBlue);
+        gaussian.SetLineWidth(2);
+        gaussian.SetLineStyle(1);
 
         tempHist->Fit("Fit", "RQ");
-        string zMean = Form("%.2f", gaussian->GetParameter(1));
-        string zError = Form("%.2f", gaussian->GetParError(1));
-        string zSigma = Form("%.2f", gaussian->GetParameter(2));
-        float zChiSquare = gaussian->GetChisquare();
-        float zNDF = gaussian->GetNDF();
+        string zMean = Form("%.2f", gaussian.GetParameter(1));
+        string zError = Form("%.2f", gaussian.GetParError(1));
+        string zSigma = Form("%.2f", gaussian.GetParameter(2));
+        float zChiSquare = gaussian.GetChisquare();
+        float zNDF = gaussian.GetNDF();
         float zChiSquareNDF = zChiSquare / zNDF;
         string zChi2NDF = Form("%.2f", zChiSquareNDF);
 
@@ -127,23 +127,23 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         float x_legend = 0.6;
         float y_legend = 0.7;
 
-        TLegend* legend = new TLegend(x_legend, y_legend, x_legend + 0.25, y_legend + 0.2);
-        legend->SetFillColor(0);
-        legend->SetFillStyle(0);
-        legend->SetTextFont(82);
-        legend->SetTextSize(0.03);
+        TLegend legend(x_legend, y_legend, x_legend + 0.25, y_legend + 0.2);
+        legend.SetFillColor(0);
+        legend.SetFillStyle(0);
+        legend.SetTextFont(82);
+        legend.SetTextSize(0.03);
 
         //legend->SetHeader("Fit Parameters", "C");
         string meanText = "#mu: " + zMean + " #pm " + zError;
-        TLegendEntry* meanEntry = legend->AddEntry(gaussian, meanText.c_str(), "l");
+        legend.AddEntry(&gaussian, meanText.c_str(), "l");
 
         string sigmaText = "#sigma: " + zSigma;
-        TLegendEntry* sigmaEntry = legend->AddEntry(gaussian, sigmaText.c_str(), "l");
+        legend.AddEntry(&gaussian, sigmaText.c_str(), "l");
 
         string chiSquareText = "#frac{#chi^{2}}{ndf}: " + zChi2NDF;
-        TLegendEntry* chiSquareEntry = legend->AddEntry(gaussian, chiSquareText.c_str(), "l");
+        legend.AddEntry(&gaussian, chiSquareText.c_str(), "l");
 
-        legend->Draw();
+        legend.Draw();
 
         string fullPath = plotDirectory + "/" + plotName + ".png";
         canvas.SaveAs(fullPath.c_str());
