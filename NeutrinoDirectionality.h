@@ -176,16 +176,16 @@ std::string AxisToString(int num)
     switch (num)
     {
         case 0:
-            name = "x";
+            name = "X";
             break;
         case 1:
-            name = "y";
+            name = "Y";
             break;
         case 2:
-            name = "z";
+            name = "Z";
             break;
         default:
-            name = "x";
+            name = "X";
     }
 
     return name;
