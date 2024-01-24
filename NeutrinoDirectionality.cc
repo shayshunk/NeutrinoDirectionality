@@ -826,9 +826,9 @@ void PrintAngles(AngleValues const& finalAngles)
 
         cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         cout << greenOn;
-        cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
+        cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
              << phiError << "\u00B0.\n";
-        cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
+        cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
              << thetaError << "\u00B0.\n"
              << resetFormats;
         cout << "--------------------------------------------\n";
@@ -836,9 +836,9 @@ void PrintAngles(AngleValues const& finalAngles)
 
     cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats << '\n';
     cout << greenOn;
-    cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phiTrue << "\u00B0 ± "
+    cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << finalAngles.phiTrue << "\u00B0 ± "
          << finalAngles.phiTrueError << "\u00B0.\n";
-    cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.thetaTrue << "\u00B0 ± "
+    cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << finalAngles.thetaTrue << "\u00B0 ± "
          << finalAngles.thetaTrueError << "\u00B0.\n" << resetFormats;
     cout << "--------------------------------------------\n";
 }
