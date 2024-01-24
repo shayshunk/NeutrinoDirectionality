@@ -33,6 +33,6 @@ sj622@meitner.wlab.yale.edu
 # Ignore old versions of the code
 GeneralHeader.h
 Directionality
-NeutrinoDirectionalityPlots_Adrian.cc
+Old_Plotter.cc
 Plots
 PromptLocation
