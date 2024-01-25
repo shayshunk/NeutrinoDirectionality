@@ -532,6 +532,21 @@ void AddSystematics(IBDValues& neutrinoCounts)
 
     cout << boldOn << cyanOn << "Added Systematics.\n" << resetFormats;
     cout << "--------------------------------------------\n";
+
+    // Printing out values
+    if (SYSTEMATIC_MEAN_VERBOSITY)
+    {
+        for (int dataset = Data; dataset < DatasetSize; dataset++)
+        {
+            cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats
+                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigmaSystematics[dataset][direction] << '\n';
+            }
+            cout << "--------------------------------------------\n";
+        }
+    }
 }
 
 AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
@@ -928,6 +943,8 @@ int main(int argc, char* argv[])
             IBDCOUNT_VERBOSITY = 1;
         else if (string(argv[i]) == "-M")
             MEAN_VERBOSITY = 1;
+        else if (string(argv[i]) == "-SM")
+            SYSTEMATIC_MEAN_VERBOSITY = 1;
         else if (string(argv[i]) == "-S")
             ANGLES_STATISTICS = 1;
         else if (string(argv[i]) == "-C")
