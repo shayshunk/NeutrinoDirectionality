@@ -791,8 +791,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     }
 
     // Final cone of uncertainty
-    float a = oneSigmaEllipse.phiErrorSystematics[DataUnbiased];
-    float b = oneSigmaEllipse.thetaErrorSystematics[DataUnbiased];
+    float a = oneSigmaEllipse.phiError[DataUnbiased];
+    float b = oneSigmaEllipse.thetaError[DataUnbiased];
     theta = 90 - finalAngles.theta[DataUnbiased];
     float solidAngle = pi * a * b * sin(theta * pi / 180.0);
     float solidAngleRadians = solidAngle * pow((pi / 180.0), 2);
