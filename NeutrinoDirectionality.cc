@@ -70,7 +70,7 @@ void FillDetectorConfig()
     }
 }
 
-bool checkNeighbor(int periodNo, int segment, char direction)
+bool CheckNeighbor(int periodNo, int segment, char direction)
 {
     // Used for dead segment calculations
 
@@ -113,13 +113,13 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
     // we're filling
     if (currentEntry.direction == X)
     {
-        posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
-        negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
+        posDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
+        negDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
     }
     else if (currentEntry.direction == Y)
     {
-        posDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
-        negDirection = checkNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
+        posDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
+        negDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
     }
     else  // Fill Z with same segment events
     {
