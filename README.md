@@ -104,7 +104,7 @@ This is the final output of `NeutrinoDirectionality.cc` with the current dataset
 This the final plot as of now, though it is to subject to change as the paper develops.
 
 <p align="center">
-    <img src="Neutrino_Angles_Unbiased_PaperFinalPlot.png" width="500">
+    <img src="DirectionalityPlots/FinalPlot.png" width="500">
 </p>
 
 ---
