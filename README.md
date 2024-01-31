@@ -94,7 +94,7 @@ The other option is contained in `Formatting.h`. I added a few quick functions t
 Sample Output
 </h2>
 
-This is the final output of `NeutrinoDirectionality.cc` with the current dataset and angle calculation methods. All preprocessor flags above are set to 0 except for `COLORFUL_FORMATTING`. 
+This is the final output of `NeutrinoDirectionality.cc` with the current dataset and angle calculation methods. All verbosity flags above are set to 0 except for `COLORFUL_FORMATTING`. 
 
 
 <p align="center">
