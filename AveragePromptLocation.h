@@ -43,7 +43,9 @@ enum Directions
 enum Signals
 {
     CorrelatedReactorOn = 0,
+    CorrelatedReactorOff,
     AccidentalReactorOn,
+    AccidentalReactorOff,
     TotalDifference,
     SignalSize
 };

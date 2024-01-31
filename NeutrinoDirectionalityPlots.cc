@@ -1,5 +1,5 @@
+#include "DirectionalityPlots.h"
 #include "Formatting.h"
-#include "NeutrinoDirectionality.h"
 #include "Plotter.h"
 
 using std::string, std::cout, std::array;
@@ -9,22 +9,17 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
     // Taking ownership of histograms
     TH1::AddDirectory(kFALSE);
 
-    // Setting up some basic padding and removing statistics boxes
-    SetBasicPlotStyle();
-
-    // Where we want our plots saved
-    string plotDirectory = "DirectionalityPlots";
-
-    // Checking if the directory already exists, making it if not
-    SetPlotDirectory(plotDirectory);
-
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         for (int direction = X; direction < Z; direction++)
         {
             string plotName = DatasetToString(dataset) + " Displacement " + AxisToString(direction);
             string histName = DatasetToString(dataset);
-            TCanvas canvas(plotName.c_str(), plotName.c_str(), 2000, 1700);
+
+            // Setting up canvas, no top margin because no title
+            TCanvas canvas(plotName.c_str(), plotName.c_str());
+            canvas.SetCanvasSize(2000, 1700);
+            canvas.SetTopMargin(0.05);
 
             // Temporary histogram for x and y because we want a 3 bin plot
             TH1F tempHist(histName.c_str(), histName.c_str(), 3, 0, 3);
@@ -86,7 +81,11 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         // Different plot style for Z
         string plotName = DatasetToString(dataset) + " Displacement Z";
         string histName = DatasetToString(dataset);
+
+        // Setting up canvas, no top margin because no title
         TCanvas canvas(plotName.c_str(), plotName.c_str(), 2000, 1700);
+        canvas.SetCanvasSize(2000, 1700);
+        canvas.SetTopMargin(0.05);
 
         auto tempHist = std::unique_ptr<TH1F>(static_cast<TH1F*>(histogram[dataset][TotalDifference][Z]->Clone()));
 
@@ -127,13 +126,13 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         float x_legend = 0.6;
         float y_legend = 0.7;
 
-        TLegend legend(x_legend, y_legend, x_legend + 0.25, y_legend + 0.2);
+        TLegend legend(0.65, 0.7, 0.95, 0.95);
         legend.SetFillColor(0);
         legend.SetFillStyle(0);
         legend.SetTextFont(82);
         legend.SetTextSize(0.03);
 
-        //legend->SetHeader("Fit Parameters", "C");
+        // legend->SetHeader("Fit Parameters", "C");
         string meanText = "#mu: " + zMean + " #pm " + zError;
         legend.AddEntry(&gaussian, meanText.c_str(), "l");
 
@@ -150,22 +149,139 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
     }
 }
 
+void MakeAnglePlots(FinalValues const& finalValues)
+{
+    // Setting up canvas, no top margin because no title
+    TCanvas canvas("Angles", "Angles");
+
+    canvas.SetCanvasSize(1600, 1550);
+    canvas.SetTopMargin(0.05);
+    canvas.SetBottomMargin(0.125);
+
+    // Need to draw a frame to set bounds
+    auto frame = canvas.DrawFrame(93.5, 33.5, 108.5, 48.5);
+
+    // Setting up axis labels
+    frame->GetXaxis()->SetTitle("#theta (deg)");
+    frame->GetYaxis()->SetTitle("#phi (deg)");
+    frame->GetXaxis()->CenterTitle(kTRUE);
+    frame->GetYaxis()->CenterTitle(kTRUE);
+
+    // Making sure the font is legible
+    frame->GetXaxis()->SetTitleSize(0.05);
+    frame->GetYaxis()->SetTitleSize(0.05);
+    frame->GetXaxis()->SetLabelSize(0.04);
+    frame->GetYaxis()->SetLabelSize(0.04);
+
+    // Error ellipses for each data point
+    TEllipse Data(finalValues.theta[DataUnbiased],
+                  finalValues.phi[DataUnbiased],
+                  finalValues.thetaErrorSystematics[DataUnbiased],
+                  finalValues.phiErrorSystematics[DataUnbiased],
+                  0,
+                  360,
+                  finalValues.tiltSystematics[DataUnbiased]);
+    Data.SetFillColor(kAzure - 3);
+    Data.SetFillStyle(3001);
+    Data.Draw();
+
+    TEllipse DataStatistics(finalValues.theta[DataUnbiased],
+                            finalValues.phi[DataUnbiased],
+                            finalValues.thetaError[DataUnbiased],
+                            finalValues.phiError[DataUnbiased],
+                            0,
+                            360,
+                            finalValues.tilt[DataUnbiased]);
+    DataStatistics.SetFillColor(kAzure + 3);
+    DataStatistics.SetFillStyle(3001);
+    DataStatistics.Draw();
+
+    TEllipse Simulation(finalValues.theta[SimUnbiased],
+                        finalValues.phi[SimUnbiased],
+                        finalValues.thetaError[SimUnbiased],
+                        finalValues.phiError[SimUnbiased],
+                        0,
+                        360,
+                        finalValues.tilt[SimUnbiased]);
+    Simulation.SetFillColor(kRed + 2);
+    Simulation.SetFillStyle(3001);
+    Simulation.Draw();
+
+    TEllipse SimulationUncorrected(finalValues.theta[Sim],
+                                   finalValues.phi[Sim],
+                                   finalValues.thetaError[Sim],
+                                   finalValues.phiError[Sim],
+                                   0,
+                                   360,
+                                   finalValues.tilt[Sim]);
+    SimulationUncorrected.SetFillColor(kMagenta + 3);
+    SimulationUncorrected.SetFillStyle(3001);
+    SimulationUncorrected.Draw();
+
+    TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
+    True.SetFillColor(kGreen + 2);
+    True.SetFillStyle(3001);
+    True.Draw();
+
+    // Setting up data markers
+    TMarker dataPoint(finalValues.theta[DataUnbiased], finalValues.phi[DataUnbiased], 43);
+    dataPoint.SetMarkerSize(5.5);
+    dataPoint.SetMarkerColor(kAzure - 2.25);
+    dataPoint.Draw();
+
+    TMarker dataSystematicsPoint(finalValues.theta[DataUnbiased], finalValues.phi[DataUnbiased], 43);
+    dataSystematicsPoint.SetMarkerSize(5.5);
+    dataSystematicsPoint.SetMarkerColor(kAzure + 3);
+
+    TMarker simPoint(finalValues.theta[SimUnbiased], finalValues.phi[SimUnbiased], 29);
+    simPoint.SetMarkerSize(4.5);
+    simPoint.SetMarkerColor(kRed + 2.25);
+    simPoint.Draw();
+
+    TMarker simUncorrectedPoint(finalValues.theta[Sim], finalValues.phi[Sim], 43);
+    simUncorrectedPoint.SetMarkerSize(4.5);
+    simUncorrectedPoint.SetMarkerColor(kMagenta + 3.25);
+    simUncorrectedPoint.Draw();
+
+    TMarker truePoint(finalValues.thetaTrue, finalValues.phiTrue, 33);
+    truePoint.SetMarkerSize(5);
+    truePoint.SetMarkerColor(kGreen + 2.25);
+    truePoint.Draw();
+
+    TLegend legend(0.54, 0.75, 0.95, 0.95);
+    legend.SetTextFont(62);
+    legend.SetTextSize(0.03);
+    legend.AddEntry(&dataPoint, "Data", "p");
+    legend.AddEntry(&dataSystematicsPoint, "Data - No Systematics", "p");
+    legend.AddEntry(&simPoint, "Simulation", "p");
+    legend.AddEntry(&simUncorrectedPoint, "Uncorrected Sim", "p");
+    legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
+    legend.Draw();
+
+    string fullPath = plotDirectory + "/FinalPlot.png";
+    canvas.SaveAs(fullPath.c_str());
+}
+
 int NeutrinoDirectionalityPlots()
 {
     // Taking ownership of TH1 pointers
     TH1::AddDirectory(kFALSE);
 
+    // Don't open the canvases and then destroy them
+    gROOT->SetBatch(kTRUE);
+
+    // Setting up some basic padding and removing statistics boxes
+    SetBasicPlotStyle();
+
+    // Where we want our plots saved
+    plotDirectory = "DirectionalityPlots";
+
+    // Checking if the directory already exists, making it if not
+    SetPlotDirectory(plotDirectory);
+
     // Setting up what we need to plot
     array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> histogram;
-    float phiTrue, phiTrueError, thetaTrue, thetaTrueError;
-    array<float, DatasetSize> phi;
-    array<float, DatasetSize> phiError;
-    array<float, DatasetSize> phiErrorSystematics;
-    array<float, DatasetSize> theta;
-    array<float, DatasetSize> thetaError;
-    array<float, DatasetSize> thetaErrorSystematics;
-    array<float, DatasetSize> tilt;
-    array<float, DatasetSize> tiltSystematics;
+    FinalValues finalValues;
 
     // Opening the root file
     auto rootFile = std::make_unique<TFile>("Directionality.root", "read");
@@ -178,37 +294,37 @@ int NeutrinoDirectionalityPlots()
         string ellipseName = vectorName + " Ellipse";
 
         TVector3* input = (TVector3*)rootFile->Get(vectorName.c_str());
-        phi[dataset] = input->X();
+        finalValues.phi[dataset] = input->X();
         TVector2* inputErrors = (TVector2*)rootFile->Get(ellipseName.c_str());
-        phiError[dataset] = inputErrors->X();
-        phiErrorSystematics[dataset] = inputErrors->Y();
+        finalValues.phiError[dataset] = inputErrors->X();
+        finalValues.phiErrorSystematics[dataset] = inputErrors->Y();
 
         // Grabbing theta
         vectorName = DatasetToString(dataset) + " Theta";
         ellipseName = vectorName + " Ellipse";
 
         input = (TVector3*)rootFile->Get(vectorName.c_str());
-        theta[dataset] = input->X();
+        finalValues.theta[dataset] = input->X();
         inputErrors = (TVector2*)rootFile->Get(ellipseName.c_str());
-        thetaError[dataset] = inputErrors->X();
-        thetaErrorSystematics[dataset] = inputErrors->Y();
+        finalValues.thetaError[dataset] = inputErrors->X();
+        finalValues.thetaErrorSystematics[dataset] = inputErrors->Y();
 
         // Grabbing tilt
         vectorName = DatasetToString(dataset) + " Tilt Ellipse";
 
         input = (TVector3*)rootFile->Get(vectorName.c_str());
-        tilt[dataset] = input->X();
-        tiltSystematics[dataset] = input->Y();
+        finalValues.tilt[dataset] = input->X();
+        finalValues.tiltSystematics[dataset] = input->Y();
     }
 
     // Grabbing true angles
     TVector2* input = (TVector2*)rootFile->Get("True Phi");
-    phiTrue = input->X();
-    phiTrueError = input->Y();
+    finalValues.phiTrue = input->X();
+    finalValues.phiTrueError = input->Y();
 
     input = (TVector2*)rootFile->Get("True Theta");
-    thetaTrue = input->X();
-    thetaTrueError = input->Y();
+    finalValues.thetaTrue = input->X();
+    finalValues.thetaTrueError = input->Y();
 
     // Grabbing histograms
     for (int dataset = Data; dataset < DatasetSize; dataset++)
@@ -226,7 +342,10 @@ int NeutrinoDirectionalityPlots()
         }
     }
 
+    rootFile->Close();
+
     MakeDisplacementPlots(histogram);
+    MakeAnglePlots(finalValues);
 
     return 0;
 }

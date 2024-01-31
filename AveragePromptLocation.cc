@@ -1,5 +1,4 @@
 #include "AveragePromptLocation.h"
-
 #include "Formatting.h"
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;

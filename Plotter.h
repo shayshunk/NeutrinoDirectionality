@@ -1,7 +1,8 @@
-#include "TStyle.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
+#include "TROOT.h"
+#include "TStyle.h"
 
 void SetBasicPlotStyle()
 {
@@ -15,7 +16,7 @@ void SetBasicPlotStyle()
     // Padding and font sizes
     gStyle->SetPadBottomMargin(0.15);
     gStyle->SetPadLeftMargin(0.15);
-    gStyle->SetPadRightMargin(0.15);
+    gStyle->SetPadRightMargin(0.05);
     gStyle->SetFrameLineWidth(2);
     gStyle->SetTitleFont(22, "t");
     gStyle->SetTitleSize(0.06, "t");
@@ -23,7 +24,7 @@ void SetBasicPlotStyle()
 
 void SetPlotDirectory(std::string plotDirectory)
 {
-    if (0 != system(Form("test -d %s",plotDirectory.c_str())))
+    if (0 != system(Form("test -d %s", plotDirectory.c_str())))
         system(Form("mkdir -m 755 -p %s", plotDirectory.c_str()));
 }
 
