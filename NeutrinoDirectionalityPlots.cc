@@ -149,7 +149,87 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
     }
 }
 
-void MakeAnglePlots(FinalValues const& finalValues)
+void MakeSimulationPlot(FinalValues const& finalValues)
+{
+    // Setting up canvas, no top margin because no title
+    TCanvas canvas("Angles", "Angles");
+
+    canvas.SetCanvasSize(1600, 1550);
+    canvas.SetTopMargin(0.05);
+    canvas.SetBottomMargin(0.125);
+
+    // Need to draw a frame to set bounds
+    auto frame = canvas.DrawFrame(93.5, 33.5, 108.5, 48.5);
+
+    // Setting up axis labels
+    frame->GetXaxis()->SetTitle("#theta (deg)");
+    frame->GetYaxis()->SetTitle("#phi (deg)");
+    frame->GetXaxis()->CenterTitle(kTRUE);
+    frame->GetYaxis()->CenterTitle(kTRUE);
+
+    // Making sure the font is legible
+    frame->GetXaxis()->SetTitleSize(0.05);
+    frame->GetYaxis()->SetTitleSize(0.05);
+    frame->GetXaxis()->SetLabelSize(0.04);
+    frame->GetYaxis()->SetLabelSize(0.04);
+
+    // Error ellipses for each data point
+    TEllipse Simulation(finalValues.theta[SimUnbiased],
+                        finalValues.phi[SimUnbiased],
+                        finalValues.thetaError[SimUnbiased],
+                        finalValues.phiError[SimUnbiased],
+                        0,
+                        360,
+                        finalValues.tilt[SimUnbiased]);
+    Simulation.SetFillColor(kRed + 2);
+    Simulation.SetFillStyle(3001);
+    Simulation.Draw();
+
+    TEllipse SimulationUncorrected(finalValues.theta[Sim],
+                                   finalValues.phi[Sim],
+                                   finalValues.thetaError[Sim],
+                                   finalValues.phiError[Sim],
+                                   0,
+                                   360,
+                                   finalValues.tilt[Sim]);
+    SimulationUncorrected.SetFillColor(kMagenta + 3);
+    SimulationUncorrected.SetFillStyle(3001);
+    SimulationUncorrected.Draw();
+
+    TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
+    True.SetFillColor(kGreen + 2);
+    True.SetFillStyle(3001);
+    True.Draw();
+
+    // Setting up data markers
+    TMarker simPoint(finalValues.theta[SimUnbiased], finalValues.phi[SimUnbiased], 29);
+    simPoint.SetMarkerSize(4.5);
+    simPoint.SetMarkerColor(kRed + 2.25);
+    simPoint.Draw();
+
+    TMarker simUncorrectedPoint(finalValues.theta[Sim], finalValues.phi[Sim], 43);
+    simUncorrectedPoint.SetMarkerSize(4.5);
+    simUncorrectedPoint.SetMarkerColor(kMagenta + 3.25);
+    simUncorrectedPoint.Draw();
+
+    TMarker truePoint(finalValues.thetaTrue, finalValues.phiTrue, 33);
+    truePoint.SetMarkerSize(5);
+    truePoint.SetMarkerColor(kGreen + 2.25);
+    truePoint.Draw();
+
+    TLegend legend(0.54, 0.75, 0.95, 0.95);
+    legend.SetTextFont(62);
+    legend.SetTextSize(0.03);
+    legend.AddEntry(&simPoint, "Simulation", "p");
+    legend.AddEntry(&simUncorrectedPoint, "Uncorrected Sim", "p");
+    legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
+    legend.Draw();
+
+    string fullPath = plotDirectory + "/SimulationPlot.png";
+    canvas.SaveAs(fullPath.c_str());
+}
+
+void MakeFinalPlot(FinalValues const& finalValues)
 {
     // Setting up canvas, no top margin because no title
     TCanvas canvas("Angles", "Angles");
@@ -207,17 +287,6 @@ void MakeAnglePlots(FinalValues const& finalValues)
     Simulation.SetFillStyle(3001);
     Simulation.Draw();
 
-    TEllipse SimulationUncorrected(finalValues.theta[Sim],
-                                   finalValues.phi[Sim],
-                                   finalValues.thetaError[Sim],
-                                   finalValues.phiError[Sim],
-                                   0,
-                                   360,
-                                   finalValues.tilt[Sim]);
-    SimulationUncorrected.SetFillColor(kMagenta + 3);
-    SimulationUncorrected.SetFillStyle(3001);
-    SimulationUncorrected.Draw();
-
     TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
     True.SetFillColor(kGreen + 2);
     True.SetFillStyle(3001);
@@ -238,11 +307,6 @@ void MakeAnglePlots(FinalValues const& finalValues)
     simPoint.SetMarkerColor(kRed + 2.25);
     simPoint.Draw();
 
-    TMarker simUncorrectedPoint(finalValues.theta[Sim], finalValues.phi[Sim], 43);
-    simUncorrectedPoint.SetMarkerSize(4.5);
-    simUncorrectedPoint.SetMarkerColor(kMagenta + 3.25);
-    simUncorrectedPoint.Draw();
-
     TMarker truePoint(finalValues.thetaTrue, finalValues.phiTrue, 33);
     truePoint.SetMarkerSize(5);
     truePoint.SetMarkerColor(kGreen + 2.25);
@@ -254,7 +318,6 @@ void MakeAnglePlots(FinalValues const& finalValues)
     legend.AddEntry(&dataPoint, "Data", "p");
     legend.AddEntry(&dataSystematicsPoint, "Data - No Systematics", "p");
     legend.AddEntry(&simPoint, "Simulation", "p");
-    legend.AddEntry(&simUncorrectedPoint, "Uncorrected Sim", "p");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
 
@@ -345,7 +408,8 @@ int NeutrinoDirectionalityPlots()
     rootFile->Close();
 
     MakeDisplacementPlots(histogram);
-    MakeAnglePlots(finalValues);
+    MakeSimulationPlot(finalValues);
+    MakeFinalPlot(finalValues);
 
     return 0;
 }
