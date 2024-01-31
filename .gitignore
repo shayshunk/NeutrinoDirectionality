@@ -3,7 +3,7 @@
 # Don't ignore README images
 !PROSPECT.png
 !AngleOutput.png
-!Neutrino_Angles_Unbiased_PaperFinalPlot.png
+!DirectionalityPlots/FinalPlot.png
 
 # Ignore all hidden files
 .*
