@@ -2,6 +2,7 @@
 
 #include "DetectorConfig.h"
 #include "Formatting.h"
+#include "Timer.h"
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
@@ -139,6 +140,9 @@ void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
 void FillHistogram(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
                    TreeValues& currentEntry)
 {
+    // Setting up timer
+    // Timer timer;
+
     // Applying energy cut
     if (currentEntry.Esmear < 0.8 || currentEntry.Esmear > 7.4)
     {
@@ -542,7 +546,8 @@ void AddSystematics(IBDValues& neutrinoCounts)
             for (int direction = X; direction < DirectionSize; direction++)
             {
                 cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats
-                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigmaSystematics[dataset][direction] << '\n';
+                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigmaSystematics[dataset][direction]
+                     << '\n';
             }
             cout << "--------------------------------------------\n";
         }
@@ -774,7 +779,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
             cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
                  << "\u00B0 ± " << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " "
-                 << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n" << resetFormats;
+                 << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n"
+                 << resetFormats;
             cout << "--------------------------------------------\n";
 
             cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats
@@ -785,7 +791,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
             cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
                  << "\u00B0 ± " << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
-                 << "\u00B0.\n" << resetFormats;
+                 << "\u00B0.\n"
+                 << resetFormats;
             cout << "--------------------------------------------\n";
         }
     }
@@ -799,7 +806,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     float coneAngle = acos(1 - (solidAngleRadians / (2 * pi))) * 180.0 / pi;
 
     cout << boldOn << greenOn << underlineOn << "Cone of Uncertainty:" << resetFormats << greenOn << " " << coneAngle << "\u00B0"
-         << '\n' << resetFormats; 
+         << '\n'
+         << resetFormats;
     cout << "--------------------------------------------\n";
 
     return oneSigmaEllipse;
@@ -854,7 +862,8 @@ void PrintAngles(AngleValues const& finalAngles)
     cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << finalAngles.phiTrue << "\u00B0 ± "
          << finalAngles.phiTrueError << "\u00B0.\n";
     cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << finalAngles.thetaTrue << "\u00B0 ± "
-         << finalAngles.thetaTrueError << "\u00B0.\n" << resetFormats;
+         << finalAngles.thetaTrueError << "\u00B0.\n"
+         << resetFormats;
     cout << "--------------------------------------------\n";
 }
 
