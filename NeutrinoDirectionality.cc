@@ -938,6 +938,7 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Sig
 
 int main(int argc, char* argv[])
 {
+    Timer timer;
     // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
 
