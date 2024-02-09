@@ -308,6 +308,7 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         TTree* rootTree = (TTree*)rootFile->Get("P2kIBDPlugin/Tibd");
 
         long nEntries = rootTree->GetEntries();
+        cout << "Entries: " << nEntries << '\n';
 
         for (long i = 0; i < nEntries; i++)
         {
