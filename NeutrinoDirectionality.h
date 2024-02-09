@@ -243,10 +243,10 @@ class Directionality
     double phiTrue, phiTrueError, thetaTrue, thetaTrueError;
 
     // Storing final ellipse values
-    std::array<double, DatasetSize> phiError;
-    std::array<double, DatasetSize> phiErrorSystematics;
-    std::array<double, DatasetSize> thetaError;
-    std::array<double, DatasetSize> thetaErrorSystematics;
+    std::array<double, DatasetSize> phiEllipseError;
+    std::array<double, DatasetSize> phiEllipseErrorSystematics;
+    std::array<double, DatasetSize> thetaEllipseError;
+    std::array<double, DatasetSize> thetaEllipseErrorSystematics;
     std::array<double, DatasetSize> tilt;
     std::array<double, DatasetSize> tiltSystematics;
 };

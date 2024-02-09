@@ -205,11 +205,14 @@ void Directionality::FillHistogram()
     }
 }
 
-void Directionality::SetUpHistograms(int dataSet, int period)
+void Directionality::SetUpHistograms(int dataset, int periodNo)
 {
     // Declaring some variables for use later
     int totalLines = 0;
     bool reactorOn = true;
+
+    dataSet = dataset;
+    period = periodNo;
 
     // Figuring out dataset
     char const* path;
@@ -310,11 +313,8 @@ void Directionality::SetUpHistograms(int dataSet, int period)
         {
             rootTree->GetEntry(i);
 
-            for (int direction = X; direction < DirectionSize; direction++)
+            for (direction = X; direction < DirectionSize; direction++)
             {
-                // Intializing struct of relevant values
-                TreeValues currentEntry;
-
                 // Grabbing relevant values from the rootTree entry
                 promptPosition = rootTree->GetLeaf("xyz")->GetValue(direction);
                 delayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(direction);
@@ -339,11 +339,6 @@ void Directionality::SetUpHistograms(int dataSet, int period)
                 // Copying some loop values into current entry
                 Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
                 nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
-                xRx = xRx;
-                dataSet = dataSet;
-                period = period;
-                direction = direction;
-                reactorOn = reactorOn;
 
                 FillHistogram();
             }
@@ -353,6 +348,10 @@ void Directionality::SetUpHistograms(int dataSet, int period)
         file.peek();
         rootFile->Close();
     }
+
+    cout << histogram[Data][CorrelatedReactorOn][X].GetEntries() << '\n';
+    cout << histogram[Data][CorrelatedReactorOn][Y].GetEntries() << '\n';
+    cout << histogram[Data][CorrelatedReactorOn][Z].GetEntries() << '\n';
 }
 
 void Directionality::CalculateUnbiasing()
@@ -760,10 +759,10 @@ void Directionality::CalculateCovariances()
         float thetaErrorSystematicsTemp = sqrt(2.291 * lambda2Sytematics) * 180.0 / pi;
 
         // Filling array
-        phiError[dataset] = phiErrorTemp;
-        phiErrorSystematics[dataset] = phiErrorSystematicsTemp;
-        thetaError[dataset] = thetaErrorTemp;
-        thetaErrorSystematics[dataset] = thetaErrorSystematicsTemp;
+        phiEllipseError[dataset] = phiErrorTemp;
+        phiEllipseErrorSystematics[dataset] = phiErrorSystematicsTemp;
+        thetaEllipseError[dataset] = thetaErrorTemp;
+        thetaEllipseErrorSystematics[dataset] = thetaErrorSystematicsTemp;
         tilt[dataset] = tiltTemp;
         tiltSystematics[dataset] = tiltSystematicsTemp;
     }
@@ -777,9 +776,9 @@ void Directionality::CalculateCovariances()
             cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
             cout << greenOn;
             cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± "
-                 << phiErrorSystematics[dataset] << "\u00B0.\n";
+                 << phiEllipseErrorSystematics[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± "
-                 << thetaErrorSystematics[dataset] << "\u00B0.\n";
+                 << thetaEllipseErrorSystematics[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << tiltSystematics[dataset] << "\u00B0.\n"
                  << resetFormats;
             cout << "--------------------------------------------\n";
@@ -788,9 +787,9 @@ void Directionality::CalculateCovariances()
                  << " without systematics.\n";
             cout << greenOn;
             cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± "
-                 << phiError[dataset] << "\u00B0.\n";
+                 << phiEllipseError[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± "
-                 << thetaError[dataset] << "\u00B0.\n";
+                 << thetaEllipseError[dataset] << "\u00B0.\n";
             cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << tilt[dataset] << "\u00B0.\n"
                  << resetFormats;
             cout << "--------------------------------------------\n";
@@ -930,13 +929,13 @@ void Directionality::FillOutputFile()
     outputFile.Close();
 }
 
-int main(int argc, char* argv[])
+int NeutrinoDirectionality()
 {
     // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
 
     // Using command line arguments for verbosity control
-    for (int i = 1; i < argc; i++)
+    /* for (int i = 1; i < argc; i++)
     {
         if (string(argv[i]) == "-D")
             DETECTOR_VERBOSITY = 1;
@@ -952,7 +951,7 @@ int main(int argc, char* argv[])
             ANGLES_STATISTICS = 1;
         else if (string(argv[i]) == "-C")
             COVARIANCE_VERBOSITY = 1;
-    }
+    } */
 
     // Take ownership of histograms
     TH1::AddDirectory(kFALSE);
