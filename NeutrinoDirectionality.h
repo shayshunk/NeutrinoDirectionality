@@ -212,7 +212,7 @@ class Directionality
 
   private:
     // Histogram to count IBDs
-    std::vector<TH1F> histogram;
+    array<array<array<TH1F, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
     // Values grabbed from ROOT tree
     double Esmear;
