@@ -101,95 +101,105 @@ bool CheckNeighbor(int periodNo, int segment, char direction)
     return neighbor;
 }
 
-void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                           TreeValues& currentEntry,
-                           int signalSet)
+Directionality::Directionality()
+{
+    for (int dataset = Data; dataset < DatasetSize; dataset++)  // Dataset
+    {
+        for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)  // Signal set
+        {
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                string data = DatasetToString(dataset);
+                string signal = SignalToString(signalSet);
+                string axis = AxisToString(direction);
+                string histogramName = data + " " + signal + " " + axis;
+                histogram.emplace_back(histogramName.c_str(), data.c_str(), bins, -histogramMax, histogramMax);
+            }
+        }
+    }
+}
+
+void Directionality::FillHistogramUnbiased(int signalSet)
 {
     bool posDirection = false, negDirection = false, success = false;
 
     // Need to weight accidental datasets by deadtime correction factor
-    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
+    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? xRx : 1;
 
     // Check for live neighbors in different directions based on which axis
     // we're filling
-    if (currentEntry.direction == X)
+    if (direction == X)
     {
-        posDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
-        negDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
+        posDirection = CheckNeighbor(period, promptSegment, 'r');
+        negDirection = CheckNeighbor(period, promptSegment, 'l');
     }
-    else if (currentEntry.direction == Y)
+    else if (direction == Y)
     {
-        posDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
-        negDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
+        posDirection = CheckNeighbor(period, promptSegment, 'u');
+        negDirection = CheckNeighbor(period, promptSegment, 'd');
     }
     else  // Fill Z with same segment events
     {
-        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, weight);
+        double displacement = delayedPosition - promptPosition;
+        histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Fill(displacement, weight);
     }
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(segmentWidth, weight);
+        histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Fill(segmentWidth, weight);
     else if (!posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(-segmentWidth, weight);
+        histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Fill(-segmentWidth, weight);
     else if (posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0, weight);
+        histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Fill(0.0, weight);
 }
 
-void FillHistogram(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                   TreeValues& currentEntry)
+void Directionality::FillHistogram()
 {
-    // Setting up timer
-    // Timer timer;
-
     // Applying energy cut
-    if (currentEntry.Esmear < 0.8 || currentEntry.Esmear > 7.4)
+    if (Esmear < 0.8 || Esmear > 7.4)
     {
         return;
     }
 
-    if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
+    if (nCaptTime > pow(10, 3) && nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
         // Calculate neutron displacement
-        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
+        double displacement = delayedPosition - promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
+        int signalSet = reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
         // Fill regular dataset with displacement but Z only takes same segment
-        if (currentEntry.direction != Z)
-            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
+        if (direction != Z)
+            histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Fill(displacement);
 
         // Fill dead segment correction dataset
-        if (currentEntry.promptSegment == currentEntry.delayedSegment)
+        if (promptSegment == delayedSegment)
         {
-            FillHistogramUnbiased(histogram, currentEntry, signalSet);
+            FillHistogramUnbiased(signalSet);
         }
     }
-    else if (currentEntry.nCaptTime > pow(10, 6))  // Accidental Dataset
+    else if (nCaptTime > pow(10, 6))  // Accidental Dataset
     {
         // Calculate neutron displacement
-        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
+        double displacement = delayedPosition - promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
+        int signalSet = reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
         // Fill regular dataset with displacement but Z only takes same segment
-        if (currentEntry.direction != Z)
-            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
+        if (direction != Z)
+            histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Fill(displacement, xRx);
 
         // Fill dead segment correction dataset
-        if (currentEntry.promptSegment == currentEntry.delayedSegment)
+        if (promptSegment == delayedSegment)
         {
-            FillHistogramUnbiased(histogram, currentEntry, signalSet);
+            FillHistogramUnbiased(signalSet);
         }
     }
 }
 
-void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                     int dataSet,
-                     int period = 0)
+void Directionality::SetUpHistograms(int dataSet, int period)
 {
     // Declaring some variables for use later
     int totalLines = 0;
@@ -300,14 +310,13 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
                 TreeValues currentEntry;
 
                 // Grabbing relevant values from the rootTree entry
-                currentEntry.promptPosition = rootTree->GetLeaf("xyz")->GetValue(direction);
-                currentEntry.delayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(direction);
-                currentEntry.promptSegment = rootTree->GetLeaf("maxseg")->GetValue(0);
-                currentEntry.delayedSegment = rootTree->GetLeaf("n_seg")->GetValue(0);
+                promptPosition = rootTree->GetLeaf("xyz")->GetValue(direction);
+                delayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(direction);
+                promptSegment = rootTree->GetLeaf("maxseg")->GetValue(0);
+                delayedSegment = rootTree->GetLeaf("n_seg")->GetValue(0);
 
                 // We throw out events where the neutron moves in a direction we're not checking
-                if (currentEntry.promptSegment != currentEntry.delayedSegment
-                    && currentEntry.promptPosition == currentEntry.delayedPosition)
+                if (promptSegment != delayedSegment && promptPosition == delayedPosition)
                     continue;
 
                 if (direction != Z)  // Cubical distance cuts in Z for X and Y
@@ -322,15 +331,15 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
                 }
 
                 // Copying some loop values into current entry
-                currentEntry.Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
-                currentEntry.nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
-                currentEntry.xRx = xRx;
-                currentEntry.dataSet = dataSet;
-                currentEntry.period = period;
-                currentEntry.direction = direction;
-                currentEntry.reactorOn = reactorOn;
+                Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
+                nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
+                xRx = xRx;
+                dataSet = dataSet;
+                period = period;
+                direction = direction;
+                reactorOn = reactorOn;
 
-                FillHistogram(histogram, currentEntry);
+                FillHistogram();
             }
         }
         // Returns the next character in the input sequence, without extracting it: The character is left as the next character
@@ -340,8 +349,7 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
     }
 }
 
-void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                        IBDValues& neutrinoCounts)
+void Directionality::CalculateUnbiasing()
 {
     // Defining variables used in calculation. Check the error propagation technote for details on the method
     double rPlus = 0, rMinus = 0;
@@ -355,17 +363,30 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>,
         {
             // Dataset - 1 returns the biased dataset counts
             // Grabbing data from filled bins, rest should be empty
-            nPlus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(296);
-            nPlusPlus = histogram[dataset][TotalDifference][direction]->GetBinContent(297);
-            nMinus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(6);
-            nMinusMinus = histogram[dataset][TotalDifference][direction]->GetBinContent(5);
-            nPlusMinus = histogram[dataset][TotalDifference][direction]->GetBinContent(151);
+            nPlus
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinContent(296);
+            nPlusPlus
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinContent(297);
+            nMinus
+                = histogram[((dataSet - 1) * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinContent(
+                    6);
+            nMinusMinus
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinContent(5);
+            nPlusMinus
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinContent(151);
 
-            nPlusError = histogram[dataset - 1][TotalDifference][direction]->GetBinError(296);
-            nPlusPlusError = histogram[dataset][TotalDifference][direction]->GetBinError(297);
-            nMinusError = histogram[dataset - 1][TotalDifference][direction]->GetBinError(6);
-            nMinusMinusError = histogram[dataset][TotalDifference][direction]->GetBinError(5);
-            nPlusMinusError = histogram[dataset][TotalDifference][direction]->GetBinError(151);
+            nPlusError
+                = histogram[((dataSet - 1) * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinError(
+                    296);
+            nPlusPlusError
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinError(297);
+            nMinusError
+                = histogram[((dataSet - 1) * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinError(
+                    6);
+            nMinusMinusError
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinError(5);
+            nPlusMinusError
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetBinError(151);
 
             rPlus = nPlus / (nPlusPlus + nPlusMinus);
             rMinus = nMinus / (nMinusMinus + nPlusMinus);
@@ -387,12 +408,12 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>,
                             2)
                       + pow((nMinus * (nPlusMinus + nPlusPlus) * (2 * nPlus + nPlusMinus + nPlusPlus) * nMinusMinusError), 2));
 
-            neutrinoCounts.mean[dataset][direction] = p;
-            neutrinoCounts.sigma[dataset][direction] = pError;
+            mean[dataset][direction] = p;
+            sigma[dataset][direction] = pError;
         }
-        neutrinoCounts.effectiveIBD[dataset][Z] = neutrinoCounts.effectiveIBD[dataset - 1][Z];
-        neutrinoCounts.mean[dataset][Z] = neutrinoCounts.mean[dataset - 1][Z];
-        neutrinoCounts.sigma[dataset][Z] = neutrinoCounts.sigma[dataset - 1][Z];
+        effectiveIBD[dataset][Z] = effectiveIBD[dataset - 1][Z];
+        mean[dataset][Z] = mean[dataset - 1][Z];
+        sigma[dataset][Z] = sigma[dataset - 1][Z];
     }
 
     cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
@@ -406,15 +427,15 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>,
             cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
             for (int direction = X; direction < DirectionSize; direction++)
             {
-                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats
-                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << mean[dataset][direction] << " ± "
+                     << sigma[dataset][direction] << '\n';
             }
             cout << "--------------------------------------------\n";
         }
     }
 }
 
-IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
+void Directionality::SubtractBackgrounds()
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
     livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
@@ -433,19 +454,23 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, Direction
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1F>(
                 static_cast<TH1F*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone(histogramName.c_str())));
-            histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOn][direction].get(),
-                                                                -1. / 100.);
+            histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Add(
+                histogram[dataset][AccidentalReactorOn][direction].get(), -1. / 100.);
 
             if (dataset == Data || dataset == DataUnbiased)
             {
-                histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][CorrelatedReactorOff][direction].get(),
-                                                                    -livetimeOn * atmosphericScaling / livetimeOff);
-                histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOff][direction].get(),
-                                                                    livetimeOn * atmosphericScaling / (100 * livetimeOff));
+                histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Add(
+                    histogram[dataset][CorrelatedReactorOff][direction].get(), -livetimeOn * atmosphericScaling / livetimeOff);
+                histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].Add(
+                    histogram[dataset][AccidentalReactorOff][direction].get(),
+                    livetimeOn * atmosphericScaling / (100 * livetimeOff));
             }
 
-            totalIBDs = histogram[dataset][TotalDifference][direction]->IntegralAndError(
-                0, histogram[dataset][TotalDifference][direction]->GetNbinsX() + 1, totalIBDErr);
+            totalIBDs
+                = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].IntegralAndError(
+                    0,
+                    histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetNbinsX() + 1,
+                    totalIBDErr);
             effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
                                                                 // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
 
@@ -460,9 +485,11 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, Direction
 
             if (dataset == Data || dataset == Sim)
             {
-                neutrinoCounts.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
-                neutrinoCounts.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev()
-                                                           / sqrt(effIBDs);
+                neutrinoCounts.mean[dataset][direction]
+                    = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetMean();
+                neutrinoCounts.sigma[dataset][direction]
+                    = histogram[(dataSet * SignalSize * DirectionSize) + (signalSet * DirectionSize) + direction].GetStdDev()
+                      / sqrt(effIBDs);
                 neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
             }
             else
