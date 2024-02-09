@@ -441,7 +441,6 @@ void Directionality::SubtractBackgrounds()
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = TH1F(histogram[dataset][CorrelatedReactorOn][direction]);
             histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1. / 100.);
-
             cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
 
             if (dataset == Data || dataset == DataUnbiased)
