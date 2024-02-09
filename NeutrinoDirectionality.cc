@@ -591,32 +591,32 @@ void Directionality::CalculateAngles()
 
         // phi = arctan(y / x)
         double tanPhi = py / px;
-        double phi = atan(tanPhi) * 180.0 / pi;
+        double phiTemp = atan(tanPhi) * 180.0 / pi;
         double tanPhiError = sqrt(pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2));
-        double phiError = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+        double phiErrorTemp = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
         double tanPhiErrorSystematics = sqrt(pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2));
-        double phiErrorSystematics = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+        double phiErrorSystematicsTemp = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
 
         // theta = arctan(z / sqrt(x^2 + y^2))
         double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
-        double theta = atan(tanTheta) * 180.0 / pi;
+        double thetaTemp = atan(tanTheta) * 180.0 / pi;
         double tanThetaError = sqrt((1 / (px * px + py * py))
                                     * (pow((px * pz * sigmaX / (px * px + py * py)), 2)
                                        + pow((py * pz * sigmaY / (px * px + py * py)), 2) + pow(sigmaZ, 2)));
-        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi;
+        double thetaErrorTemp = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi;
         double tanThetaErrorSystematics
             = sqrt((1 / (px * px + py * py))
                    * (pow((px * pz * sigmaXSystematics / (px * px + py * py)), 2)
                       + pow((py * pz * sigmaYSystematics / (px * px + py * py)), 2) + pow(sigmaZSystematics, 2)));
-        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi;
+        double thetaErrorSystematicsTemp = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi;
 
         // Storing values
-        phi[dataset] = phi;
-        phiError[dataset] = phiError;
-        phiErrorSystematics[dataset] = phiErrorSystematics;
-        theta[dataset] = theta;
-        thetaError[dataset] = thetaError;
-        thetaErrorSystematics[dataset] = thetaErrorSystematics;
+        phi[dataset] = phiTemp;
+        phiError[dataset] = phiErrorTemp;
+        phiErrorSystematics[dataset] = phiErrorSystematicsTemp;
+        theta[dataset] = thetaTemp;
+        thetaError[dataset] = thetaErrorTemp;
+        thetaErrorSystematics[dataset] = thetaErrorSystematicsTemp;
     }
 
     // Calculating "true" neutrino direction
@@ -847,10 +847,10 @@ void Directionality::PrintAngles()
 
         cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         cout << greenOn;
-        cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± " << phiError
+        cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± " << phiErrorTemp
              << "\u00B0.\n";
-        cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± " << thetaError
-             << "\u00B0.\n"
+        cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± "
+             << thetaErrorTemp << "\u00B0.\n"
              << resetFormats;
         cout << "--------------------------------------------\n";
     }
@@ -932,7 +932,6 @@ void Directionality::FillOutputFile()
 
 int main(int argc, char* argv[])
 {
-    Timer timer;
     // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
 
@@ -958,6 +957,12 @@ int main(int argc, char* argv[])
     // Take ownership of histograms
     TH1::AddDirectory(kFALSE);
 
+    // Setting up timer
+    Timer timer;
+
+    // Setting up Directionality class
+    Directionality neutrinoDirection;
+
     // Fill detector configuration
     FillDetectorConfig();
 
@@ -967,7 +972,7 @@ int main(int argc, char* argv[])
     cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
     {
-        SetUpHistograms(Data, period);
+        neutrinoDirection.SetUpHistograms(Data, period);
     }
     lineCounter = 0;
 
@@ -986,19 +991,19 @@ int main(int argc, char* argv[])
     cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)
     {
-        SetUpHistograms(histogram, Sim, period);
+        neutrinoDirection.SetUpHistograms(Sim, period);
     }
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-    neutrinoCounts = SubtractBackgrounds(histogram);
-    AddSystematics(neutrinoCounts);
-    finalAngles = CalculateAngles(neutrinoCounts);
-    oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);
-    OffsetTheta(finalAngles);
-    PrintAngles(finalAngles);
-    FillOutputFile(histogram, finalAngles, oneSigmaEllipse);
+    neutrinoDirection.SubtractBackgrounds();
+    neutrinoDirection.AddSystematics();
+    neutrinoDirection.CalculateAngles();
+    neutrinoDirection.CalculateCovariances();
+    neutrinoDirection.OffsetTheta();
+    neutrinoDirection.PrintAngles();
+    neutrinoDirection.FillOutputFile();
 
     return 0;
 }
