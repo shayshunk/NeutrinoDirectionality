@@ -152,11 +152,11 @@ void Directionality::FillHistogramUnbiased(int signalSet)
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
-        histogram[dataSet][signalSet][direction].Fill(segmentWidth, weight);
+        histogram[dataSet + 1][signalSet][direction].Fill(segmentWidth, weight);
     else if (!posDirection && negDirection)
-        histogram[dataSet][signalSet][direction].Fill(-segmentWidth, weight);
+        histogram[dataSet + 1][signalSet][direction].Fill(-segmentWidth, weight);
     else if (posDirection && negDirection)
-        histogram[dataSet][signalSet][direction].Fill(0.0, weight);
+        histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
 }
 
 void Directionality::FillHistogram()
@@ -209,7 +209,7 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
 {
     // Declaring some variables for use later
     int totalLines = 0;
-    bool reactorOn = true;
+    reactorOn = true;
 
     dataSet = dataset;
     period = periodNo;
@@ -308,7 +308,6 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         TTree* rootTree = (TTree*)rootFile->Get("P2kIBDPlugin/Tibd");
 
         long nEntries = rootTree->GetEntries();
-        cout << "Entries: " << nEntries << '\n';
 
         for (long i = 0; i < nEntries; i++)
         {
@@ -349,10 +348,6 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         file.peek();
         rootFile->Close();
     }
-
-    cout << histogram[Data][CorrelatedReactorOn][X].GetEntries() << '\n';
-    cout << histogram[Data][CorrelatedReactorOn][Y].GetEntries() << '\n';
-    cout << histogram[Data][CorrelatedReactorOn][Z].GetEntries() << '\n';
 }
 
 void Directionality::CalculateUnbiasing()
@@ -435,7 +430,6 @@ void Directionality::SubtractBackgrounds()
 
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
-    IBDValues neutrinoCounts;
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
@@ -447,6 +441,8 @@ void Directionality::SubtractBackgrounds()
             // Have to static cast raw pointer to shared pointer to keep up safety measures
             histogram[dataset][TotalDifference][direction] = TH1F(histogram[dataset][CorrelatedReactorOn][direction]);
             histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1. / 100.);
+
+            cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
 
             if (dataset == Data || dataset == DataUnbiased)
             {
@@ -979,7 +975,7 @@ int NeutrinoDirectionality()
     cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-    if (LIVETIME_VERBOSITY)
+    if (!LIVETIME_VERBOSITY)
     {
         cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
         cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
