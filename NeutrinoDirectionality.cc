@@ -436,6 +436,8 @@ IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, Direction
             histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOn][direction].get(),
                                                                 -1. / 100.);
 
+            // cout << histogram[dataset][TotalDifference][direction]->GetEntries() << '\n';
+
             if (dataset == Data || dataset == DataUnbiased)
             {
                 histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][CorrelatedReactorOff][direction].get(),
