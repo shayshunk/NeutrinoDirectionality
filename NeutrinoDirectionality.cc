@@ -367,14 +367,21 @@ void Directionality::SubtractBackgrounds()
             histogram[dataset][TotalDifference][direction] = TH1F(histogram[dataset][CorrelatedReactorOn][direction]);
             histogram[dataset][TotalDifference][direction].SetNameTitle(histogramName.c_str(), data.c_str());
 
-            histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1 / 100);
+            cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
+
+            histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1. / 100);
+
+            cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
 
             if (dataset == Data || dataset == DataUnbiased)
             {
                 histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][CorrelatedReactorOff][direction],
                                                                    -livetimeOn * atmosphericScaling / livetimeOff);
+
+                cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
                 histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOff][direction],
                                                                    livetimeOn * atmosphericScaling / (100 * livetimeOff));
+                cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
             }
 
             totalIBDs = histogram[dataset][TotalDifference][direction].IntegralAndError(
@@ -787,8 +794,8 @@ void Directionality::CalculateCovariances()
     }
 
     // Final cone of uncertainty
-    float a = phiError[DataUnbiased];
-    float b = thetaError[DataUnbiased];
+    float a = phiEllipseError[DataUnbiased];
+    float b = thetaEllipseError[DataUnbiased];
     thetaTemp = 90 - theta[DataUnbiased];
     float solidAngle = pi * a * b * sin(thetaTemp * pi / 180.0);
     float solidAngleRadians = solidAngle * pow((pi / 180.0), 2);
@@ -919,13 +926,13 @@ void Directionality::FillOutputFile()
     outputFile.Close();
 }
 
-int NeutrinoDirectionality()
+int main(int argc, char* argv[])
 {
     // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
 
     // Using command line arguments for verbosity control
-    /* for (int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         if (string(argv[i]) == "-D")
             DETECTOR_VERBOSITY = 1;
@@ -941,7 +948,7 @@ int NeutrinoDirectionality()
             ANGLES_STATISTICS = 1;
         else if (string(argv[i]) == "-C")
             COVARIANCE_VERBOSITY = 1;
-    } */
+    }
 
     // Take ownership of histograms
     TH1::AddDirectory(kFALSE);

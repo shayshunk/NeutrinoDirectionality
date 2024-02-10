@@ -34,13 +34,13 @@ int lineCounter = 0;
 double livetimeOff = 0, livetimeOn = 0;
 
 // Print flags
-bool DETECTOR_VERBOSITY = 1;
-bool LIVETIME_VERBOSITY = 1;
-bool IBDCOUNT_VERBOSITY = 1;
-bool MEAN_VERBOSITY = 1;
-bool SYSTEMATIC_MEAN_VERBOSITY = 1;
-bool ANGLES_STATISTICS = 1;
-bool COVARIANCE_VERBOSITY = 1;
+bool DETECTOR_VERBOSITY = 0;
+bool LIVETIME_VERBOSITY = 0;
+bool IBDCOUNT_VERBOSITY = 0;
+bool MEAN_VERBOSITY = 0;
+bool SYSTEMATIC_MEAN_VERBOSITY = 0;
+bool ANGLES_STATISTICS = 0;
+bool COVARIANCE_VERBOSITY = 0;
 
 // Utilities to refer to parameters easily
 enum Directions
@@ -212,7 +212,7 @@ class Directionality
 
   private:
     // Histogram to count IBDs
-    array<array<array<TH1F, DirectionSize>, SignalSize>, DatasetSize> histogram;
+    std::array<std::array<std::array<TH1F, DirectionSize>, SignalSize>, DatasetSize> histogram;
 
     // Values grabbed from ROOT tree
     double Esmear;
