@@ -105,7 +105,7 @@ Directionality::Directionality()
 {
     for (int dataset = Data; dataset < DatasetSize; dataset++)  // Dataset
     {
-        for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)  // Signal set
+        for (int signalSet = CorrelatedReactorOn; signalSet < TotalDifference; signalSet++)  // Signal set
         {
             for (int direction = X; direction < DirectionSize; direction++)
             {
@@ -284,9 +284,6 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         // Open the root file
         auto rootFile = std::make_unique<TFile>(rootFilename);
 
-        // Declare deadtime correction coefficient (veto deadtime correction)
-        double xRx;
-
         // Going into empty scope to let the pointers die out for safety
         {
             TVectorD* runtime = (TVectorD*)rootFile->Get("runtime");
@@ -350,79 +347,6 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
     }
 }
 
-void Directionality::CalculateUnbiasing()
-{
-    // Defining variables used in calculation. Check the error propagation technote for details on the method
-    double rPlus = 0, rMinus = 0;
-    double p = 0, pError = 0;
-    double nPlus = 0, nPlusPlus = 0, nMinus = 0, nMinusMinus = 0, nPlusMinus = 0;
-    double nPlusError = 0, nPlusPlusError = 0, nMinusError = 0, nMinusMinusError = 0, nPlusMinusError = 0;
-
-    for (int dataset = DataUnbiased; dataset < DatasetSize; dataset += 2)
-    {
-        for (int direction = X; direction < Z; direction++)
-        {
-            // Dataset - 1 returns the biased dataset counts
-            // Grabbing data from filled bins, rest should be empty
-            nPlus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(296);
-            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(297);
-            nMinus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(6);
-            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(5);
-            nPlusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(151);
-
-            nPlusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(296);
-            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(297);
-            nMinusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(6);
-            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(5);
-            nPlusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(151);
-
-            rPlus = nPlus / (nPlusPlus + nPlusMinus);
-            rMinus = nMinus / (nMinusMinus + nPlusMinus);
-
-            p = segmentWidth * (rPlus - rMinus) / (rPlus + rMinus + 1);
-
-            pError
-                = segmentWidth
-                  * pow(1 / ((nMinus * (nPlusMinus + nPlusPlus) + (nMinusMinus + nPlusMinus) * (nPlus + nPlusMinus + nPlusPlus))),
-                        2)
-                  * sqrt(
-                      pow((nMinusMinus + nPlusMinus) * (nPlusMinus + nPlusPlus), 2)
-                          * (pow(nPlusError * (2 * nMinus + nMinusMinus + nPlusMinus), 2)
-                             + pow(nMinusError * (2 * nPlus + nPlusPlus + nPlusMinus), 2))
-                      + pow((nPlus * (nPlusMinus + nMinusMinus) * (2 * nMinus + nMinusMinus + nPlusMinus) * nPlusPlusError), 2)
-                      + pow((nPlusMinusError
-                             * (nPlus * pow((nMinusMinus + nPlusMinus), 2)
-                                + nMinus * (2 * nMinusMinus * nPlus - 2 * nPlus * nPlusPlus - pow((nPlusMinus + nPlusPlus), 2)))),
-                            2)
-                      + pow((nMinus * (nPlusMinus + nPlusPlus) * (2 * nPlus + nPlusMinus + nPlusPlus) * nMinusMinusError), 2));
-
-            mean[dataset][direction] = p;
-            sigma[dataset][direction] = pError;
-        }
-        effectiveIBD[dataset][Z] = effectiveIBD[dataset - 1][Z];
-        mean[dataset][Z] = mean[dataset - 1][Z];
-        sigma[dataset][Z] = sigma[dataset - 1][Z];
-    }
-
-    cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
-    cout << "--------------------------------------------\n";
-
-    // Printing out values
-    if (MEAN_VERBOSITY)
-    {
-        for (int dataset = Data; dataset < DatasetSize; dataset++)
-        {
-            cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
-            for (int direction = X; direction < DirectionSize; direction++)
-            {
-                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << mean[dataset][direction] << " ± "
-                     << sigma[dataset][direction] << '\n';
-            }
-            cout << "--------------------------------------------\n";
-        }
-    }
-}
-
 void Directionality::SubtractBackgrounds()
 {
     /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
@@ -436,12 +360,14 @@ void Directionality::SubtractBackgrounds()
         for (int direction = X; direction < DirectionSize; direction++)
         {
             string histogramName;
-            histogramName = DatasetToString(dataset) + " Total Difference " + AxisToString(direction);
+            string data = DatasetToString(dataset);
+            histogramName = data + " Total Difference " + AxisToString(direction);
 
-            // Have to static cast raw pointer to shared pointer to keep up safety measures
+            // Copying Correlated Reactor On to start
             histogram[dataset][TotalDifference][direction] = TH1F(histogram[dataset][CorrelatedReactorOn][direction]);
-            histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1. / 100.);
-            cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
+            histogram[dataset][TotalDifference][direction].SetNameTitle(histogramName.c_str(), data.c_str());
+
+            histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1 / 100);
 
             if (dataset == Data || dataset == DataUnbiased)
             {
@@ -518,6 +444,79 @@ void Directionality::SubtractBackgrounds()
     cout << "--------------------------------------------\n";
 
     CalculateUnbiasing();
+}
+
+void Directionality::CalculateUnbiasing()
+{
+    // Defining variables used in calculation. Check the error propagation technote for details on the method
+    double rPlus = 0, rMinus = 0;
+    double p = 0, pError = 0;
+    double nPlus = 0, nPlusPlus = 0, nMinus = 0, nMinusMinus = 0, nPlusMinus = 0;
+    double nPlusError = 0, nPlusPlusError = 0, nMinusError = 0, nMinusMinusError = 0, nPlusMinusError = 0;
+
+    for (int dataset = DataUnbiased; dataset < DatasetSize; dataset += 2)
+    {
+        for (int direction = X; direction < Z; direction++)
+        {
+            // Dataset - 1 returns the biased dataset counts
+            // Grabbing data from filled bins, rest should be empty
+            nPlus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(296);
+            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(297);
+            nMinus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(6);
+            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(5);
+            nPlusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(151);
+
+            nPlusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(296);
+            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(297);
+            nMinusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(6);
+            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(5);
+            nPlusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(151);
+
+            rPlus = nPlus / (nPlusPlus + nPlusMinus);
+            rMinus = nMinus / (nMinusMinus + nPlusMinus);
+
+            p = segmentWidth * (rPlus - rMinus) / (rPlus + rMinus + 1);
+
+            pError
+                = segmentWidth
+                  * pow(1 / ((nMinus * (nPlusMinus + nPlusPlus) + (nMinusMinus + nPlusMinus) * (nPlus + nPlusMinus + nPlusPlus))),
+                        2)
+                  * sqrt(
+                      pow((nMinusMinus + nPlusMinus) * (nPlusMinus + nPlusPlus), 2)
+                          * (pow(nPlusError * (2 * nMinus + nMinusMinus + nPlusMinus), 2)
+                             + pow(nMinusError * (2 * nPlus + nPlusPlus + nPlusMinus), 2))
+                      + pow((nPlus * (nPlusMinus + nMinusMinus) * (2 * nMinus + nMinusMinus + nPlusMinus) * nPlusPlusError), 2)
+                      + pow((nPlusMinusError
+                             * (nPlus * pow((nMinusMinus + nPlusMinus), 2)
+                                + nMinus * (2 * nMinusMinus * nPlus - 2 * nPlus * nPlusPlus - pow((nPlusMinus + nPlusPlus), 2)))),
+                            2)
+                      + pow((nMinus * (nPlusMinus + nPlusPlus) * (2 * nPlus + nPlusMinus + nPlusPlus) * nMinusMinusError), 2));
+
+            mean[dataset][direction] = p;
+            sigma[dataset][direction] = pError;
+        }
+        effectiveIBD[dataset][Z] = effectiveIBD[dataset - 1][Z];
+        mean[dataset][Z] = mean[dataset - 1][Z];
+        sigma[dataset][Z] = sigma[dataset - 1][Z];
+    }
+
+    cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
+    // Printing out values
+    if (MEAN_VERBOSITY)
+    {
+        for (int dataset = Data; dataset < DatasetSize; dataset++)
+        {
+            cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << mean[dataset][direction] << " ± "
+                     << sigma[dataset][direction] << '\n';
+            }
+            cout << "--------------------------------------------\n";
+        }
+    }
 }
 
 void Directionality::AddSystematics()
@@ -626,22 +625,17 @@ void Directionality::CalculateAngles()
 
     // Same angle calculation as above
     float tanPhiTrue = yTrue / xTrue;
-    float phiTrue = atan(tanPhiTrue) * 180.0 / pi;
+    phiTrue = atan(tanPhiTrue) * 180.0 / pi;
     float tanPhiTrueError = sqrt(pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2));
-    float phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
+    phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 
     float tanThetaTrue = zTrue / sqrt(pow(xTrue, 2) + pow(yTrue, 2));
-    float thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
+    thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
     float tanThetaTrueError
         = sqrt(pow(1 / sqrt(xTrue * xTrue + yTrue * yTrue), 2)
                * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2)
                   + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)));
-    float thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
-
-    phiTrue = phiTrue;
-    phiTrueError = phiTrueError;
-    thetaTrue = thetaTrue;
-    thetaTrueError = thetaTrueError;
+    thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 }
 
 void Directionality::CalculateCovariances()
