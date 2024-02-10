@@ -367,21 +367,15 @@ void Directionality::SubtractBackgrounds()
             histogram[dataset][TotalDifference][direction] = TH1F(histogram[dataset][CorrelatedReactorOn][direction]);
             histogram[dataset][TotalDifference][direction].SetNameTitle(histogramName.c_str(), data.c_str());
 
-            cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
-
             histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1. / 100);
-
-            cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
 
             if (dataset == Data || dataset == DataUnbiased)
             {
                 histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][CorrelatedReactorOff][direction],
                                                                    -livetimeOn * atmosphericScaling / livetimeOff);
 
-                cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
                 histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOff][direction],
                                                                    livetimeOn * atmosphericScaling / (100 * livetimeOff));
-                cout << histogram[dataset][TotalDifference][direction].GetEntries() << '\n';
             }
 
             totalIBDs = histogram[dataset][TotalDifference][direction].IntegralAndError(
