@@ -230,6 +230,7 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
 
     // Combining names into file list name
     string fileList = Form(path, std::to_string(period).c_str(), std::to_string(period).c_str());
+    array<string, 1500> files;
 
     // Opening and checking file list
     ifstream file;
@@ -241,6 +242,8 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         cout << "Trying to find: " << fileList << '\n';
         return;
     }
+
+    int lineNumber = 0;
 
     while (file.good() && !file.eof())
     {
@@ -264,11 +267,19 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         }
 
         // Reading file list
-        string line;
-        getline(file, line);
+        getline(file, files[lineNumber]);
+        lineNumber++;
+    }
+
+    files[lineNumber - 1] = "Done";
+
+    for (int index = 0; index < files.size(); index++)
+    {
+        if (files[index] == "Done")
+            break;
 
         // Combining names into root file name
-        TString rootFilename = Form(fileName, std::to_string(period).c_str(), line.data());
+        TString rootFilename = Form(fileName, std::to_string(period).c_str(), files[index].data());
 
         if (rootFilename.Contains(" 0"))
         {
