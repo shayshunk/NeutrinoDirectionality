@@ -1,4 +1,5 @@
 #include "TCanvas.h"
+#include "TH1.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TROOT.h"

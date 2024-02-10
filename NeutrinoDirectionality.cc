@@ -101,99 +101,118 @@ bool CheckNeighbor(int periodNo, int segment, char direction)
     return neighbor;
 }
 
-void FillHistogramUnbiased(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                           TreeValues& currentEntry,
-                           int signalSet)
+Directionality::Directionality()
+{
+    for (int dataset = Data; dataset < DatasetSize; dataset++)  // Dataset
+    {
+        for (int signalSet = CorrelatedReactorOn; signalSet < TotalDifference; signalSet++)  // Signal set
+        {
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                // No reactor off for simulations
+                if ((dataset == Sim || dataset == SimUnbiased)
+                    && (signalSet == CorrelatedReactorOff || signalSet == AccidentalReactorOff))
+                    continue;
+
+                string data = DatasetToString(dataset);
+                string signal = SignalToString(signalSet);
+                string axis = AxisToString(direction);
+                string histogramName = data + " " + signal + " " + axis;
+                histogram[dataset][signalSet][direction]
+                    = TH1F(histogramName.c_str(), data.c_str(), bins, -histogramMax, histogramMax);
+            }
+        }
+    }
+}
+
+void Directionality::FillHistogramUnbiased(int signalSet)
 {
     bool posDirection = false, negDirection = false, success = false;
 
     // Need to weight accidental datasets by deadtime correction factor
-    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? currentEntry.xRx : 1;
+    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? xRx : 1;
 
     // Check for live neighbors in different directions based on which axis
     // we're filling
-    if (currentEntry.direction == X)
+    if (direction == X)
     {
-        posDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'r');
-        negDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'l');
+        posDirection = CheckNeighbor(period, promptSegment, 'r');
+        negDirection = CheckNeighbor(period, promptSegment, 'l');
     }
-    else if (currentEntry.direction == Y)
+    else if (direction == Y)
     {
-        posDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'u');
-        negDirection = CheckNeighbor(currentEntry.period, currentEntry.promptSegment, 'd');
+        posDirection = CheckNeighbor(period, promptSegment, 'u');
+        negDirection = CheckNeighbor(period, promptSegment, 'd');
     }
     else  // Fill Z with same segment events
     {
-        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
-        histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, weight);
+        double displacement = delayedPosition - promptPosition;
+        histogram[dataSet][signalSet][direction].Fill(displacement, weight);
     }
 
     // Dataset + 1 returns the unbiased version of that dataset
     if (posDirection && !negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(segmentWidth, weight);
+        histogram[dataSet + 1][signalSet][direction].Fill(segmentWidth, weight);
     else if (!posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(-segmentWidth, weight);
+        histogram[dataSet + 1][signalSet][direction].Fill(-segmentWidth, weight);
     else if (posDirection && negDirection)
-        histogram[currentEntry.dataSet + 1][signalSet][currentEntry.direction]->Fill(0.0, weight);
+        histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
 }
 
-void FillHistogram(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                   TreeValues& currentEntry)
+void Directionality::FillHistogram()
 {
-    // Setting up timer
-    // Timer timer;
-
     // Applying energy cut
-    if (currentEntry.Esmear < 0.8 || currentEntry.Esmear > 7.4)
+    if (Esmear < 0.8 || Esmear > 7.4)
     {
         return;
     }
 
-    if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
+    if (nCaptTime > pow(10, 3) && nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
         // Calculate neutron displacement
-        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
+        double displacement = delayedPosition - promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
+        int signalSet = reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
         // Fill regular dataset with displacement but Z only takes same segment
-        if (currentEntry.direction != Z)
-            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement);
+        if (direction != Z)
+            histogram[dataSet][signalSet][direction].Fill(displacement);
 
         // Fill dead segment correction dataset
-        if (currentEntry.promptSegment == currentEntry.delayedSegment)
+        if (promptSegment == delayedSegment)
         {
-            FillHistogramUnbiased(histogram, currentEntry, signalSet);
+            FillHistogramUnbiased(signalSet);
         }
     }
-    else if (currentEntry.nCaptTime > pow(10, 6))  // Accidental Dataset
+    else if (nCaptTime > pow(10, 6))  // Accidental Dataset
     {
         // Calculate neutron displacement
-        double displacement = currentEntry.delayedPosition - currentEntry.promptPosition;
+        double displacement = delayedPosition - promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
+        int signalSet = reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
         // Fill regular dataset with displacement but Z only takes same segment
-        if (currentEntry.direction != Z)
-            histogram[currentEntry.dataSet][signalSet][currentEntry.direction]->Fill(displacement, currentEntry.xRx);
+        if (direction != Z)
+            histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
 
         // Fill dead segment correction dataset
-        if (currentEntry.promptSegment == currentEntry.delayedSegment)
+        if (promptSegment == delayedSegment)
         {
-            FillHistogramUnbiased(histogram, currentEntry, signalSet);
+            FillHistogramUnbiased(signalSet);
         }
     }
 }
 
-void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                     int dataSet,
-                     int period = 0)
+void Directionality::SetUpHistograms(int dataset, int periodNo)
 {
     // Declaring some variables for use later
     int totalLines = 0;
-    bool reactorOn = true;
+    reactorOn = true;
+
+    dataSet = dataset;
+    period = periodNo;
 
     // Figuring out dataset
     char const* path;
@@ -265,9 +284,6 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
         // Open the root file
         auto rootFile = std::make_unique<TFile>(rootFilename);
 
-        // Declare deadtime correction coefficient (veto deadtime correction)
-        double xRx;
-
         // Going into empty scope to let the pointers die out for safety
         {
             TVectorD* runtime = (TVectorD*)rootFile->Get("runtime");
@@ -294,20 +310,16 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
         {
             rootTree->GetEntry(i);
 
-            for (int direction = X; direction < DirectionSize; direction++)
+            for (direction = X; direction < DirectionSize; direction++)
             {
-                // Intializing struct of relevant values
-                TreeValues currentEntry;
-
                 // Grabbing relevant values from the rootTree entry
-                currentEntry.promptPosition = rootTree->GetLeaf("xyz")->GetValue(direction);
-                currentEntry.delayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(direction);
-                currentEntry.promptSegment = rootTree->GetLeaf("maxseg")->GetValue(0);
-                currentEntry.delayedSegment = rootTree->GetLeaf("n_seg")->GetValue(0);
+                promptPosition = rootTree->GetLeaf("xyz")->GetValue(direction);
+                delayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(direction);
+                promptSegment = rootTree->GetLeaf("maxseg")->GetValue(0);
+                delayedSegment = rootTree->GetLeaf("n_seg")->GetValue(0);
 
                 // We throw out events where the neutron moves in a direction we're not checking
-                if (currentEntry.promptSegment != currentEntry.delayedSegment
-                    && currentEntry.promptPosition == currentEntry.delayedPosition)
+                if (promptSegment != delayedSegment && promptPosition == delayedPosition)
                     continue;
 
                 if (direction != Z)  // Cubical distance cuts in Z for X and Y
@@ -322,15 +334,10 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
                 }
 
                 // Copying some loop values into current entry
-                currentEntry.Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
-                currentEntry.nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
-                currentEntry.xRx = xRx;
-                currentEntry.dataSet = dataSet;
-                currentEntry.period = period;
-                currentEntry.direction = direction;
-                currentEntry.reactorOn = reactorOn;
+                Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
+                nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
 
-                FillHistogram(histogram, currentEntry);
+                FillHistogram();
             }
         }
         // Returns the next character in the input sequence, without extracting it: The character is left as the next character
@@ -340,8 +347,107 @@ void SetUpHistograms(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Si
     }
 }
 
-void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram,
-                        IBDValues& neutrinoCounts)
+void Directionality::SubtractBackgrounds()
+{
+    /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
+    livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
+
+    // Defining variables for IBD background subtraction
+    double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
+
+    for (int dataset = Data; dataset < DatasetSize; dataset++)
+    {
+        for (int direction = X; direction < DirectionSize; direction++)
+        {
+            string histogramName;
+            string data = DatasetToString(dataset);
+            histogramName = data + " Total Difference " + AxisToString(direction);
+
+            // Copying Correlated Reactor On to start
+            histogram[dataset][TotalDifference][direction] = TH1F(histogram[dataset][CorrelatedReactorOn][direction]);
+            histogram[dataset][TotalDifference][direction].SetNameTitle(histogramName.c_str(), data.c_str());
+
+            histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOn][direction], -1. / 100);
+
+            if (dataset == Data || dataset == DataUnbiased)
+            {
+                histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][CorrelatedReactorOff][direction],
+                                                                   -livetimeOn * atmosphericScaling / livetimeOff);
+
+                histogram[dataset][TotalDifference][direction].Add(&histogram[dataset][AccidentalReactorOff][direction],
+                                                                   livetimeOn * atmosphericScaling / (100 * livetimeOff));
+            }
+
+            totalIBDs = histogram[dataset][TotalDifference][direction].IntegralAndError(
+                0, histogram[dataset][TotalDifference][direction].GetNbinsX() + 1, totalIBDErr);
+            effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
+                                                                // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
+
+            totalIBD[dataset][direction] = totalIBDs;
+            totalIBDError[dataset][direction] = totalIBDErr;
+
+            if (direction == Z)
+            {
+                effectiveIBD[dataset][direction] = effIBDs;
+                continue;
+            }
+
+            if (dataset == Data || dataset == Sim)
+            {
+                mean[dataset][direction] = histogram[dataset][TotalDifference][direction].GetMean();
+                sigma[dataset][direction] = histogram[dataset][TotalDifference][direction].GetStdDev() / sqrt(effIBDs);
+                effectiveIBD[dataset][direction] = effIBDs;
+            }
+            else
+            {
+                effectiveIBD[dataset][direction] = effectiveIBD[dataset - 1][direction];
+            }
+        }
+
+        if (dataset == DataUnbiased || dataset == SimUnbiased)
+            continue;
+
+        // Z is fit to a Guassian and only takes same segment inputs
+        // Possible thanks to 1mm resolution in Z
+        TF1 gaussian("Fit", "gaus", -140, 140);
+
+        histogram[dataset][TotalDifference][Z].Fit("Fit", "RQ");
+
+        float zMean = gaussian.GetParameter(1);
+        float zError = gaussian.GetParError(1);
+
+        mean[dataset][Z] = zMean;
+        sigma[dataset][Z] = zError;
+
+        // Deleting fit because we don't want the plot options stuck here
+        delete histogram[dataset][TotalDifference][Z].GetListOfFunctions()->FindObject("Fit");
+    }
+
+    // Printing out values
+    if (IBDCOUNT_VERBOSITY)
+    {
+        for (int dataset = Data; dataset < DatasetSize; dataset++)
+        {
+            cout << "Total and Effective IBD Events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
+
+            for (int direction = X; direction < DirectionSize; direction++)
+            {
+                cout << boldOn << AxisToString(direction) << ": " << resetFormats << totalIBD[dataset][direction] << " ± "
+                     << totalIBDError[dataset][direction] << boldOn << ". Effective IBD counts: " << resetFormats
+                     << effectiveIBD[dataset][direction] << ".\n";
+            }
+
+            cout << "--------------------------------------------\n";
+        }
+    }
+
+    cout << boldOn << cyanOn << "Subtracted backgrounds.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
+    CalculateUnbiasing();
+}
+
+void Directionality::CalculateUnbiasing()
 {
     // Defining variables used in calculation. Check the error propagation technote for details on the method
     double rPlus = 0, rMinus = 0;
@@ -355,17 +461,17 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>,
         {
             // Dataset - 1 returns the biased dataset counts
             // Grabbing data from filled bins, rest should be empty
-            nPlus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(296);
-            nPlusPlus = histogram[dataset][TotalDifference][direction]->GetBinContent(297);
-            nMinus = histogram[dataset - 1][TotalDifference][direction]->GetBinContent(6);
-            nMinusMinus = histogram[dataset][TotalDifference][direction]->GetBinContent(5);
-            nPlusMinus = histogram[dataset][TotalDifference][direction]->GetBinContent(151);
+            nPlus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(296);
+            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(297);
+            nMinus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(6);
+            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(5);
+            nPlusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(151);
 
-            nPlusError = histogram[dataset - 1][TotalDifference][direction]->GetBinError(296);
-            nPlusPlusError = histogram[dataset][TotalDifference][direction]->GetBinError(297);
-            nMinusError = histogram[dataset - 1][TotalDifference][direction]->GetBinError(6);
-            nMinusMinusError = histogram[dataset][TotalDifference][direction]->GetBinError(5);
-            nPlusMinusError = histogram[dataset][TotalDifference][direction]->GetBinError(151);
+            nPlusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(296);
+            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(297);
+            nMinusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(6);
+            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(5);
+            nPlusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(151);
 
             rPlus = nPlus / (nPlusPlus + nPlusMinus);
             rMinus = nMinus / (nMinusMinus + nPlusMinus);
@@ -387,12 +493,12 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>,
                             2)
                       + pow((nMinus * (nPlusMinus + nPlusPlus) * (2 * nPlus + nPlusMinus + nPlusPlus) * nMinusMinusError), 2));
 
-            neutrinoCounts.mean[dataset][direction] = p;
-            neutrinoCounts.sigma[dataset][direction] = pError;
+            mean[dataset][direction] = p;
+            sigma[dataset][direction] = pError;
         }
-        neutrinoCounts.effectiveIBD[dataset][Z] = neutrinoCounts.effectiveIBD[dataset - 1][Z];
-        neutrinoCounts.mean[dataset][Z] = neutrinoCounts.mean[dataset - 1][Z];
-        neutrinoCounts.sigma[dataset][Z] = neutrinoCounts.sigma[dataset - 1][Z];
+        effectiveIBD[dataset][Z] = effectiveIBD[dataset - 1][Z];
+        mean[dataset][Z] = mean[dataset - 1][Z];
+        sigma[dataset][Z] = sigma[dataset - 1][Z];
     }
 
     cout << boldOn << cyanOn << "Calculated Means.\n" << resetFormats;
@@ -406,119 +512,15 @@ void CalculateUnbiasing(array<array<array<std::shared_ptr<TH1F>, DirectionSize>,
             cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
             for (int direction = X; direction < DirectionSize; direction++)
             {
-                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats
-                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigma[dataset][direction] << '\n';
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << mean[dataset][direction] << " ± "
+                     << sigma[dataset][direction] << '\n';
             }
             cout << "--------------------------------------------\n";
         }
     }
 }
 
-IBDValues SubtractBackgrounds(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize>& histogram)
-{
-    /* IBD events = (Correlated - Accidental/100)_{reactor on} + (-livetimeOn/livetimeOff*Correlated +
-    livetimeOn/livetimeOff*Accidental/100)_{reactor off} */
-
-    // Defining variables for IBD background subtraction
-    double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
-    IBDValues neutrinoCounts;
-
-    for (int dataset = Data; dataset < DatasetSize; dataset++)
-    {
-        for (int direction = X; direction < DirectionSize; direction++)
-        {
-            string histogramName;
-            histogramName = DatasetToString(dataset) + " Total Difference " + AxisToString(direction);
-
-            // Have to static cast raw pointer to shared pointer to keep up safety measures
-            histogram[dataset][TotalDifference][direction] = std::shared_ptr<TH1F>(
-                static_cast<TH1F*>(histogram[dataset][CorrelatedReactorOn][direction]->Clone(histogramName.c_str())));
-            histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOn][direction].get(),
-                                                                -1. / 100.);
-
-            // cout << histogram[dataset][TotalDifference][direction]->GetEntries() << '\n';
-
-            if (dataset == Data || dataset == DataUnbiased)
-            {
-                histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][CorrelatedReactorOff][direction].get(),
-                                                                    -livetimeOn * atmosphericScaling / livetimeOff);
-                histogram[dataset][TotalDifference][direction]->Add(histogram[dataset][AccidentalReactorOff][direction].get(),
-                                                                    livetimeOn * atmosphericScaling / (100 * livetimeOff));
-            }
-
-            totalIBDs = histogram[dataset][TotalDifference][direction]->IntegralAndError(
-                0, histogram[dataset][TotalDifference][direction]->GetNbinsX() + 1, totalIBDErr);
-            effIBDs = pow(totalIBDs, 2) / pow(totalIBDErr, 2);  // Effective IBD counts. Done by Poisson Distribution
-                                                                // N^2/(sqrt(N)^2) = N; Eff. counts = counts^2/counts_err^2
-
-            neutrinoCounts.totalIBD[dataset][direction] = totalIBDs;
-            neutrinoCounts.totalIBDError[dataset][direction] = totalIBDErr;
-
-            if (direction == Z)
-            {
-                neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
-                continue;
-            }
-
-            if (dataset == Data || dataset == Sim)
-            {
-                neutrinoCounts.mean[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetMean();
-                neutrinoCounts.sigma[dataset][direction] = histogram[dataset][TotalDifference][direction]->GetStdDev()
-                                                           / sqrt(effIBDs);
-                neutrinoCounts.effectiveIBD[dataset][direction] = effIBDs;
-            }
-            else
-            {
-                neutrinoCounts.effectiveIBD[dataset][direction] = neutrinoCounts.effectiveIBD[dataset - 1][direction];
-            }
-        }
-
-        if (dataset == DataUnbiased || dataset == SimUnbiased)
-            continue;
-
-        // Z is fit to a Guassian and only takes same segment inputs
-        // Possible thanks to 1mm resolution in Z
-        TF1* gaussian = new TF1("Fit", "gaus", -140, 140);
-
-        histogram[dataset][TotalDifference][Z]->Fit("Fit", "RQ");
-
-        float zMean = gaussian->GetParameter(1);
-        float zError = gaussian->GetParError(1);
-
-        neutrinoCounts.mean[dataset][Z] = zMean;
-        neutrinoCounts.sigma[dataset][Z] = zError;
-
-        // Deleting fit because we don't want the plot options stuck here
-        delete histogram[dataset][TotalDifference][Z]->GetListOfFunctions()->FindObject("Fit");
-    }
-
-    // Printing out values
-    if (IBDCOUNT_VERBOSITY)
-    {
-        for (int dataset = Data; dataset < DatasetSize; dataset++)
-        {
-            cout << "Total and Effective IBD Events for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
-
-            for (int direction = X; direction < DirectionSize; direction++)
-            {
-                cout << boldOn << AxisToString(direction) << ": " << resetFormats << neutrinoCounts.totalIBD[dataset][direction]
-                     << " ± " << neutrinoCounts.totalIBDError[dataset][direction] << boldOn
-                     << ". Effective IBD counts: " << resetFormats << neutrinoCounts.effectiveIBD[dataset][direction] << ".\n";
-            }
-
-            cout << "--------------------------------------------\n";
-        }
-    }
-
-    cout << boldOn << cyanOn << "Subtracted backgrounds.\n" << resetFormats;
-    cout << "--------------------------------------------\n";
-
-    CalculateUnbiasing(histogram, neutrinoCounts);
-
-    return neutrinoCounts;
-}
-
-void AddSystematics(IBDValues& neutrinoCounts)
+void Directionality::AddSystematics()
 {
     // Systematics extracted from BiPo study
 
@@ -527,13 +529,13 @@ void AddSystematics(IBDValues& neutrinoCounts)
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        sigmaX = neutrinoCounts.sigma[dataset][X];
-        sigmaY = neutrinoCounts.sigma[dataset][Y];
-        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+        sigmaX = sigma[dataset][X];
+        sigmaY = sigma[dataset][Y];
+        sigmaZ = sigma[dataset][Z];
 
-        neutrinoCounts.sigmaSystematics[dataset][X] = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
-        neutrinoCounts.sigmaSystematics[dataset][Y] = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
-        neutrinoCounts.sigmaSystematics[dataset][Z] = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
+        sigmaSystematics[dataset][X] = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
+        sigmaSystematics[dataset][Y] = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
+        sigmaSystematics[dataset][Z] = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
     }
 
     cout << boldOn << cyanOn << "Added Systematics.\n" << resetFormats;
@@ -547,19 +549,16 @@ void AddSystematics(IBDValues& neutrinoCounts)
             cout << "Mean and sigma values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
             for (int direction = X; direction < DirectionSize; direction++)
             {
-                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats
-                     << neutrinoCounts.mean[dataset][direction] << " ± " << neutrinoCounts.sigmaSystematics[dataset][direction]
-                     << '\n';
+                cout << boldOn << "p" << AxisToString(direction) << ": " << resetFormats << mean[dataset][direction] << " ± "
+                     << sigmaSystematics[dataset][direction] << '\n';
             }
             cout << "--------------------------------------------\n";
         }
     }
 }
 
-AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
+void Directionality::CalculateAngles()
 {
-    AngleValues finalAngles;
-
     // Defining variables for readability of code
     double px, py, pz;
     double sigmaX, sigmaY, sigmaZ;
@@ -569,50 +568,50 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         // Grabbing values from current dataset
-        px = neutrinoCounts.mean[dataset][X];
-        py = neutrinoCounts.mean[dataset][Y];
-        pz = neutrinoCounts.mean[dataset][Z];
+        px = mean[dataset][X];
+        py = mean[dataset][Y];
+        pz = mean[dataset][Z];
 
-        sigmaX = neutrinoCounts.sigma[dataset][X];
-        sigmaY = neutrinoCounts.sigma[dataset][Y];
-        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+        sigmaX = sigma[dataset][X];
+        sigmaY = sigma[dataset][Y];
+        sigmaZ = sigma[dataset][Z];
 
-        sigmaXSystematics = neutrinoCounts.sigmaSystematics[dataset][X];
-        sigmaYSystematics = neutrinoCounts.sigmaSystematics[dataset][Y];
-        sigmaZSystematics = neutrinoCounts.sigmaSystematics[dataset][Z];
+        sigmaXSystematics = sigmaSystematics[dataset][X];
+        sigmaYSystematics = sigmaSystematics[dataset][Y];
+        sigmaZSystematics = sigmaSystematics[dataset][Z];
 
-        effIBDX = neutrinoCounts.effectiveIBD[dataset][X];
-        effIBDY = neutrinoCounts.effectiveIBD[dataset][Y];
-        effIBDZ = neutrinoCounts.effectiveIBD[dataset][Z];
+        effIBDX = effectiveIBD[dataset][X];
+        effIBDY = effectiveIBD[dataset][Y];
+        effIBDZ = effectiveIBD[dataset][Z];
 
         // phi = arctan(y / x)
         double tanPhi = py / px;
-        double phi = atan(tanPhi) * 180.0 / pi;
+        double phiTemp = atan(tanPhi) * 180.0 / pi;
         double tanPhiError = sqrt(pow((sigmaX * py) / pow(px, 2), 2) + pow(sigmaY / px, 2));
-        double phiError = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+        double phiErrorTemp = (tanPhiError / (1 + pow(tanPhi, 2))) * 180.0 / pi;
         double tanPhiErrorSystematics = sqrt(pow((sigmaXSystematics * py) / pow(px, 2), 2) + pow(sigmaYSystematics / px, 2));
-        double phiErrorSystematics = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
+        double phiErrorSystematicsTemp = (tanPhiErrorSystematics / (1 + pow(tanPhi, 2))) * 180.0 / pi;
 
         // theta = arctan(z / sqrt(x^2 + y^2))
         double tanTheta = pz / sqrt(pow(px, 2) + pow(py, 2));
-        double theta = atan(tanTheta) * 180.0 / pi;
+        double thetaTemp = atan(tanTheta) * 180.0 / pi;
         double tanThetaError = sqrt((1 / (px * px + py * py))
                                     * (pow((px * pz * sigmaX / (px * px + py * py)), 2)
                                        + pow((py * pz * sigmaY / (px * px + py * py)), 2) + pow(sigmaZ, 2)));
-        double thetaError = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi;
+        double thetaErrorTemp = (tanThetaError / (1 + pow(tanTheta, 2))) * 180.0 / pi;
         double tanThetaErrorSystematics
             = sqrt((1 / (px * px + py * py))
                    * (pow((px * pz * sigmaXSystematics / (px * px + py * py)), 2)
                       + pow((py * pz * sigmaYSystematics / (px * px + py * py)), 2) + pow(sigmaZSystematics, 2)));
-        double thetaErrorSystematics = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi;
+        double thetaErrorSystematicsTemp = (tanThetaErrorSystematics / (1 + pow(tanTheta, 2))) * 180.0 / pi;
 
         // Storing values
-        finalAngles.phi[dataset] = phi;
-        finalAngles.phiError[dataset] = phiError;
-        finalAngles.phiErrorSystematics[dataset] = phiErrorSystematics;
-        finalAngles.theta[dataset] = theta;
-        finalAngles.thetaError[dataset] = thetaError;
-        finalAngles.thetaErrorSystematics[dataset] = thetaErrorSystematics;
+        phi[dataset] = phiTemp;
+        phiError[dataset] = phiErrorTemp;
+        phiErrorSystematics[dataset] = phiErrorSystematicsTemp;
+        theta[dataset] = thetaTemp;
+        thetaError[dataset] = thetaErrorTemp;
+        thetaErrorSystematics[dataset] = thetaErrorSystematicsTemp;
     }
 
     // Calculating "true" neutrino direction
@@ -627,30 +626,21 @@ AngleValues CalculateAngles(IBDValues const& neutrinoCounts)
 
     // Same angle calculation as above
     float tanPhiTrue = yTrue / xTrue;
-    float phiTrue = atan(tanPhiTrue) * 180.0 / pi;
+    phiTrue = atan(tanPhiTrue) * 180.0 / pi;
     float tanPhiTrueError = sqrt(pow((yTrue * xTrueError) / (xTrue * xTrue), 2) + pow(yTrueError / xTrue, 2));
-    float phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
+    phiTrueError = tanPhiTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 
     float tanThetaTrue = zTrue / sqrt(pow(xTrue, 2) + pow(yTrue, 2));
-    float thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
+    thetaTrue = atan(tanThetaTrue) * 180.0 / pi;
     float tanThetaTrueError
         = sqrt(pow(1 / sqrt(xTrue * xTrue + yTrue * yTrue), 2)
                * (pow(xTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * xTrueError, 2)
                   + pow(yTrue * zTrue / (xTrue * xTrue + yTrue * yTrue) * yTrueError, 2) + pow(zTrueError, 2)));
-    float thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
-
-    finalAngles.phiTrue = phiTrue;
-    finalAngles.phiTrueError = phiTrueError;
-    finalAngles.thetaTrue = thetaTrue;
-    finalAngles.thetaTrueError = thetaTrueError;
-
-    return finalAngles;
+    thetaTrueError = tanThetaTrueError / (1 + pow(tanPhiTrue, 2)) * 180.0 / pi;
 }
 
-CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValues const& finalAngles)
+void Directionality::CalculateCovariances()
 {
-    CovarianceValues oneSigmaEllipse;
-
     // Calculating covariances
     array<array<float, 2>, 2> covarianceMatrix;
     array<array<float, 2>, 2> covarianceMatrixSystematics;
@@ -659,26 +649,26 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
     float px, py, pz;
     float sigmaX, sigmaY, sigmaZ;
     float sigmaXSystematics, sigmaYSystematics, sigmaZSystematics;
-    float phi, theta;
+    float phiTemp, thetaTemp;
 
     // From error propagation document
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         // Grabbing values of current dataset from struct
-        px = neutrinoCounts.mean[dataset][X];
-        py = neutrinoCounts.mean[dataset][Y];
-        pz = neutrinoCounts.mean[dataset][Z];
+        px = mean[dataset][X];
+        py = mean[dataset][Y];
+        pz = mean[dataset][Z];
 
-        sigmaX = neutrinoCounts.sigma[dataset][X];
-        sigmaY = neutrinoCounts.sigma[dataset][Y];
-        sigmaZ = neutrinoCounts.sigma[dataset][Z];
+        sigmaX = sigma[dataset][X];
+        sigmaY = sigma[dataset][Y];
+        sigmaZ = sigma[dataset][Z];
 
-        sigmaXSystematics = neutrinoCounts.sigmaSystematics[dataset][X];
-        sigmaYSystematics = neutrinoCounts.sigmaSystematics[dataset][Y];
-        sigmaZSystematics = neutrinoCounts.sigmaSystematics[dataset][Z];
+        sigmaXSystematics = sigmaSystematics[dataset][X];
+        sigmaYSystematics = sigmaSystematics[dataset][Y];
+        sigmaZSystematics = sigmaSystematics[dataset][Z];
 
-        phi = finalAngles.phi[dataset];
-        theta = finalAngles.theta[dataset];
+        phiTemp = phi[dataset];
+        thetaTemp = theta[dataset];
 
         // Filling out first matrix
         covarianceMatrix[0][0] = (pow(sigmaX, 2) * pow(py, 2) / (pow(px, 4))) + pow(sigmaY, 2) / pow(px, 2);
@@ -701,17 +691,17 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
               + (pow(sigmaZSystematics, 2)) / (pow(px, 2) + pow(py, 2));
 
         // Including angles
-        covarianceMatrix[0][0] = covarianceMatrix[0][0] * pow(cos(phi * pi / 180), 4);
-        covarianceMatrix[0][1] = covarianceMatrix[0][1] * pow(cos(phi * pi / 180), 2) * pow(cos(theta * pi / 180), 2);
-        covarianceMatrix[1][0] = covarianceMatrix[1][0] * pow(cos(phi * pi / 180), 2) * pow(cos(theta * pi / 180), 2);
-        covarianceMatrix[1][1] = covarianceMatrix[1][1] * pow(cos(theta * pi / 180), 4);
+        covarianceMatrix[0][0] = covarianceMatrix[0][0] * pow(cos(phiTemp * pi / 180), 4);
+        covarianceMatrix[0][1] = covarianceMatrix[0][1] * pow(cos(phiTemp * pi / 180), 2) * pow(cos(thetaTemp * pi / 180), 2);
+        covarianceMatrix[1][0] = covarianceMatrix[1][0] * pow(cos(phiTemp * pi / 180), 2) * pow(cos(thetaTemp * pi / 180), 2);
+        covarianceMatrix[1][1] = covarianceMatrix[1][1] * pow(cos(thetaTemp * pi / 180), 4);
 
-        covarianceMatrixSystematics[0][0] = covarianceMatrixSystematics[0][0] * pow(cos(phi * pi / 180), 4);
-        covarianceMatrixSystematics[0][1] = covarianceMatrixSystematics[0][1] * pow(cos(phi * pi / 180), 2)
-                                            * pow(cos(theta * pi / 180), 2);
-        covarianceMatrixSystematics[1][0] = covarianceMatrixSystematics[1][0] * pow(cos(phi * pi / 180), 2)
-                                            * pow(cos(theta * pi / 180), 2);
-        covarianceMatrixSystematics[1][1] = covarianceMatrixSystematics[1][1] * pow(cos(theta * pi / 180), 4);
+        covarianceMatrixSystematics[0][0] = covarianceMatrixSystematics[0][0] * pow(cos(phiTemp * pi / 180), 4);
+        covarianceMatrixSystematics[0][1] = covarianceMatrixSystematics[0][1] * pow(cos(phiTemp * pi / 180), 2)
+                                            * pow(cos(thetaTemp * pi / 180), 2);
+        covarianceMatrixSystematics[1][0] = covarianceMatrixSystematics[1][0] * pow(cos(phiTemp * pi / 180), 2)
+                                            * pow(cos(thetaTemp * pi / 180), 2);
+        covarianceMatrixSystematics[1][1] = covarianceMatrixSystematics[1][1] * pow(cos(thetaTemp * pi / 180), 4);
 
         // Eigenvalues
         float a = covarianceMatrix[0][0], aSystematics = covarianceMatrixSystematics[0][0];
@@ -739,8 +729,8 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         vector1_1 *= normalizer;
         vector1_2 *= normalizer;
 
-        float tilt = atan(vector1_1) * 180.0 / pi;
-        tilt = 90 + tilt;
+        float tiltTemp = atan(vector1_1) * 180.0 / pi;
+        tiltTemp += 90;
 
         float vector1_1Systematics = lambda1Sytematics - dSystematics;
         float vector1_2Systematics = cSystematics;
@@ -749,23 +739,23 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         vector1_1Systematics *= normalizerSystematics;
         vector1_2Systematics *= normalizerSystematics;
 
-        float tiltSystematics = atan(vector1_1Systematics) * 180.0 / pi;
-        tiltSystematics = 90 + tiltSystematics;
+        float tiltSystematicsTemp = atan(vector1_1Systematics) * 180.0 / pi;
+        tiltSystematicsTemp += 90;
 
         // Calculating final angle errors
-        float phiError = sqrt(2.291 * lambda1) * 180.0 / pi;
-        float thetaError = sqrt(2.291 * lambda2) * 180.0 / pi;
+        float phiErrorTemp = sqrt(2.291 * lambda1) * 180.0 / pi;
+        float thetaErrorTemp = sqrt(2.291 * lambda2) * 180.0 / pi;
 
-        float phiErrorSystematics = sqrt(2.291 * lambda1Sytematics) * 180.0 / pi;
-        float thetaErrorSystematics = sqrt(2.291 * lambda2Sytematics) * 180.0 / pi;
+        float phiErrorSystematicsTemp = sqrt(2.291 * lambda1Sytematics) * 180.0 / pi;
+        float thetaErrorSystematicsTemp = sqrt(2.291 * lambda2Sytematics) * 180.0 / pi;
 
-        // Filling struct
-        oneSigmaEllipse.phiError[dataset] = phiError;
-        oneSigmaEllipse.phiErrorSystematics[dataset] = phiErrorSystematics;
-        oneSigmaEllipse.thetaError[dataset] = thetaError;
-        oneSigmaEllipse.thetaErrorSystematics[dataset] = thetaErrorSystematics;
-        oneSigmaEllipse.tilt[dataset] = tilt;
-        oneSigmaEllipse.tiltSystematics[dataset] = tiltSystematics;
+        // Filling array
+        phiEllipseError[dataset] = phiErrorTemp;
+        phiEllipseErrorSystematics[dataset] = phiErrorSystematicsTemp;
+        thetaEllipseError[dataset] = thetaErrorTemp;
+        thetaEllipseErrorSystematics[dataset] = thetaErrorSystematicsTemp;
+        tilt[dataset] = tiltTemp;
+        tiltSystematics[dataset] = tiltSystematicsTemp;
     }
 
     // Prints out the 1 sigma values if COVARIANCE_VERBOSITY is set to 1
@@ -776,34 +766,32 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
         {
             cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats << " with systematics.\n";
             cout << greenOn;
-            cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-                 << oneSigmaEllipse.phiErrorSystematics[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
-                 << "\u00B0 ± " << oneSigmaEllipse.thetaErrorSystematics[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " "
-                 << oneSigmaEllipse.tiltSystematics[dataset] << "\u00B0.\n"
+            cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± "
+                 << phiEllipseErrorSystematics[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± "
+                 << thetaEllipseErrorSystematics[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << tiltSystematics[dataset] << "\u00B0.\n"
                  << resetFormats;
             cout << "--------------------------------------------\n";
 
             cout << "The 1 sigma ellipse for: " << boldOn << DatasetToString(dataset) << resetFormats
                  << " without systematics.\n";
             cout << greenOn;
-            cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-                 << oneSigmaEllipse.phiError[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << finalAngles.theta[dataset]
-                 << "\u00B0 ± " << oneSigmaEllipse.thetaError[dataset] << "\u00B0.\n";
-            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << oneSigmaEllipse.tilt[dataset]
-                 << "\u00B0.\n"
+            cout << boldOn << underlineOn << "Phi:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± "
+                 << phiEllipseError[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Theta:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± "
+                 << thetaEllipseError[dataset] << "\u00B0.\n";
+            cout << boldOn << underlineOn << "Tilt:" << resetFormats << greenOn << " " << tilt[dataset] << "\u00B0.\n"
                  << resetFormats;
             cout << "--------------------------------------------\n";
         }
     }
 
     // Final cone of uncertainty
-    float a = oneSigmaEllipse.phiError[DataUnbiased];
-    float b = oneSigmaEllipse.thetaError[DataUnbiased];
-    theta = 90 - finalAngles.theta[DataUnbiased];
-    float solidAngle = pi * a * b * sin(theta * pi / 180.0);
+    float a = phiEllipseError[DataUnbiased];
+    float b = thetaEllipseError[DataUnbiased];
+    thetaTemp = 90 - theta[DataUnbiased];
+    float solidAngle = pi * a * b * sin(thetaTemp * pi / 180.0);
     float solidAngleRadians = solidAngle * pow((pi / 180.0), 2);
     float coneAngle = acos(1 - (solidAngleRadians / (2 * pi))) * 180.0 / pi;
 
@@ -811,72 +799,68 @@ CovarianceValues CalculateCovariances(IBDValues const& neutrinoCounts, AngleValu
          << '\n'
          << resetFormats;
     cout << "--------------------------------------------\n";
-
-    return oneSigmaEllipse;
 }
 
-void OffsetTheta(AngleValues& finalAngles)
+void Directionality::OffsetTheta()
 {
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        finalAngles.theta[dataset] = 90 - finalAngles.theta[dataset];
+        theta[dataset] = 90 - theta[dataset];
     }
 
-    finalAngles.thetaTrue = 90 + finalAngles.thetaTrue;
+    thetaTrue = 90 + thetaTrue;
 }
 
-void PrintAngles(AngleValues const& finalAngles)
+void Directionality::PrintAngles()
 {
     cout << boldOn << cyanOn << "Final Angles!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        float phiError, thetaError;
+        float phiErrorTemp, thetaErrorTemp;
         if (dataset == Sim || dataset == SimUnbiased)
         {
-            phiError = finalAngles.phiError[dataset];
-            thetaError = finalAngles.thetaError[dataset];
+            phiErrorTemp = phiError[dataset];
+            thetaErrorTemp = thetaError[dataset];
         }
         else if (ANGLES_STATISTICS)
         {
-            phiError = finalAngles.phiError[dataset];
-            thetaError = finalAngles.thetaError[dataset];
+            phiErrorTemp = phiError[dataset];
+            thetaErrorTemp = thetaError[dataset];
         }
         else
         {
-            phiError = finalAngles.phiErrorSystematics[dataset];
-            thetaError = finalAngles.thetaErrorSystematics[dataset];
+            phiErrorTemp = phiErrorSystematics[dataset];
+            thetaErrorTemp = thetaErrorSystematics[dataset];
         }
 
         cout << "Angle values for: " << boldOn << DatasetToString(dataset) << resetFormats << '\n';
         cout << greenOn;
-        cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << finalAngles.phi[dataset] << "\u00B0 ± "
-             << phiError << "\u00B0.\n";
-        cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << finalAngles.theta[dataset] << "\u00B0 ± "
-             << thetaError << "\u00B0.\n"
+        cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << phi[dataset] << "\u00B0 ± " << phiErrorTemp
+             << "\u00B0.\n";
+        cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << theta[dataset] << "\u00B0 ± "
+             << thetaErrorTemp << "\u00B0.\n"
              << resetFormats;
         cout << "--------------------------------------------\n";
     }
 
     cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats << '\n';
     cout << greenOn;
-    cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << finalAngles.phiTrue << "\u00B0 ± "
-         << finalAngles.phiTrueError << "\u00B0.\n";
-    cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << finalAngles.thetaTrue << "\u00B0 ± "
-         << finalAngles.thetaTrueError << "\u00B0.\n"
+    cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError
+         << "\u00B0.\n";
+    cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError
+         << "\u00B0.\n"
          << resetFormats;
     cout << "--------------------------------------------\n";
 }
 
-void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> const& histogram,
-                    AngleValues const& finalAngles,
-                    CovarianceValues const& oneSigmaEllipse)
+void Directionality::FillOutputFile()
 {
     // Set up our output file
-    auto outputFile = std::make_unique<TFile>("Directionality.root", "recreate");
+    TFile outputFile("Directionality.root", "recreate");
 
-    outputFile->cd();
+    outputFile.cd();
 
     TVector3* angleOutput;
     TVector2* ellipseOutput;
@@ -884,36 +868,34 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Sig
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        angleOutput
-            = new TVector3(finalAngles.phi[dataset], finalAngles.phiError[dataset], finalAngles.phiErrorSystematics[dataset]);
+        angleOutput = new TVector3(phi[dataset], phiError[dataset], phiErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Phi";
-        outputFile->WriteTObject(angleOutput, outputName.c_str());
+        outputFile.WriteTObject(angleOutput, outputName.c_str());
 
-        ellipseOutput = new TVector2(oneSigmaEllipse.phiError[dataset], oneSigmaEllipse.phiErrorSystematics[dataset]);
+        ellipseOutput = new TVector2(phiError[dataset], phiErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Phi Ellipse";
-        outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+        outputFile.WriteTObject(ellipseOutput, outputName.c_str());
 
-        angleOutput = new TVector3(
-            finalAngles.theta[dataset], finalAngles.thetaError[dataset], finalAngles.thetaErrorSystematics[dataset]);
+        angleOutput = new TVector3(theta[dataset], thetaError[dataset], thetaErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Theta";
-        outputFile->WriteTObject(angleOutput, outputName.c_str());
+        outputFile.WriteTObject(angleOutput, outputName.c_str());
 
-        ellipseOutput = new TVector2(oneSigmaEllipse.thetaError[dataset], oneSigmaEllipse.thetaErrorSystematics[dataset]);
+        ellipseOutput = new TVector2(thetaError[dataset], thetaErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Theta Ellipse";
-        outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+        outputFile.WriteTObject(ellipseOutput, outputName.c_str());
 
-        ellipseOutput = new TVector2(oneSigmaEllipse.tilt[dataset], oneSigmaEllipse.tiltSystematics[dataset]);
+        ellipseOutput = new TVector2(tilt[dataset], tiltSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Tilt Ellipse";
-        outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+        outputFile.WriteTObject(ellipseOutput, outputName.c_str());
     }
 
-    ellipseOutput = new TVector2(finalAngles.phiTrue, finalAngles.phiTrueError);
+    ellipseOutput = new TVector2(phiTrue, phiTrueError);
     outputName = "True Phi";
-    outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+    outputFile.WriteTObject(ellipseOutput, outputName.c_str());
 
-    ellipseOutput = new TVector2(finalAngles.thetaTrue, finalAngles.thetaTrueError);
+    ellipseOutput = new TVector2(thetaTrue, thetaTrueError);
     outputName = "True Theta";
-    outputFile->WriteTObject(ellipseOutput, outputName.c_str());
+    outputFile.WriteTObject(ellipseOutput, outputName.c_str());
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
@@ -926,7 +908,7 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Sig
 
             for (int direction = X; direction < DirectionSize; direction++)
             {
-                histogram[dataset][signalSet][direction]->Write();
+                histogram[dataset][signalSet][direction].Write();
             }
         }
     }
@@ -935,12 +917,11 @@ void FillOutputFile(array<array<array<std::shared_ptr<TH1F>, DirectionSize>, Sig
          << resetFormats;
     cout << "--------------------------------------------\n";
 
-    outputFile->Close();
+    outputFile.Close();
 }
 
 int main(int argc, char* argv[])
 {
-    Timer timer;
     // Ignore Warnings (mostly for time honestly)
     gErrorIgnoreLevel = kError;
 
@@ -966,38 +947,14 @@ int main(int argc, char* argv[])
     // Take ownership of histograms
     TH1::AddDirectory(kFALSE);
 
+    // Setting up timer
+    Timer timer;
+
+    // Setting up Directionality class
+    Directionality neutrinoDirection;
+
     // Fill detector configuration
     FillDetectorConfig();
-
-    // Set up what we're measuring
-    IBDValues neutrinoCounts;
-    AngleValues finalAngles;
-    CovarianceValues oneSigmaEllipse;
-
-    // Need histograms for counting each variable
-    array<array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>, DatasetSize> histogram;
-
-    // Set up histograms for all 3 directions
-    for (int dataset = Data; dataset < DatasetSize; dataset++)  // Dataset
-    {
-        for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)  // Signal set
-        {
-            // No reactor off for simulations
-            if ((dataset == Sim || dataset == SimUnbiased)
-                && (signalSet == CorrelatedReactorOff || signalSet == AccidentalReactorOff))
-                continue;
-
-            for (int direction = X; direction < DirectionSize; direction++)
-            {
-                string data = DatasetToString(dataset);
-                string signal = SignalToString(signalSet);
-                string axis = AxisToString(direction);
-                string histogramName = data + " " + signal + " " + axis;
-                histogram[dataset][signalSet][direction]
-                    = std::make_shared<TH1F>(histogramName.c_str(), data.c_str(), bins, -histogramMax, histogramMax);
-            }
-        }
-    }
 
     // Filling data histograms
     cout << "--------------------------------------------\n";
@@ -1005,14 +962,14 @@ int main(int argc, char* argv[])
     cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
     {
-        SetUpHistograms(histogram, Data, period);
+        neutrinoDirection.SetUpHistograms(Data, period);
     }
     lineCounter = 0;
 
     cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-    if (LIVETIME_VERBOSITY)
+    if (!LIVETIME_VERBOSITY)
     {
         cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
         cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
@@ -1024,19 +981,19 @@ int main(int argc, char* argv[])
     cout << "--------------------------------------------\n";
     for (int period = 1; period < 6; period++)
     {
-        SetUpHistograms(histogram, Sim, period);
+        neutrinoDirection.SetUpHistograms(Sim, period);
     }
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-    neutrinoCounts = SubtractBackgrounds(histogram);
-    AddSystematics(neutrinoCounts);
-    finalAngles = CalculateAngles(neutrinoCounts);
-    oneSigmaEllipse = CalculateCovariances(neutrinoCounts, finalAngles);
-    OffsetTheta(finalAngles);
-    PrintAngles(finalAngles);
-    FillOutputFile(histogram, finalAngles, oneSigmaEllipse);
+    neutrinoDirection.SubtractBackgrounds();
+    neutrinoDirection.AddSystematics();
+    neutrinoDirection.CalculateAngles();
+    neutrinoDirection.CalculateCovariances();
+    neutrinoDirection.OffsetTheta();
+    neutrinoDirection.PrintAngles();
+    neutrinoDirection.FillOutputFile();
 
     return 0;
 }
