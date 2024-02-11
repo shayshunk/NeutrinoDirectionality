@@ -70,52 +70,6 @@ enum Signals
     SignalSize
 };
 
-struct TreeValues
-{
-    double Esmear;
-    double nCaptTime;
-    double xRx;
-    int promptSegment;
-    int delayedSegment;
-    int dataSet;
-    int direction;
-    int period;
-    double promptPosition;
-    double delayedPosition;
-    bool reactorOn;
-};
-
-struct IBDValues
-{
-    std::array<std::array<float, DirectionSize>, DatasetSize> effectiveIBD;
-    std::array<std::array<float, DirectionSize>, DatasetSize> totalIBD;
-    std::array<std::array<float, DirectionSize>, DatasetSize> totalIBDError;
-    std::array<std::array<float, DirectionSize>, DatasetSize> mean;
-    std::array<std::array<float, DirectionSize>, DatasetSize> sigma;
-    std::array<std::array<float, DirectionSize>, DatasetSize> sigmaSystematics;
-};
-
-struct AngleValues
-{
-    std::array<double, DatasetSize> phi;
-    std::array<double, DatasetSize> phiError;
-    std::array<double, DatasetSize> phiErrorSystematics;
-    std::array<double, DatasetSize> theta;
-    std::array<double, DatasetSize> thetaError;
-    std::array<double, DatasetSize> thetaErrorSystematics;
-    double phiTrue, phiTrueError, thetaTrue, thetaTrueError;
-};
-
-struct CovarianceValues
-{
-    std::array<double, DatasetSize> phiError;
-    std::array<double, DatasetSize> phiErrorSystematics;
-    std::array<double, DatasetSize> thetaError;
-    std::array<double, DatasetSize> thetaErrorSystematics;
-    std::array<double, DatasetSize> tilt;
-    std::array<double, DatasetSize> tiltSystematics;
-};
-
 std::string DatasetToString(int num)
 {
     std::string name;

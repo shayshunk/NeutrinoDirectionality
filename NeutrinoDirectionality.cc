@@ -247,7 +247,17 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
 
     while (file.good() && !file.eof())
     {
-        lineCounter++;
+        // Reading file list
+        getline(file, files[lineNumber]);
+        lineNumber++;
+    }
+
+    files[lineNumber - 1] = "Done";
+
+    for (int index = 0; index < files.size(); index++)
+    {
+        if (files[index] == "Done")
+            break;
 
         if (dataSet == Data || dataSet == DataUnbiased)
         {
@@ -265,18 +275,6 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
                 cout.flush();
             }
         }
-
-        // Reading file list
-        getline(file, files[lineNumber]);
-        lineNumber++;
-    }
-
-    files[lineNumber - 1] = "Done";
-
-    for (int index = 0; index < files.size(); index++)
-    {
-        if (files[index] == "Done")
-            break;
 
         // Combining names into root file name
         TString rootFilename = Form(fileName, std::to_string(period).c_str(), files[index].data());
@@ -353,8 +351,9 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         }
         // Returns the next character in the input sequence, without extracting it: The character is left as the next character
         // to be extracted from the stream
-        file.peek();
         rootFile->Close();
+
+        lineCounter++;
     }
 }
 
