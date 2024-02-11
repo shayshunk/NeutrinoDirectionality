@@ -19,7 +19,7 @@
 
 // Invariables
 int const bins = 301;  // Number of bins for our histograms
-int const totalDataLines = 4000;
+int const totalDataLines = 4040;
 int const totalSimLines = 500;
 float const histogramMax = 150.5;  // Maximum value of bin for histograms
 float const segmentWidth = 145.7;  // Distance between segment centers in mm
@@ -28,10 +28,6 @@ char const* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_perio
 char const* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
 char const* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
 char const* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
-
-// Variables
-int lineCounter = 0;
-double livetimeOff = 0, livetimeOn = 0;
 
 // Print flags
 bool DETECTOR_VERBOSITY = 0;
@@ -151,10 +147,15 @@ std::string AxisToString(int num)
 class Directionality
 {
   public:
+    // Variables
+    double livetimeOff = 0, livetimeOn = 0;
+
+    // Main functions
     Directionality();
+    void ReadFileList(int dataset, int periodNo);
+    void SetUpHistograms(int dataset, int periodNo = 0);
     void FillHistogramUnbiased(int signalSet);
     void FillHistogram();
-    void SetUpHistograms(int Data, int period = 0);
     void CalculateUnbiasing();
     void SubtractBackgrounds();
     void AddSystematics();
@@ -164,9 +165,17 @@ class Directionality
     void PrintAngles();
     void FillOutputFile();
 
+    // Inline functions
+    inline void ResetLineNumber() { lineNumber = 0; }
+    inline void ResetLineCounter() { lineCounter = 0; }
+    inline void ResetIndex() { index = 0; }
+
   private:
     // Histogram to count IBDs
     std::array<std::array<std::array<TH1F, DirectionSize>, SignalSize>, DatasetSize> histogram;
+
+    // File list
+    std::array<std::string, 4045> files;
 
     // Values grabbed from ROOT tree
     double Esmear;
@@ -177,6 +186,8 @@ class Directionality
     int dataSet;
     int direction;
     int period;
+    int lineNumber = 0, lineCounter = 0;
+    std::size_t index = 0;
     bool reactorOn;
 
     // Storing final counts

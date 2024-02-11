@@ -123,114 +123,22 @@ Directionality::Directionality()
             }
         }
     }
+
+    ResetLineNumber();
 }
 
-void Directionality::FillHistogramUnbiased(int signalSet)
+void Directionality::ReadFileList(int dataset, int periodNo)
 {
-    bool posDirection = false, negDirection = false, success = false;
-
-    // Need to weight accidental datasets by deadtime correction factor
-    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? xRx : 1;
-
-    // Check for live neighbors in different directions based on which axis
-    // we're filling
-    if (direction == X)
-    {
-        posDirection = CheckNeighbor(period, promptSegment, 'r');
-        negDirection = CheckNeighbor(period, promptSegment, 'l');
-    }
-    else if (direction == Y)
-    {
-        posDirection = CheckNeighbor(period, promptSegment, 'u');
-        negDirection = CheckNeighbor(period, promptSegment, 'd');
-    }
-    else  // Fill Z with same segment events
-    {
-        double displacement = delayedPosition - promptPosition;
-        histogram[dataSet][signalSet][direction].Fill(displacement, weight);
-    }
-
-    // Dataset + 1 returns the unbiased version of that dataset
-    if (posDirection && !negDirection)
-        histogram[dataSet + 1][signalSet][direction].Fill(segmentWidth, weight);
-    else if (!posDirection && negDirection)
-        histogram[dataSet + 1][signalSet][direction].Fill(-segmentWidth, weight);
-    else if (posDirection && negDirection)
-        histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
-}
-
-void Directionality::FillHistogram()
-{
-    // Applying energy cut
-    if (Esmear < 0.8 || Esmear > 7.4)
-    {
-        return;
-    }
-
-    if (nCaptTime > pow(10, 3) && nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
-    {
-        // Calculate neutron displacement
-        double displacement = delayedPosition - promptPosition;
-
-        // Figure out whether the reactor is on and assign signal index
-        int signalSet = reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
-
-        // Fill regular dataset with displacement but Z only takes same segment
-        if (direction != Z)
-            histogram[dataSet][signalSet][direction].Fill(displacement);
-
-        // Fill dead segment correction dataset
-        if (promptSegment == delayedSegment)
-        {
-            FillHistogramUnbiased(signalSet);
-        }
-    }
-    else if (nCaptTime > pow(10, 6))  // Accidental Dataset
-    {
-        // Calculate neutron displacement
-        double displacement = delayedPosition - promptPosition;
-
-        // Figure out whether the reactor is on and assign signal index
-        int signalSet = reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
-
-        // Fill regular dataset with displacement but Z only takes same segment
-        if (direction != Z)
-            histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
-
-        // Fill dead segment correction dataset
-        if (promptSegment == delayedSegment)
-        {
-            FillHistogramUnbiased(signalSet);
-        }
-    }
-}
-
-void Directionality::SetUpHistograms(int dataset, int periodNo)
-{
-    // Declaring some variables for use later
-    int totalLines = 0;
-    reactorOn = true;
-
-    dataSet = dataset;
-    period = periodNo;
-
-    // Figuring out dataset
     char const* path;
-    char const* fileName;
-    if (dataSet == Data)
-    {
+
+    if (dataset == Data)
         path = dataPath;
-        fileName = dataFileName;
-    }
-    else if (dataSet == Sim)
-    {
+
+    else if (dataset == Sim)
         path = simPath;
-        fileName = simFileName;
-    }
 
     // Combining names into file list name
-    string fileList = Form(path, std::to_string(period).c_str(), std::to_string(period).c_str());
-    array<string, 1500> files;
+    string fileList = Form(path, std::to_string(periodNo).c_str(), std::to_string(periodNo).c_str());
 
     // Opening and checking file list
     ifstream file;
@@ -243,25 +151,42 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         return;
     }
 
-    int lineNumber = 0;
-
-    while (file.good() && !file.eof())
+    while (file.good() && getline(file, files[lineNumber]))
     {
-        // Reading file list
-        getline(file, files[lineNumber]);
         lineNumber++;
     }
 
-    files[lineNumber - 1] = "Done";
+    files[lineNumber] = "Done";
+    lineNumber++;
+}
 
-    for (int index = 0; index < files.size(); index++)
+void Directionality::SetUpHistograms(int dataset, int periodNo)
+{
+    // Declaring some variables for use later
+    int totalLines = 0;
+    reactorOn = true;
+
+    dataSet = dataset;
+    period = periodNo;
+
+    char const* fileName;
+    if (dataset == Data)
+        fileName = dataFileName;
+
+    else if (dataset == Sim)
+        fileName = simFileName;
+
+    while (index < files.size())
     {
         if (files[index] == "Done")
-            break;
+        {
+            index++;
+            return;
+        }
 
         if (dataSet == Data || dataSet == DataUnbiased)
         {
-            if (lineCounter % 200 == 0)
+            if (lineCounter % 100 == 0)
             {
                 cout << "Reading file: " << lineCounter << "/" << totalDataLines << '\r';
                 cout.flush();
@@ -354,6 +279,87 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
         rootFile->Close();
 
         lineCounter++;
+        index++;
+    }
+}
+
+void Directionality::FillHistogramUnbiased(int signalSet)
+{
+    bool posDirection = false, negDirection = false, success = false;
+
+    // Need to weight accidental datasets by deadtime correction factor
+    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? xRx : 1;
+
+    // Check for live neighbors in different directions based on which axis
+    // we're filling
+    if (direction == X)
+    {
+        posDirection = CheckNeighbor(period, promptSegment, 'r');
+        negDirection = CheckNeighbor(period, promptSegment, 'l');
+    }
+    else if (direction == Y)
+    {
+        posDirection = CheckNeighbor(period, promptSegment, 'u');
+        negDirection = CheckNeighbor(period, promptSegment, 'd');
+    }
+    else  // Fill Z with same segment events
+    {
+        double displacement = delayedPosition - promptPosition;
+        histogram[dataSet][signalSet][direction].Fill(displacement, weight);
+    }
+
+    // Dataset + 1 returns the unbiased version of that dataset
+    if (posDirection && !negDirection)
+        histogram[dataSet + 1][signalSet][direction].Fill(segmentWidth, weight);
+    else if (!posDirection && negDirection)
+        histogram[dataSet + 1][signalSet][direction].Fill(-segmentWidth, weight);
+    else if (posDirection && negDirection)
+        histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
+}
+
+void Directionality::FillHistogram()
+{
+    // Applying energy cut
+    if (Esmear < 0.8 || Esmear > 7.4)
+    {
+        return;
+    }
+
+    if (nCaptTime > pow(10, 3) && nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
+    {
+        // Calculate neutron displacement
+        double displacement = delayedPosition - promptPosition;
+
+        // Figure out whether the reactor is on and assign signal index
+        int signalSet = reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
+
+        // Fill regular dataset with displacement but Z only takes same segment
+        if (direction != Z)
+            histogram[dataSet][signalSet][direction].Fill(displacement);
+
+        // Fill dead segment correction dataset
+        if (promptSegment == delayedSegment)
+        {
+            FillHistogramUnbiased(signalSet);
+        }
+    }
+    else if (nCaptTime > pow(10, 6))  // Accidental Dataset
+    {
+        // Calculate neutron displacement
+        double displacement = delayedPosition - promptPosition;
+
+        // Figure out whether the reactor is on and assign signal index
+        int signalSet = reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
+
+        // Fill regular dataset with displacement but Z only takes same segment
+        if (direction != Z)
+            histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
+
+        // Fill dead segment correction dataset
+        if (promptSegment == delayedSegment)
+        {
+            FillHistogramUnbiased(signalSet);
+        }
     }
 }
 
@@ -970,25 +976,39 @@ int main(int argc, char* argv[])
     cout << "--------------------------------------------\n";
     cout << "Filling data histograms!\n";
     cout << "--------------------------------------------\n";
-    for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
+    for (int period = 1; period <= 5; period++)  // 5 periods of PROSPECT Data
+    {
+        neutrinoDirection.ReadFileList(Data, period);
+    }
+
+    for (int period = 1; period <= 5; period++)  // 5 periods of PROSPECT Data
     {
         neutrinoDirection.SetUpHistograms(Data, period);
     }
-    lineCounter = 0;
+
+    neutrinoDirection.ResetLineCounter();
+    neutrinoDirection.ResetLineNumber();
+    neutrinoDirection.ResetIndex();
 
     cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
     if (!LIVETIME_VERBOSITY)
     {
-        cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats << "events: " << livetimeOff << '\n';
-        cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats << "events: " << livetimeOn << '\n';
+        cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats
+             << "events: " << neutrinoDirection.livetimeOff << '\n';
+        cout << "Total livetime for all" << boldOn << " Reactor On " << resetFormats
+             << "events: " << neutrinoDirection.livetimeOn << '\n';
         cout << "--------------------------------------------\n";
     }
 
     // Filling simulation histograms
     cout << "Filling simulation histograms!\n" << resetFormats;
     cout << "--------------------------------------------\n";
+    for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
+    {
+        neutrinoDirection.ReadFileList(Sim, period);
+    }
     for (int period = 1; period < 6; period++)
     {
         neutrinoDirection.SetUpHistograms(Sim, period);
