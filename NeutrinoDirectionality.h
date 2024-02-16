@@ -17,18 +17,6 @@
 
 #define pi 3.14159265358979323846
 
-// Invariables
-int const bins = 301;  // Number of bins for our histograms
-int const totalDataLines = 4040;
-int const totalSimLines = 500;
-float const histogramMax = 150.5;  // Maximum value of bin for histograms
-float const segmentWidth = 145.7;  // Distance between segment centers in mm
-float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coefficient for background subtraction
-char const* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/Period_%s_files.txt";
-char const* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
-char const* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
-char const* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
-
 // Print flags
 bool DETECTOR_VERBOSITY = 0;
 bool LIVETIME_VERBOSITY = 0;
@@ -189,6 +177,18 @@ class Directionality
     int lineNumber = 0, lineCounter = 0;
     std::size_t index = 0;
     bool reactorOn;
+
+    // Invariables
+    int const bins = 301;  // Number of bins for our histograms
+    int const totalDataLines = 4040;
+    int const totalSimLines = 500;
+    float const histogramMax = 150.5;  // Maximum value of bin for histograms
+    float const segmentWidth = 145.7;  // Distance between segment centers in mm
+    float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coefficient for background subtraction
+    char const* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/Period_%s_files.txt";
+    char const* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
+    char const* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
+    char const* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
 
     // Storing final counts
     std::array<std::array<float, DirectionSize>, DatasetSize> effectiveIBD;
