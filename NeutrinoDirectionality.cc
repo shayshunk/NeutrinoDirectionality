@@ -551,7 +551,7 @@ void Directionality::AddSystematics()
 
         sigmaSystematics[dataset][X] = sqrt(pow(sigmaX, 2) + pow(0.25, 2) + pow(0.08, 2));
         sigmaSystematics[dataset][Y] = sqrt(pow(sigmaY, 2) + pow(0.39, 2) + pow(0.08, 2));
-        sigmaSystematics[dataset][Z] = sqrt(pow(sigmaZ, 2) + pow(0.05, 2) + pow(0.09, 2));
+        sigmaSystematics[dataset][Z] = sqrt(pow(sigmaZ, 2) + pow(0.06, 2) + pow(0.06, 2));
     }
 
     cout << boldOn << cyanOn << "Added Systematics.\n" << resetFormats;
@@ -993,7 +993,7 @@ int main(int argc, char* argv[])
     cout << boldOn << cyanOn << "Successfully filled data histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
-    if (!LIVETIME_VERBOSITY)
+    if (LIVETIME_VERBOSITY)
     {
         cout << "Total livetime for all" << boldOn << " Reactor Off " << resetFormats
              << "events: " << neutrinoDirection.livetimeOff << '\n';
