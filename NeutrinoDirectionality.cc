@@ -1005,11 +1005,11 @@ int main(int argc, char* argv[])
     // Filling simulation histograms
     cout << "Filling simulation histograms!\n" << resetFormats;
     cout << "--------------------------------------------\n";
-    for (int period = 1; period < 6; period++)  // 5 periods of PROSPECT Data
+    for (int period = 1; period <= 5; period++)  // 5 periods of PROSPECT Data
     {
         neutrinoDirection.ReadFileList(Sim, period);
     }
-    for (int period = 1; period < 6; period++)
+    for (int period = 1; period <= 5; period++)
     {
         neutrinoDirection.SetUpHistograms(Sim, period);
     }
