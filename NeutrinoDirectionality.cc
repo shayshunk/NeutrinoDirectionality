@@ -867,9 +867,9 @@ void Directionality::PrintAngles()
     cout << "--------------------------------------------\n";
 
     float phiOffset = fabs(phi[Data] - phi[DataUnbiased]);
-    float phiOffsetPercent = phiOffset / phi[DataUnbiased];
+    float phiOffsetPercent = phiOffset / phi[DataUnbiased] * 100;
     float thetaOffset = fabs(theta[Data] - theta[DataUnbiased]);
-    float thetaOffsetPercent = thetaOffset / theta[DataUnbiased];
+    float thetaOffsetPercent = thetaOffset / theta[DataUnbiased] * 100;
 
     cout << "Offsets between " << boldOn << "Data" << resetFormats << " and " << boldOn << "Data Unbiased:\n";
     cout << resetFormats << greenOn << "ϕ:" << phiOffset << " or " << phiOffsetPercent << "%.\n";
@@ -877,9 +877,9 @@ void Directionality::PrintAngles()
     cout << "--------------------------------------------\n";
     
     phiOffset = fabs(phi[Sim] - phi[SimUnbiased]);
-    phiOffsetPercent = phiOffset / phi[SimUnbiased];
+    phiOffsetPercent = phiOffset / phi[SimUnbiased] * 100;
     thetaOffset = fabs(theta[Sim] - theta[SimUnbiased]);
-    thetaOffsetPercent = thetaOffset / theta[SimUnbiased];
+    thetaOffsetPercent = thetaOffset / theta[SimUnbiased] * 100;
     cout << "Offset between " << boldOn << "Sim" << resetFormats << " and " << boldOn << "Sim Unbiased:\n";
     cout << resetFormats << greenOn << "ϕ: " << phiOffset << "\u00B0 or " << phiOffsetPercent << "%.\n";
     cout << "θ: " << thetaOffset << "\u00B0 or " << thetaOffsetPercent << "%.\n" << resetFormats;
