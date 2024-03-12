@@ -261,8 +261,10 @@ void MakeFinalPlot(FinalValues const& finalValues)
                   0,
                   360,
                   finalValues.tiltSystematics[DataUnbiased]);
-    Data.SetFillColor(kAzure - 3);
-    Data.SetFillStyle(3001);
+    Data.SetLineColor(kAzure - 3);
+    Data.SetLineStyle(1);
+    Data.SetLineWidth(4);
+    Data.SetFillStyle(0);
     Data.Draw();
 
     TEllipse DataStatistics(finalValues.theta[DataUnbiased],
@@ -272,11 +274,13 @@ void MakeFinalPlot(FinalValues const& finalValues)
                             0,
                             360,
                             finalValues.tilt[DataUnbiased]);
-    DataStatistics.SetFillColor(kAzure + 3);
-    DataStatistics.SetFillStyle(3001);
+    DataStatistics.SetLineColor(kAzure + 3);
+    DataStatistics.SetLineStyle(7);
+    DataStatistics.SetLineWidth(4);
+    DataStatistics.SetFillStyle(0);
     DataStatistics.Draw();
 
-    TEllipse Simulation(finalValues.theta[SimUnbiased],
+    /* TEllipse Simulation(finalValues.theta[SimUnbiased],
                         finalValues.phi[SimUnbiased],
                         finalValues.thetaError[SimUnbiased],
                         finalValues.phiError[SimUnbiased],
@@ -285,7 +289,7 @@ void MakeFinalPlot(FinalValues const& finalValues)
                         finalValues.tilt[SimUnbiased]);
     Simulation.SetFillColor(kRed + 2);
     Simulation.SetFillStyle(3001);
-    Simulation.Draw();
+    Simulation.Draw(); */
 
     TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
     True.SetFillColor(kGreen + 2);
@@ -302,10 +306,10 @@ void MakeFinalPlot(FinalValues const& finalValues)
     dataSystematicsPoint.SetMarkerSize(5.5);
     dataSystematicsPoint.SetMarkerColor(kAzure + 3);
 
-    TMarker simPoint(finalValues.theta[SimUnbiased], finalValues.phi[SimUnbiased], 29);
+    /* TMarker simPoint(finalValues.theta[SimUnbiased], finalValues.phi[SimUnbiased], 29);
     simPoint.SetMarkerSize(4.5);
     simPoint.SetMarkerColor(kRed + 2.25);
-    simPoint.Draw();
+    simPoint.Draw();*/
 
     TMarker truePoint(finalValues.thetaTrue, finalValues.phiTrue, 33);
     truePoint.SetMarkerSize(5);
@@ -317,7 +321,7 @@ void MakeFinalPlot(FinalValues const& finalValues)
     legend.SetTextSize(0.03);
     legend.AddEntry(&dataPoint, "Data", "p");
     legend.AddEntry(&dataSystematicsPoint, "Data - No Systematics", "p");
-    legend.AddEntry(&simPoint, "Simulation", "p");
+    //legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
 
