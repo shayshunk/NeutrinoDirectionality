@@ -835,12 +835,8 @@ void Directionality::PrintAngles()
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         float phiErrorTemp, thetaErrorTemp;
-        if (dataset == Sim || dataset == SimUnbiased)
-        {
-            phiErrorTemp = phiError[dataset];
-            thetaErrorTemp = thetaError[dataset];
-        }
-        else if (ANGLES_STATISTICS)
+
+        if (dataset == Sim || dataset == SimUnbiased || ANGLES_STATISTICS)
         {
             phiErrorTemp = phiError[dataset];
             thetaErrorTemp = thetaError[dataset];
@@ -868,6 +864,25 @@ void Directionality::PrintAngles()
     cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << thetaTrue << "\u00B0 ± " << thetaTrueError
          << "\u00B0.\n"
          << resetFormats;
+    cout << "--------------------------------------------\n";
+
+    float phiOffset = fabs(phi[Data] - phi[DataUnbiased]);
+    float phiOffsetPercent = phiOffset / phi[DataUnbiased];
+    float thetaOffset = fabs(theta[Data] - theta[DataUnbiased]);
+    float thetaOffsetPercent = thetaOffset / theta[DataUnbiased];
+
+    cout << "Offsets between " << boldOn << "Data" << resetFormats << " and " << boldOn << "Data Unbiased:\n";
+    cout << resetFormats << greenOn << "ϕ:" << phiOffset << " or " << phiOffsetPercent << "%.\n";
+    cout << "θ:" << thetaOffset << " or " << thetaOffsetPercent << "%.\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+    
+    phiOffset = fabs(phi[Sim] - phi[SimUnbiased]);
+    phiOffsetPercent = phiOffset / phi[SimUnbiased];
+    thetaOffset = fabs(theta[Sim] - theta[SimUnbiased]);
+    thetaOffsetPercent = thetaOffset / theta[SimUnbiased];
+    cout << "Offset between " << boldOn << "Sim" << resetFormats << " and " << boldOn << "Sim Unbiased:\n";
+    cout << resetFormats << greenOn << "ϕ: " << phiOffset << "\u00B0 or " << phiOffsetPercent << "%.\n";
+    cout << "θ: " << thetaOffset << "\u00B0 or " << thetaOffsetPercent << "%.\n" << resetFormats;
     cout << "--------------------------------------------\n";
 }
 
