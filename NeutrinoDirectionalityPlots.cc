@@ -302,9 +302,9 @@ void MakeFinalPlot(FinalValues const& finalValues)
     dataPoint.SetMarkerColor(kAzure - 2.25);
     dataPoint.Draw();
 
-    TMarker dataSystematicsPoint(finalValues.theta[DataUnbiased], finalValues.phi[DataUnbiased], 43);
-    dataSystematicsPoint.SetMarkerSize(5.5);
-    dataSystematicsPoint.SetMarkerColor(kAzure + 3);
+    TMarker dataStatisticsPoint(finalValues.theta[DataUnbiased], finalValues.phi[DataUnbiased], 43);
+    dataStatisticsPoint.SetMarkerSize(5.5);
+    dataStatisticsPoint.SetMarkerColor(kAzure + 3);
 
     /* TMarker simPoint(finalValues.theta[SimUnbiased], finalValues.phi[SimUnbiased], 29);
     simPoint.SetMarkerSize(4.5);
@@ -316,11 +316,18 @@ void MakeFinalPlot(FinalValues const& finalValues)
     truePoint.SetMarkerColor(kGreen + 2.25);
     truePoint.Draw();
 
+    // Setting up line just for legend purposes
+    TLine statsLine(0.2, 0.2, 0.4, 0.4);
+    statsLine.SetLineColor(kAzure + 3);
+    statsLine.SetLineStyle(7);
+    statsLine.SetLineWidth(4);
+    statsLine.Draw();
+
     TLegend legend(0.54, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
     legend.AddEntry(&dataPoint, "Data", "p");
-    legend.AddEntry(&dataSystematicsPoint, "Data - No Systematics", "p");
+    legend.AddEntry(&statsLine, "Data - No Systematics", "l");
     //legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();

@@ -2,6 +2,7 @@
 #include "TEllipse.h"
 #include "TGraph.h"
 #include "TMarker.h"
+#include "TLine.h"
 
 using std::array;
 
