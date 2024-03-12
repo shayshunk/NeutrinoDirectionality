@@ -321,13 +321,18 @@ void MakeFinalPlot(FinalValues const& finalValues)
     statsLine.SetLineColor(kAzure + 3);
     statsLine.SetLineStyle(7);
     statsLine.SetLineWidth(4);
-    statsLine.Draw();
 
-    TLegend legend(0.54, 0.75, 0.95, 0.95);
+    TLine dataLine(0.2, 0.2, 0.4, 0.4);
+    dataLine.SetLineColor(kAzure - 3);
+    dataLine.SetLineStyle(1);
+    dataLine.SetLineWidth(4);
+
+    TLegend legend(0.50, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
-    legend.AddEntry(&dataPoint, "Data", "p");
-    legend.AddEntry(&statsLine, "Data - No Systematics", "l");
+    legend.AddEntry(&dataPoint, "Data - Best Fit", "p");
+    legend.AddEntry(&dataLine, "Data - 1#sigma", "l");
+    legend.AddEntry(&statsLine, "Data - 1#sigma No Systematics", "l");
     //legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
