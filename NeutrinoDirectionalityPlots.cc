@@ -327,12 +327,12 @@ void MakeFinalPlot(FinalValues const& finalValues)
     dataLine.SetLineStyle(1);
     dataLine.SetLineWidth(4);
 
-    TLegend legend(0.50, 0.75, 0.95, 0.95);
+    TLegend legend(0.53, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
-    legend.AddEntry(&dataPoint, "Data - Best Fit", "p");
-    legend.AddEntry(&dataLine, "Data - 1#sigma", "l");
-    legend.AddEntry(&statsLine, "Data - 1#sigma No Systematics", "l");
+    legend.AddEntry(&dataPoint, "Best Fit", "p");
+    legend.AddEntry(&dataLine, "1#sigma", "l");
+    legend.AddEntry(&statsLine, "1#sigma Statistics Only", "l");
     //legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
