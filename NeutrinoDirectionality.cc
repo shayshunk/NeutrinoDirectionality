@@ -511,6 +511,17 @@ void Directionality::CalculateUnbiasing()
 
             mean[dataset][direction] = p;
             sigma[dataset][direction] = pError;
+
+            if (NCOUNT_VERBOSITY)
+            {
+                cout << "N counts for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << '\n';
+                cout << "N+: " << resetFormats << nPlus << '\n';
+                cout << boldOn << "N-: " << resetFormats << nMinus << '\n';
+                cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
+                cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
+                cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
+                cout << "--------------------------------------------\n";
+            }
         }
         effectiveIBD[dataset][Z] = effectiveIBD[dataset - 1][Z];
         mean[dataset][Z] = mean[dataset - 1][Z];
@@ -965,6 +976,8 @@ int main(int argc, char* argv[])
             LIVETIME_VERBOSITY = 1;
         else if (string(argv[i]) == "-I")
             IBDCOUNT_VERBOSITY = 1;
+        else if (string(argv[i]) == "-N")
+            NCOUNT_VERBOSITY = 1;
         else if (string(argv[i]) == "-M")
             MEAN_VERBOSITY = 1;
         else if (string(argv[i]) == "-SM")
