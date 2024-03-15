@@ -886,7 +886,7 @@ void Directionality::PrintAngles()
     cout << resetFormats << greenOn << "ϕ:" << phiOffset << " or " << phiOffsetPercent << "%.\n";
     cout << "θ:" << thetaOffset << " or " << thetaOffsetPercent << "%.\n" << resetFormats;
     cout << "--------------------------------------------\n";
-    
+
     phiOffset = fabs(phi[Sim] - phi[SimUnbiased]);
     phiOffsetPercent = phiOffset / phi[SimUnbiased] * 100;
     thetaOffset = fabs(theta[Sim] - theta[SimUnbiased]);
