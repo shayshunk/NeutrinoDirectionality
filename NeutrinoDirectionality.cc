@@ -904,40 +904,40 @@ void Directionality::FillOutputFile()
 
     outputFile.cd();
 
-    TVector3* angleOutput;
-    TVector2* ellipseOutput;
+    TVector3 angleOutput;
+    TVector2 ellipseOutput;
     string outputName;
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
-        angleOutput = new TVector3(phi[dataset], phiError[dataset], phiErrorSystematics[dataset]);
+        angleOutput = TVector3(phi[dataset], phiError[dataset], phiErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Phi";
-        outputFile.WriteTObject(angleOutput, outputName.c_str());
+        outputFile.WriteTObject(&angleOutput, outputName.c_str());
 
-        ellipseOutput = new TVector2(phiError[dataset], phiErrorSystematics[dataset]);
+        ellipseOutput = TVector2(phiError[dataset], phiErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Phi Ellipse";
-        outputFile.WriteTObject(ellipseOutput, outputName.c_str());
+        outputFile.WriteTObject(&ellipseOutput, outputName.c_str());
 
-        angleOutput = new TVector3(theta[dataset], thetaError[dataset], thetaErrorSystematics[dataset]);
+        angleOutput = TVector3(theta[dataset], thetaError[dataset], thetaErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Theta";
-        outputFile.WriteTObject(angleOutput, outputName.c_str());
+        outputFile.WriteTObject(&angleOutput, outputName.c_str());
 
-        ellipseOutput = new TVector2(thetaError[dataset], thetaErrorSystematics[dataset]);
+        ellipseOutput = TVector2(thetaError[dataset], thetaErrorSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Theta Ellipse";
-        outputFile.WriteTObject(ellipseOutput, outputName.c_str());
+        outputFile.WriteTObject(&ellipseOutput, outputName.c_str());
 
-        ellipseOutput = new TVector2(tilt[dataset], tiltSystematics[dataset]);
+        ellipseOutput = TVector2(tilt[dataset], tiltSystematics[dataset]);
         outputName = DatasetToString(dataset) + " Tilt Ellipse";
-        outputFile.WriteTObject(ellipseOutput, outputName.c_str());
+        outputFile.WriteTObject(&ellipseOutput, outputName.c_str());
     }
 
-    ellipseOutput = new TVector2(phiTrue, phiTrueError);
+    ellipseOutput = TVector2(phiTrue, phiTrueError);
     outputName = "True Phi";
-    outputFile.WriteTObject(ellipseOutput, outputName.c_str());
+    outputFile.WriteTObject(&ellipseOutput, outputName.c_str());
 
-    ellipseOutput = new TVector2(thetaTrue, thetaTrueError);
+    ellipseOutput = TVector2(thetaTrue, thetaTrueError);
     outputName = "True Theta";
-    outputFile.WriteTObject(ellipseOutput, outputName.c_str());
+    outputFile.WriteTObject(&ellipseOutput, outputName.c_str());
 
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
