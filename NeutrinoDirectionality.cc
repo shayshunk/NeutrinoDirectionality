@@ -830,6 +830,7 @@ void Directionality::CalculateCovariances()
 
 void Directionality::OffsetTheta()
 {
+    // We measure theta from the z-axis down to the neutrino vector
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         theta[dataset] = 90 - theta[dataset];
@@ -868,6 +869,7 @@ void Directionality::PrintAngles()
         cout << "--------------------------------------------\n";
     }
 
+    // True Neutrino Direction calculations
     cout << "Angle values for: " << boldOn << "True Neutrino Direction" << resetFormats << '\n';
     cout << greenOn;
     cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << phiTrue << "\u00B0 ± " << phiTrueError
@@ -877,6 +879,7 @@ void Directionality::PrintAngles()
          << resetFormats;
     cout << "--------------------------------------------\n";
 
+    // Offsets caused by Unbiasing method calculations
     float phiOffset = fabs(phi[Data] - phi[DataUnbiased]);
     float phiOffsetPercent = phiOffset / phi[DataUnbiased] * 100;
     float thetaOffset = fabs(theta[Data] - theta[DataUnbiased]);
@@ -904,10 +907,12 @@ void Directionality::FillOutputFile()
 
     outputFile.cd();
 
+    // Setting up writer objects
     TVector3 angleOutput;
     TVector2 ellipseOutput;
     string outputName;
 
+    // Iterating through databases
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         angleOutput = TVector3(phi[dataset], phiError[dataset], phiErrorSystematics[dataset]);
@@ -939,6 +944,7 @@ void Directionality::FillOutputFile()
     outputName = "True Theta";
     outputFile.WriteTObject(&ellipseOutput, outputName.c_str());
 
+    // Printing histograms to file just in case
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize; signalSet++)
@@ -1045,6 +1051,7 @@ int main(int argc, char* argv[])
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
+    // Should be self-explanatory
     neutrinoDirection.SubtractBackgrounds();
     neutrinoDirection.AddSystematics();
     neutrinoDirection.CalculateAngles();
