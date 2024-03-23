@@ -35,14 +35,12 @@ void SetTitleStyles(TH1* histogram)
     histogram->GetXaxis()->CenterTitle(true);
     histogram->GetXaxis()->SetTitleFont(22);
     histogram->GetXaxis()->SetTitleSize(0.05);
-    histogram->GetXaxis()->SetLabelFont(82);
     histogram->GetXaxis()->SetLabelSize(0.04);
 
     // Y axis
     histogram->GetYaxis()->CenterTitle(true);
     histogram->GetYaxis()->SetTitleFont(22);
     histogram->GetYaxis()->SetTitleSize(0.05);
-    histogram->GetYaxis()->SetLabelFont(82);
     histogram->GetYaxis()->SetLabelSize(0.04);
     histogram->GetYaxis()->SetMaxDigits(4);
 
@@ -50,6 +48,5 @@ void SetTitleStyles(TH1* histogram)
     histogram->GetZaxis()->CenterTitle(true);
     histogram->GetZaxis()->SetTitleFont(22);
     histogram->GetZaxis()->SetTitleSize(0.05);
-    histogram->GetZaxis()->SetLabelFont(82);
     histogram->GetZaxis()->SetLabelSize(0.04);
 }
