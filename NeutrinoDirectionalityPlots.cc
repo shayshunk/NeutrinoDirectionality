@@ -196,6 +196,19 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     SimulationUncorrected.SetFillStyle(3001);
     SimulationUncorrected.Draw();
 
+    TEllipse DataStatistics(finalValues.theta[SimUnbiased],
+                            finalValues.phi[SimUnbiased],
+                            finalValues.thetaError[DataUnbiased],
+                            finalValues.phiError[DataUnbiased],
+                            0,
+                            360,
+                            finalValues.tilt[DataUnbiased]);
+    DataStatistics.SetLineColor(kAzure + 3);
+    DataStatistics.SetLineStyle(7);
+    DataStatistics.SetLineWidth(4);
+    DataStatistics.SetFillStyle(0);
+    DataStatistics.Draw();
+
     TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
     True.SetFillColor(kGreen + 2);
     True.SetFillStyle(3001);
@@ -217,11 +230,18 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     truePoint.SetMarkerColor(kGreen + 2.25);
     truePoint.Draw();
 
+    // Setting up line just for legend purposes
+    TLine statsLine(0.2, 0.2, 0.4, 0.4);
+    statsLine.SetLineColor(kAzure + 3);
+    statsLine.SetLineStyle(7);
+    statsLine.SetLineWidth(4);
+
     TLegend legend(0.54, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
     legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&simUncorrectedPoint, "Uncorrected Sim", "p");
+    legend.AddEntry(&statsLine, "Data 1#sigma Statistics", "l");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
 
@@ -333,7 +353,7 @@ void MakeFinalPlot(FinalValues const& finalValues)
     legend.AddEntry(&dataPoint, "Best Fit", "p");
     legend.AddEntry(&dataLine, "1#sigma", "l");
     legend.AddEntry(&statsLine, "1#sigma Statistics Only", "l");
-    //legend.AddEntry(&simPoint, "Simulation", "p");
+    // legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
 
