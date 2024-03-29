@@ -51,7 +51,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
 
             // Setting up titles and draw styles
             string histTitle = "Delayed - Prompt Positions: ";
-            histTitle = histTitle + AxisToString(direction) + " (mm)";
+            histTitle = histTitle + AxisToString(direction);
             tempHist.GetXaxis()->SetTitle(histTitle.c_str());
             tempHist.GetYaxis()->SetTitle("IBD Events");
 
