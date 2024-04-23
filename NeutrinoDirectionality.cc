@@ -261,7 +261,7 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
                     float zPromptPosition = rootTree->GetLeaf("xyz")->GetValue(Z);
                     float zDelayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(Z);
 
-                    float displacement = zPromptPosition - zDelayedPosition;
+                    float displacement = fabs(zPromptPosition - zDelayedPosition);
 
                     if (displacement > 60)
                         continue;
