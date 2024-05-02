@@ -240,7 +240,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
     legend.AddEntry(&simPoint, "Simulation", "p");
-    legend.AddEntry(&simUncorrectedPoint, "Uncorrected Sim", "p");
+    legend.AddEntry(&simUncorrectedPoint, "Biased Sim", "p");
     legend.AddEntry(&statsLine, "Data 1#sigma Statistics", "l");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
