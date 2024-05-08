@@ -416,7 +416,7 @@ void Directionality::SubtractBackgrounds()
             }
             else
             {
-                effectiveIBD[dataset][direction] = effectiveIBD[dataset - 1][direction];
+                effectiveIBD[dataset][direction] = effIBDs;
             }
         }
 
