@@ -74,20 +74,6 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
 
             tempHist.Draw("HISTS ][");
 
-            // Getting the standard deviations for mobility calculations
-            double lowValue = tempHist.GetBinContent(1);
-            double highValue = tempHist.GetBinContent(3);
-            double midValue = tempHist.GetBinContent(2);
-            double segmentPitch = 145.7;
-
-            double mean = (lowValue * (-segmentPitch) + highValue * segmentPitch) / (lowValue + highValue + midValue);
-            double lowDev = (lowValue * (-segmentPitch - mean) * (-segmentPitch - mean));
-            double midDev = (midValue * (0 - mean) * (0 - mean));
-            double highDev = (highValue * (segmentPitch - mean) * (segmentPitch - mean));
-            double stdDev = sqrt((lowDev + midDev + highDev) / (lowValue + highValue + midValue));
-
-            cout << plotName << " Standard Deviation: " << stdDev << "\n";
-
             string fullPath = plotDirectory + "/" + plotName + ".png";
             canvas.SaveAs(fullPath.c_str());
         }

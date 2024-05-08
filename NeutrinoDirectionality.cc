@@ -514,7 +514,7 @@ void Directionality::CalculateUnbiasing()
 
             if (NCOUNT_VERBOSITY)
             {
-                cout << "N counts for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << '\n';
+                cout << "N counts for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << ":\n";
                 cout << "N+: " << resetFormats << nPlus << '\n';
                 cout << boldOn << "N-: " << resetFormats << nMinus << '\n';
                 cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
@@ -522,6 +522,11 @@ void Directionality::CalculateUnbiasing()
                 cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
                 cout << "--------------------------------------------\n";
             }
+
+            double stdDev = (segmentWidth / (rPlus + rMinus + 1)) * sqrt(4 * rPlus * rMinus + rPlus + rMinus);
+            cout << "Standard Deviation for " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction);
+            cout << resetFormats << " " << stdDev << "\n";
+            cout << "--------------------------------------------\n";
         }
         effectiveIBD[dataset][Z] = effectiveIBD[dataset - 1][Z];
         mean[dataset][Z] = mean[dataset - 1][Z];
