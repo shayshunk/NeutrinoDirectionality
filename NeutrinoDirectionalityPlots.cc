@@ -50,9 +50,11 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
             tempHist.SetBinError(3, histogram[dataset][TotalDifference][direction]->GetBinError(highBin));
 
             // Setting up titles and draw styles
-            string histTitle = "Delayed - Prompt Positions: ";
-            histTitle = histTitle + AxisToString(direction);
-            tempHist.GetXaxis()->SetTitle(histTitle.c_str());
+            if (direction == X)
+                tempHist.GetXaxis()->SetTitle("#bf{#it{s}}_{#it{x}}: Delayed - Prompt");
+            else
+                tempHist.GetXaxis()->SetTitle("#bf{#it{s}}_{#it{y}}: Delayed - Prompt");
+
             tempHist.GetYaxis()->SetTitle("IBD Events");
 
             tempHist.SetLineColor(kRed);
