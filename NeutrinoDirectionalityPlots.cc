@@ -56,7 +56,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
             tempHist.GetYaxis()->SetTitle("IBD Events");
 
             tempHist.SetLineColor(kRed);
-            tempHist.SetLineWidth(4);
+            tempHist.SetLineWidth(9);
             tempHist.SetLineStyle(1);
             tempHist.SetMarkerStyle(20);
             tempHist.SetMarkerSize(1.3);
@@ -96,7 +96,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         tempHist->GetYaxis()->SetTitle("IBD Events");
 
         tempHist->SetLineColor(kRed);
-        tempHist->SetLineWidth(2);
+        tempHist->SetLineWidth(4);
         tempHist->SetLineStyle(1);
         tempHist->SetMarkerStyle(20);
         tempHist->SetMarkerSize(1);
@@ -108,7 +108,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         // Setting up fit
         TF1 gaussian("Fit", "gaus", -140, 140);
         gaussian.SetLineColor(kBlue);
-        gaussian.SetLineWidth(2);
+        gaussian.SetLineWidth(4);
         gaussian.SetLineStyle(1);
 
         tempHist->Fit("Fit", "RQ");
