@@ -92,7 +92,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         auto tempHist = std::unique_ptr<TH1F>(static_cast<TH1F*>(histogram[dataset][TotalDifference][Z]->Clone()));
 
         // Setting up titles and draw styles
-        tempHist->GetXaxis()->SetTitle("#bf{#it{s}}_{#it{z}}: Delayed - Prompt");
+        tempHist->GetXaxis()->SetTitle("#bf{#it{s}}_{#it{z}}: Delayed - Prompt (mm)");
         tempHist->GetYaxis()->SetTitle("IBD Events");
 
         tempHist->SetLineColor(kRed);
