@@ -382,35 +382,40 @@ void Directionality::SubtractBackgrounds()
 
         for (int direction = X; direction < Z; direction++)
         {
-            // Dataset - 1 returns the biased dataset counts
-            // Grabbing data from filled bins, rest should be empty
-            nPlus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(296);
-            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(297);
-            nMinus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(6);
-            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(5);
-            nPlusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(151);
+            for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize - 1; signalSet++)
+            {
+                // Dataset - 1 returns the biased dataset counts
+                // Grabbing data from filled bins, rest should be empty
+                nPlus = histogram[dataset - 1][signalSet][direction].GetBinContent(296);
+                nPlusPlus = histogram[dataset][signalSet][direction].GetBinContent(297);
+                nMinus = histogram[dataset - 1][signalSet][direction].GetBinContent(6);
+                nMinusMinus = histogram[dataset][signalSet][direction].GetBinContent(5);
+                nPlusMinus = histogram[dataset][signalSet][direction].GetBinContent(151);
 
-            nPlusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(296);
-            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(297);
-            nMinusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(6);
-            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(5);
-            nPlusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(151);
+                nPlusError = histogram[dataset - 1][signalSet][direction].GetBinError(296);
+                nPlusPlusError = histogram[dataset][signalSet][direction].GetBinError(297);
+                nMinusError = histogram[dataset - 1][signalSet][direction].GetBinError(6);
+                nMinusMinusError = histogram[dataset][signalSet][direction].GetBinError(5);
+                nPlusMinusError = histogram[dataset][signalSet][direction].GetBinError(151);
 
-            cout << "N counts for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << ":\n";
-            cout << "N+: " << resetFormats << nPlus << '\n';
-            cout << boldOn << "N-: " << resetFormats << nMinus << '\n';
-            cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
-            cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
-            cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
-            cout << "--------------------------------------------\n";
+                cout << "N (with background) counts for: " << boldOn << DatasetToString(dataset) << " "
+                     << AxisToString(direction) << " " << SignalToString(signalSet) << ":\n";
+                cout << "N+: " << resetFormats << nPlus << '\n';
+                cout << boldOn << "N-: " << resetFormats << nMinus << '\n';
+                cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
+                cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
+                cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
+                cout << "--------------------------------------------\n";
 
-            cout << "N count errors for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << ":\n";
-            cout << "N+: " << resetFormats << nPlusError << '\n';
-            cout << boldOn << "N-: " << resetFormats << nMinusError << '\n';
-            cout << boldOn << "N++: " << resetFormats << nPlusPlusError << '\n';
-            cout << boldOn << "N--: " << resetFormats << nMinusMinusError << '\n';
-            cout << boldOn << "N+-: " << resetFormats << nPlusMinusError << '\n';
-            cout << "--------------------------------------------\n";
+                cout << "N (with background) count errors for: " << boldOn << DatasetToString(dataset) << " "
+                     << AxisToString(direction) << " " << SignalToString(signalSet) << ":\n";
+                cout << "N+: " << resetFormats << nPlusError << '\n';
+                cout << boldOn << "N-: " << resetFormats << nMinusError << '\n';
+                cout << boldOn << "N++: " << resetFormats << nPlusPlusError << '\n';
+                cout << boldOn << "N--: " << resetFormats << nMinusMinusError << '\n';
+                cout << boldOn << "N+-: " << resetFormats << nPlusMinusError << '\n';
+                cout << "--------------------------------------------\n";
+            }
         }
     }
 
