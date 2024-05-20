@@ -371,6 +371,49 @@ void Directionality::SubtractBackgrounds()
     // Defining variables for IBD background subtraction
     double totalIBDs = 0, totalIBDErr = 0, effIBDs = 0;
 
+    // Doing n counts for comparison with/without background subtraction
+    double nPlus = 0, nPlusPlus = 0, nMinus = 0, nMinusMinus = 0, nPlusMinus = 0;
+    double nPlusError = 0, nPlusPlusError = 0, nMinusError = 0, nMinusMinusError = 0, nPlusMinusError = 0;
+
+    for (int dataset = DataUnbiased; dataset < DatasetSize; dataset += 2)
+    {
+        if (!NCOUNT_VERBOSITY)
+            continue;
+
+        for (int direction = X; direction < Z; direction++)
+        {
+            // Dataset - 1 returns the biased dataset counts
+            // Grabbing data from filled bins, rest should be empty
+            nPlus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(296);
+            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(297);
+            nMinus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(6);
+            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(5);
+            nPlusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(151);
+
+            nPlusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(296);
+            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(297);
+            nMinusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(6);
+            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(5);
+            nPlusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(151);
+
+            cout << "N counts for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << ":\n";
+            cout << "N+: " << resetFormats << nPlus << '\n';
+            cout << boldOn << "N-: " << resetFormats << nMinus << '\n';
+            cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
+            cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
+            cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
+            cout << "--------------------------------------------\n";
+
+            cout << "N count errors for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << ":\n";
+            cout << "N+: " << resetFormats << nPlusError << '\n';
+            cout << boldOn << "N-: " << resetFormats << nMinusError << '\n';
+            cout << boldOn << "N++: " << resetFormats << nPlusPlusError << '\n';
+            cout << boldOn << "N--: " << resetFormats << nMinusMinusError << '\n';
+            cout << boldOn << "N+-: " << resetFormats << nPlusMinusError << '\n';
+            cout << "--------------------------------------------\n";
+        }
+    }
+
     for (int dataset = Data; dataset < DatasetSize; dataset++)
     {
         for (int direction = X; direction < DirectionSize; direction++)
@@ -520,6 +563,14 @@ void Directionality::CalculateUnbiasing()
                 cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
                 cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
                 cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
+                cout << "--------------------------------------------\n";
+
+                cout << "N count errors for: " << boldOn << DatasetToString(dataset) << " " << AxisToString(direction) << ":\n";
+                cout << "N+: " << resetFormats << nPlusError << '\n';
+                cout << boldOn << "N-: " << resetFormats << nMinusError << '\n';
+                cout << boldOn << "N++: " << resetFormats << nPlusPlusError << '\n';
+                cout << boldOn << "N--: " << resetFormats << nMinusMinusError << '\n';
+                cout << boldOn << "N+-: " << resetFormats << nPlusMinusError << '\n';
                 cout << "--------------------------------------------\n";
             }
 
