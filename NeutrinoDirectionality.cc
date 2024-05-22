@@ -283,40 +283,6 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
     }
 }
 
-void Directionality::FillHistogramUnbiased(int signalSet)
-{
-    bool posDirection = false, negDirection = false, success = false;
-
-    // Need to weight accidental datasets by deadtime correction factor
-    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? xRx : 1;
-
-    // Check for live neighbors in different directions based on which axis
-    // we're filling
-    if (direction == X)
-    {
-        posDirection = CheckNeighbor(period, promptSegment, 'r');
-        negDirection = CheckNeighbor(period, promptSegment, 'l');
-    }
-    else if (direction == Y)
-    {
-        posDirection = CheckNeighbor(period, promptSegment, 'u');
-        negDirection = CheckNeighbor(period, promptSegment, 'd');
-    }
-    else  // Fill Z with same segment events
-    {
-        double displacement = delayedPosition - promptPosition;
-        histogram[dataSet][signalSet][direction].Fill(displacement, weight);
-    }
-
-    // Dataset + 1 returns the unbiased version of that dataset
-    if (posDirection && !negDirection)
-        histogram[dataSet + 1][signalSet][direction].Fill(segmentWidth, weight);
-    else if (!posDirection && negDirection)
-        histogram[dataSet + 1][signalSet][direction].Fill(-segmentWidth, weight);
-    else if (posDirection && negDirection)
-        histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
-}
-
 void Directionality::FillHistogram()
 {
     // Applying energy cut
@@ -338,10 +304,7 @@ void Directionality::FillHistogram()
             histogram[dataSet][signalSet][direction].Fill(displacement);
 
         // Fill dead segment correction dataset
-        if (promptSegment == delayedSegment)
-        {
-            FillHistogramUnbiased(signalSet);
-        }
+        FillHistogramUnbiased(signalSet);
     }
     else if (nCaptTime > pow(10, 6))  // Accidental Dataset
     {
@@ -356,10 +319,54 @@ void Directionality::FillHistogram()
             histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
 
         // Fill dead segment correction dataset
-        if (promptSegment == delayedSegment)
-        {
-            FillHistogramUnbiased(signalSet);
-        }
+        FillHistogramUnbiased(signalSet);
+    }
+}
+
+void Directionality::FillHistogramUnbiased(int signalSet)
+{
+    bool posDirection = false, negDirection = false;
+    bool isDisplacement = false;
+
+    // Need to weight accidental datasets by deadtime correction factor
+    double weight = (signalSet == AccidentalReactorOff || signalSet == AccidentalReactorOn) ? xRx : 1;
+
+    isDisplacement = promptSegment != delayedSegment ? true : false;
+
+    // Check for live neighbors in different directions based on which axis we're filling
+    if (direction == X)
+    {
+        posDirection = CheckNeighbor(period, promptSegment, 'r');
+        negDirection = CheckNeighbor(period, promptSegment, 'l');
+    }
+    else if (direction == Y)
+    {
+        posDirection = CheckNeighbor(period, promptSegment, 'u');
+        negDirection = CheckNeighbor(period, promptSegment, 'd');
+    }
+    else if (direction == Z && promptSegment == delayedSegment)  // Fill Z with same segment events
+    {
+        double displacement = delayedPosition - promptPosition;
+        histogram[dataSet][signalSet][direction].Fill(displacement, weight);
+    }
+
+    // Dataset + 1 returns the unbiased version of that dataset
+    if (!isDisplacement)
+    {
+        if (posDirection && !negDirection)
+            histogram[dataSet + 1][signalSet][direction].Fill(1.0, weight);
+        else if (!posDirection && negDirection)
+            histogram[dataSet + 1][signalSet][direction].Fill(-1.0, weight);
+        else if (posDirection && negDirection)
+            histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
+    }
+    else if (isDisplacement && direction != Z)
+    {
+        // Calculate neutron displacement
+        double displacement = delayedPosition - promptPosition;
+
+        // Fill neutron displacement but only for x and y
+        histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
     }
 }
 
