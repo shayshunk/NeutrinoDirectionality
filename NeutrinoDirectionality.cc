@@ -291,13 +291,15 @@ void Directionality::FillHistogram()
         return;
     }
 
+    int signalSet = 0;
+
     if (nCaptTime > pow(10, 3) && nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
         // Calculate neutron displacement
         double displacement = delayedPosition - promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
+        signalSet = reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
 
         // Fill regular dataset with displacement but Z only takes same segment
         if (direction != Z)
@@ -312,7 +314,7 @@ void Directionality::FillHistogram()
         double displacement = delayedPosition - promptPosition;
 
         // Figure out whether the reactor is on and assign signal index
-        int signalSet = reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
+        signalSet = reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
 
         // Fill regular dataset with displacement but Z only takes same segment
         if (direction != Z)
@@ -333,6 +335,15 @@ void Directionality::FillHistogramUnbiased(int signalSet)
 
     isDisplacement = promptSegment != delayedSegment ? true : false;
 
+    if (isDisplacement && direction != Z)
+    {
+        // Calculate neutron displacement
+        double displacement = delayedPosition - promptPosition;
+
+        // Fill neutron displacement but only for x and y
+        histogram[dataSet + 1][signalSet][direction].Fill(displacement, weight);
+    }
+
     // Check for live neighbors in different directions based on which axis we're filling
     if (direction == X)
     {
@@ -344,7 +355,7 @@ void Directionality::FillHistogramUnbiased(int signalSet)
         posDirection = CheckNeighbor(period, promptSegment, 'u');
         negDirection = CheckNeighbor(period, promptSegment, 'd');
     }
-    else if (direction == Z && promptSegment == delayedSegment)  // Fill Z with same segment events
+    else if (direction == Z && !isDisplacement)  // Fill Z with same segment events
     {
         double displacement = delayedPosition - promptPosition;
         histogram[dataSet][signalSet][direction].Fill(displacement, weight);
@@ -359,14 +370,6 @@ void Directionality::FillHistogramUnbiased(int signalSet)
             histogram[dataSet + 1][signalSet][direction].Fill(-1.0, weight);
         else if (posDirection && negDirection)
             histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
-    }
-    else if (isDisplacement && direction != Z)
-    {
-        // Calculate neutron displacement
-        double displacement = delayedPosition - promptPosition;
-
-        // Fill neutron displacement but only for x and y
-        histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
     }
 }
 
@@ -391,18 +394,17 @@ void Directionality::SubtractBackgrounds()
         {
             for (int signalSet = CorrelatedReactorOn; signalSet < SignalSize - 1; signalSet++)
             {
-                // Dataset - 1 returns the biased dataset counts
                 // Grabbing data from filled bins, rest should be empty
-                nPlus = histogram[dataset - 1][signalSet][direction].GetBinContent(296);
-                nPlusPlus = histogram[dataset][signalSet][direction].GetBinContent(297);
-                nMinus = histogram[dataset - 1][signalSet][direction].GetBinContent(6);
-                nMinusMinus = histogram[dataset][signalSet][direction].GetBinContent(5);
+                nPlus = histogram[dataset][signalSet][direction].GetBinContent(296);
+                nPlusPlus = histogram[dataset][signalSet][direction].GetBinContent(152);
+                nMinus = histogram[dataset][signalSet][direction].GetBinContent(6);
+                nMinusMinus = histogram[dataset][signalSet][direction].GetBinContent(150);
                 nPlusMinus = histogram[dataset][signalSet][direction].GetBinContent(151);
 
-                nPlusError = histogram[dataset - 1][signalSet][direction].GetBinError(296);
-                nPlusPlusError = histogram[dataset][signalSet][direction].GetBinError(297);
-                nMinusError = histogram[dataset - 1][signalSet][direction].GetBinError(6);
-                nMinusMinusError = histogram[dataset][signalSet][direction].GetBinError(5);
+                nPlusError = histogram[dataset][signalSet][direction].GetBinError(296);
+                nPlusPlusError = histogram[dataset][signalSet][direction].GetBinError(152);
+                nMinusError = histogram[dataset][signalSet][direction].GetBinError(6);
+                nMinusMinusError = histogram[dataset][signalSet][direction].GetBinError(150);
                 nPlusMinusError = histogram[dataset][signalSet][direction].GetBinError(151);
 
                 cout << "N (with background) counts for: " << boldOn << DatasetToString(dataset) << " "
@@ -412,6 +414,10 @@ void Directionality::SubtractBackgrounds()
                 cout << boldOn << "N++: " << resetFormats << nPlusPlus << '\n';
                 cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
                 cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
+                cout << "--------------------------------------------\n";
+                cout << "For comparison with Data results: \n";
+                cout << "N+: " << histogram[dataset - 1][signalSet][direction].GetBinContent(296) << '\n';
+                cout << "N-: " << histogram[dataset - 1][signalSet][direction].GetBinContent(6) << '\n';
                 cout << "--------------------------------------------\n";
 
                 cout << "N (with background) count errors for: " << boldOn << DatasetToString(dataset) << " "
@@ -532,16 +538,16 @@ void Directionality::CalculateUnbiasing()
         {
             // Dataset - 1 returns the biased dataset counts
             // Grabbing data from filled bins, rest should be empty
-            nPlus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(296);
-            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(297);
-            nMinus = histogram[dataset - 1][TotalDifference][direction].GetBinContent(6);
-            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(5);
+            nPlus = histogram[dataset][TotalDifference][direction].GetBinContent(296);
+            nPlusPlus = histogram[dataset][TotalDifference][direction].GetBinContent(152);
+            nMinus = histogram[dataset][TotalDifference][direction].GetBinContent(6);
+            nMinusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(150);
             nPlusMinus = histogram[dataset][TotalDifference][direction].GetBinContent(151);
 
-            nPlusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(296);
-            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(297);
-            nMinusError = histogram[dataset - 1][TotalDifference][direction].GetBinError(6);
-            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(5);
+            nPlusError = histogram[dataset][TotalDifference][direction].GetBinError(296);
+            nPlusPlusError = histogram[dataset][TotalDifference][direction].GetBinError(152);
+            nMinusError = histogram[dataset][TotalDifference][direction].GetBinError(6);
+            nMinusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(150);
             nPlusMinusError = histogram[dataset][TotalDifference][direction].GetBinError(151);
 
             rPlus = nPlus / (nPlusPlus + nPlusMinus);
