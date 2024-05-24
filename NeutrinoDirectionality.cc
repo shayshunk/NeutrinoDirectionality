@@ -415,10 +415,6 @@ void Directionality::SubtractBackgrounds()
                 cout << boldOn << "N--: " << resetFormats << nMinusMinus << '\n';
                 cout << boldOn << "N+-: " << resetFormats << nPlusMinus << '\n';
                 cout << "--------------------------------------------\n";
-                cout << "For comparison with Data results: \n";
-                cout << "N+: " << histogram[dataset - 1][signalSet][direction].GetBinContent(296) << '\n';
-                cout << "N-: " << histogram[dataset - 1][signalSet][direction].GetBinContent(6) << '\n';
-                cout << "--------------------------------------------\n";
 
                 cout << "N (with background) count errors for: " << boldOn << DatasetToString(dataset) << " "
                      << AxisToString(direction) << " " << SignalToString(signalSet) << ":\n";
