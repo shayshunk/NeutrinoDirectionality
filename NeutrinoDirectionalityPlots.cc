@@ -57,6 +57,9 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
 
             tempHist.GetYaxis()->SetTitle("IBD Events");
 
+            tempHist.GetXaxis()->SetTitleSize(0.07);
+            tempHist.GetYaxis()->SetTitleSize(0.07);
+
             tempHist.SetLineColor(kRed);
             tempHist.SetLineWidth(9);
             tempHist.SetLineStyle(1);

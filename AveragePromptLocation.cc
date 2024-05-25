@@ -1,4 +1,5 @@
 #include "AveragePromptLocation.h"
+
 #include "Formatting.h"
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
@@ -14,11 +15,11 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
     if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
         float promptPosition;
-        
+
         switch (currentEntry.direction)
         {
             case X:
-                promptPosition = currentEntry.promptSegment % 14;
+                promptPosition = (currentEntry.promptSegment % 14);
                 break;
             case Y:
                 promptPosition = floor(currentEntry.promptSegment / 14);
@@ -195,6 +196,7 @@ void SubtractBackgrounds(array<array<std::shared_ptr<TH1F>, DirectionSize>, Sign
 
         cout << boldOn << underlineOn << "Values for: " << resetFormats << AxisToString(direction) << '\n';
         cout << "Average prompt location: " << mean << " ± " << sigma << '\n';
+        cout << "Total IBDs: " << totalIBDs << " ± " << totalIBDErr << '\n';
         cout << "Effective IBDs: " << effIBDs << '\n';
     }
 }
@@ -248,7 +250,7 @@ int main()
     cout << "--------------------------------------------\n";
     cout << "Filling simulation histograms!\n";
     cout << "--------------------------------------------\n";
-    
+
     SetUpHistograms(histogram);
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
