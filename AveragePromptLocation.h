@@ -30,6 +30,9 @@ char const* dataFileName
 
 // Variables
 int lineCounter = 0;
+int correlatedxCounts = 0, accidentalxCounts = 0;
+int correlatedyCounts = 0, accidentalyCounts = 0;
+int correlatedzCounts = 0, accidentalzCounts = 0;
 double livetimeOff = 0, livetimeOn = 0;
 
 enum Directions

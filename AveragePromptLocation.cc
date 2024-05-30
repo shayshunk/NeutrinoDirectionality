@@ -20,41 +20,54 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
         {
             case X:
                 promptPosition = (currentEntry.promptSegment % 14);
+                correlatedxCounts++;
                 break;
             case Y:
                 promptPosition = floor(currentEntry.promptSegment / 14);
+                correlatedyCounts++;
                 break;
             case Z:
                 promptPosition = currentEntry.promptPosition;
+                correlatedzCounts++;
                 break;
             default:
                 promptPosition = currentEntry.promptPosition;
         }
 
-        // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn ? CorrelatedReactorOn : CorrelatedReactorOff;
-
         // Fill regular dataset with prompt location
-        histogram[signalSet][currentEntry.direction]->Fill(promptPosition);
+        histogram[CorrelatedReactorOn][currentEntry.direction]->Fill(promptPosition);
     }
     else if (currentEntry.nCaptTime > pow(10, 6))  // Accidental Dataset
     {
         float promptPosition;
-        promptPosition = (currentEntry.direction == Z) ? currentEntry.promptPosition : currentEntry.promptSegment;
 
-        // Figure out whether the reactor is on and assign signal index
-        int signalSet = currentEntry.reactorOn ? AccidentalReactorOn : AccidentalReactorOff;
+        switch (currentEntry.direction)
+        {
+            case X:
+                promptPosition = (currentEntry.promptSegment % 14);
+                accidentalxCounts++;
+                break;
+            case Y:
+                promptPosition = floor(currentEntry.promptSegment / 14);
+                accidentalyCounts++;
+                break;
+            case Z:
+                promptPosition = currentEntry.promptPosition;
+                accidentalzCounts++;
+                break;
+            default:
+                promptPosition = currentEntry.promptPosition;
+        }
 
         // Fill regular dataset with prompt location
-        histogram[signalSet][currentEntry.direction]->Fill(promptPosition, currentEntry.xRx);
+        histogram[AccidentalReactorOn][currentEntry.direction]->Fill(promptPosition);
     }
 }
 
 void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram, int periodNo)
 {
     // Declaring some variables for use later
-    int totalLines = 0, correlatedCounts = 0, accidentalCounts = 0;
-    bool reactorOn = true;
+    int totalLines = 0;
 
     // Figuring out period
     string period = std::to_string(periodNo);
@@ -102,15 +115,6 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
             TVectorD* promptVeto = (TVectorD*)rootFile->Get("accumulated/P2kIBDPlugin.tveto_prompt");  // prompt veto deadtime
             TVectorD* delayedVeto = (TVectorD*)rootFile->Get("accumulated/P2kIBDPlugin.tveto_delayed");  // delayed veto deadtime
             xRx = runtime->Max() / (runtime->Max() - promptVeto->Max()) * runtime->Max() / (runtime->Max() - delayedVeto->Max());
-
-            if (reactorOn)
-            {
-                livetimeOn += runtime->Max() / xRx;
-            }
-            else
-            {
-                livetimeOff += runtime->Max() / xRx;
-            }
         }
 
         // Grab rootTree and cast to unique pointer
@@ -138,20 +142,18 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
                     && currentEntry.promptPosition == currentEntry.delayedPosition)
                     continue;
 
-                /* float zPromptPosition = rootTree->GetLeaf("xyz")->GetValue(Z);
-                float zDelayedPosition = rootTree->GetLeaf("n_xyz")->GetValue(Z);
-
-                float displacement = zPromptPosition - zDelayedPosition;
-
-                if (displacement > 60)
-                    continue; */
-
                 // Copying some loop values into current entry
                 currentEntry.Esmear = rootTree->GetLeaf("Esmear")->GetValue(0);
                 currentEntry.nCaptTime = rootTree->GetLeaf("ncapt_dt")->GetValue(0);
                 currentEntry.xRx = xRx;
                 currentEntry.direction = direction;
-                currentEntry.reactorOn = reactorOn;
+
+                if (direction == X && correlatedxCounts == 200000)
+                    continue;
+                else if (direction == Y && correlatedyCounts == 200000)
+                    continue;
+                if (direction == Z && correlatedzCounts == 200000)
+                    continue;
 
                 FillHistogram(histogram, currentEntry);
             }
@@ -246,6 +248,20 @@ int main()
     for (int period = 1; period <= 5; period++)
     {
         SetUpHistograms(histogram, period);
+
+        cout << "Correlated x counts for period " << period << " : " << correlatedxCounts << '\n';
+        cout << "Accidental x counts for period " << period << " : " << accidentalxCounts << '\n';
+        cout << "Correlated y counts for period " << period << " : " << correlatedyCounts << '\n';
+        cout << "Accidental y counts for period " << period << " : " << accidentalyCounts << '\n';
+        cout << "Correlated z counts for period " << period << " : " << correlatedzCounts << '\n';
+        cout << "Accidental z counts for period " << period << " : " << accidentalzCounts << '\n';
+
+        correlatedxCounts = 0;
+        correlatedyCounts = 0;
+        correlatedzCounts = 0;
+        accidentalxCounts = 0;
+        accidentalyCounts = 0;
+        accidentalzCounts = 0;
     }
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
