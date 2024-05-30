@@ -141,7 +141,6 @@ void Directionality::ReadFileList(int dataset, int periodNo)
             break;
         case PerfSim:
             path = perfSimPath;
-            periodNo = NULL;
             break;
         default:
             path = dataPath;
@@ -149,10 +148,12 @@ void Directionality::ReadFileList(int dataset, int periodNo)
     }
 
     // Combining names into file list name
-    string fileList = Form(path, std::to_string(periodNo).c_str(), std::to_string(periodNo).c_str());
+    string fileList;
 
-    if (periodNo == NULL)
-        cout << "FILE LIST FOR PERF SIM: " << fileList << '\n';
+    if (periodNo != 6)
+        fileList = Form(path, std::to_string(periodNo).c_str(), std::to_string(periodNo).c_str());
+    else
+        fileList = path;
 
     // Opening and checking file list
     ifstream file;
@@ -499,7 +500,7 @@ void Directionality::SubtractBackgrounds()
                 continue;
             }
 
-            if (dataset == Data || dataset == Sim)
+            if (dataset == Data || dataset == Sim || dataset == PerfSim)
             {
                 mean[dataset][direction] = histogram[dataset][TotalDifference][direction].GetMean();
                 sigma[dataset][direction] = histogram[dataset][TotalDifference][direction].GetStdDev() / sqrt(effIBDs);
@@ -1110,6 +1111,12 @@ int main(int argc, char* argv[])
     // Fill detector configuration
     FillDetectorConfig();
 
+    // Just some tests
+    cout << "Checking up neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'u') << '\n';
+    cout << "Checking down neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'd') << '\n';
+    cout << "Checking left neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'l') << '\n';
+    cout << "Checking right neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'r') << '\n';
+
     // Filling data histograms
     cout << "--------------------------------------------\n";
     cout << "Filling data histograms!\n";
@@ -1155,13 +1162,17 @@ int main(int argc, char* argv[])
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
+    neutrinoDirection.ResetLineCounter();
+    neutrinoDirection.ResetLineNumber();
+    neutrinoDirection.ResetIndex();
+
     // Filling simulation histograms
     cout << "Filling perfect simulation histograms!\n" << resetFormats;
     cout << "--------------------------------------------\n";
     neutrinoDirection.ReadFileList(PerfSim, 6);
     neutrinoDirection.SetUpHistograms(PerfSim, 6);
 
-    cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
+    cout << boldOn << cyanOn << "Successfully filled perfect simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
     // Should be self-explanatory

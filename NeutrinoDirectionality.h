@@ -76,7 +76,10 @@ std::string DatasetToString(int num)
             name = "Simulation Unbiased";
             break;
         case 4:
-            name = "True";
+            name = "Perfect Simulation";
+            break;
+        case 5:
+            name = "Perfect Simulation Unbiased";
             break;
         default:
             name = "Data";
