@@ -42,6 +42,8 @@ enum Datasets
     DataUnbiased,
     Sim,
     SimUnbiased,
+    PerfSim,
+    PerfSimUnbiased,
     DatasetSize
 };
 

@@ -10,7 +10,7 @@ void FillDetectorConfig()
 {
     // Filling values based on different periods
     int noSegments = 154;
-    int noPeriods = 5;
+    int noPeriods = 6;
 
     for (int i = 0; i < noPeriods; i++)
     {
@@ -1117,6 +1117,15 @@ int main(int argc, char* argv[])
     {
         neutrinoDirection.SetUpHistograms(Sim, period);
     }
+
+    cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+
+    // Filling simulation histograms
+    cout << "Filling perfect simulation histograms!\n" << resetFormats;
+    cout << "--------------------------------------------\n";
+    neutrinoDirection.ReadFileList(PerfSim, 0);
+    neutrinoDirection.SetUpHistograms(PerfSim, 0);
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
