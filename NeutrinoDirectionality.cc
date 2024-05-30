@@ -717,9 +717,9 @@ void Directionality::CalculateAngles()
     float xTrueError = 0.1, yTrueError = 0.1, zTrueError = 0.1;
 
     // Scaling by average prompt location
-    xTrue += 64.61 / 1000;
-    yTrue += 13.11 / 1000;
-    zTrue += 0.73 / 1000;
+    xTrue += 50.99 / 1000;
+    yTrue -= 23.31 / 1000;
+    zTrue -= 0.33 / 1000;
 
     // Same angle calculation as above
     float tanPhiTrue = yTrue / xTrue;
