@@ -131,14 +131,28 @@ void Directionality::ReadFileList(int dataset, int periodNo)
 {
     char const* path;
 
-    if (dataset == Data)
-        path = dataPath;
-
-    else if (dataset == Sim)
-        path = simPath;
+    switch (dataset)
+    {
+        case Data:
+            path = dataPath;
+            break;
+        case Sim:
+            path = simPath;
+            break;
+        case PerfSim:
+            path = perfSimPath;
+            periodNo = NULL;
+            break;
+        default:
+            path = dataPath;
+            break;
+    }
 
     // Combining names into file list name
     string fileList = Form(path, std::to_string(periodNo).c_str(), std::to_string(periodNo).c_str());
+
+    if (periodNo == NULL)
+        cout << "FILE LIST FOR PERF SIM: " << fileList << '\n';
 
     // Opening and checking file list
     ifstream file;
@@ -170,11 +184,22 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
     period = periodNo;
 
     char const* fileName;
-    if (dataset == Data)
-        fileName = dataFileName;
 
-    else if (dataset == Sim)
-        fileName = simFileName;
+    switch (dataset)
+    {
+        case Data:
+            fileName = dataFileName;
+            break;
+        case Sim:
+            fileName = simFileName;
+            break;
+        case PerfSim:
+            fileName = perfSimFileName;
+            break;
+        default:
+            fileName = dataFileName;
+            break;
+    }
 
     while (index < files.size())
     {
@@ -200,9 +225,18 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
                 cout.flush();
             }
         }
+        else if (dataSet == PerfSim || dataSet == PerfSimUnbiased)
+        {
+            cout << "Reading file: " << lineCounter << "/" << totalPerfSimLines << '\r';
+            cout.flush();
+        }
 
         // Combining names into root file name
-        TString rootFilename = Form(fileName, std::to_string(period).c_str(), files[index].data());
+        TString rootFilename;
+        if (period != 6)
+            rootFilename = Form(fileName, std::to_string(period).c_str(), files[index].data());
+        else
+            rootFilename = Form(fileName, files[index].data());
 
         if (rootFilename.Contains(" 0"))
         {
@@ -1124,8 +1158,8 @@ int main(int argc, char* argv[])
     // Filling simulation histograms
     cout << "Filling perfect simulation histograms!\n" << resetFormats;
     cout << "--------------------------------------------\n";
-    neutrinoDirection.ReadFileList(PerfSim, 0);
-    neutrinoDirection.SetUpHistograms(PerfSim, 0);
+    neutrinoDirection.ReadFileList(PerfSim, 6);
+    neutrinoDirection.SetUpHistograms(PerfSim, 6);
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
