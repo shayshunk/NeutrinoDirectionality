@@ -4,7 +4,9 @@
 
 using std::cout, std::string, std::ifstream, std::array, std::getline;
 
-void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram, TreeValues& currentEntry)
+void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram,
+                   TreeValues& currentEntry,
+                   int periodNo)
 {
     // Applying energy cut
     if (currentEntry.Esmear < 0.8 || currentEntry.Esmear > 7.4)
@@ -14,7 +16,7 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
 
     if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
-        float promptPosition;
+        float promptPosition, weight;
 
         switch (currentEntry.direction)
         {
@@ -34,12 +36,34 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
                 promptPosition = currentEntry.promptPosition;
         }
 
+        switch (periodNo)
+        {
+            case 1:
+                weight = 0.1042;
+                break;
+            case 2:
+                weight = 0.2711;
+                break;
+            case 3:
+                weight = 0.2473;
+                break;
+            case 4:
+                weight = 0.2230;
+                break;
+            case 5:
+                weight = 0.1564;
+                break;
+            default:
+                weight = 0;
+                break;
+        }
+
         // Fill regular dataset with prompt location
-        histogram[CorrelatedReactorOn][currentEntry.direction]->Fill(promptPosition);
+        histogram[CorrelatedReactorOn][currentEntry.direction]->Fill(promptPosition, weight);
     }
     else if (currentEntry.nCaptTime > pow(10, 6))  // Accidental Dataset
     {
-        float promptPosition;
+        float promptPosition, weight;
 
         switch (currentEntry.direction)
         {
@@ -59,8 +83,30 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
                 promptPosition = currentEntry.promptPosition;
         }
 
+        switch (periodNo)
+        {
+            case 1:
+                weight = 0.1042;
+                break;
+            case 2:
+                weight = 0.2711;
+                break;
+            case 3:
+                weight = 0.2473;
+                break;
+            case 4:
+                weight = 0.2230;
+                break;
+            case 5:
+                weight = 0.1564;
+                break;
+            default:
+                weight = 0;
+                break;
+        }
+
         // Fill regular dataset with prompt location
-        histogram[AccidentalReactorOn][currentEntry.direction]->Fill(promptPosition);
+        histogram[AccidentalReactorOn][currentEntry.direction]->Fill(promptPosition, weight);
     }
 }
 
@@ -155,7 +201,7 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
                 if (direction == Z && correlatedzCounts == 200000)
                     continue;
 
-                FillHistogram(histogram, currentEntry);
+                FillHistogram(histogram, currentEntry, periodNo);
             }
         }
         // Returns the next character in the input sequence, without extracting it: The character is left as the next character
