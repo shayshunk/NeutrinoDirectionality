@@ -50,14 +50,17 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
     }
 }
 
-void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram)
+void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize>& histogram, int periodNo)
 {
     // Declaring some variables for use later
-    int totalLines = 0;
+    int totalLines = 0, correlatedCounts = 0, accidentalCounts = 0;
     bool reactorOn = true;
 
+    // Figuring out period
+    string period = std::to_string(periodNo);
+
     // Combining names into file list name
-    string fileList(dataPath);
+    string fileList = Form(dataPath, std::to_string(periodNo).c_str(), std::to_string(periodNo).c_str());
 
     // Opening and checking file list
     ifstream file;
@@ -74,9 +77,9 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
     {
         lineCounter++;
 
-        if (lineCounter % 10 == 0)
+        if (lineCounter % 1 == 0)
         {
-            cout << "Reading file: " << lineCounter << "/" << totalDataLines << '\r';
+            cout << "Reading file: " << lineCounter << "/" << totalSimLines << '\r';
             cout.flush();
         }
 
@@ -85,18 +88,7 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
         getline(file, line);
 
         // Combining names into root file name
-        TString rootFilename = Form(dataFileName, line.data());
-
-        if (rootFilename.Contains(" 0"))
-        {
-            rootFilename.ReplaceAll(" 0", "");
-            reactorOn = false;
-        }
-        else if (rootFilename.Contains(" 1"))
-        {
-            rootFilename.ReplaceAll(" 1", "");
-            reactorOn = true;
-        }
+        TString rootFilename = Form(dataFileName, period.c_str(), line.data());
 
         // Open the root file
         auto rootFile = std::make_unique<TFile>(rootFilename);
@@ -251,7 +243,10 @@ int main()
     cout << "Filling simulation histograms!\n";
     cout << "--------------------------------------------\n";
 
-    SetUpHistograms(histogram);
+    for (int period = 1; period <= 5; period++)
+    {
+        SetUpHistograms(histogram, period);
+    }
 
     cout << boldOn << cyanOn << "Successfully filled simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
