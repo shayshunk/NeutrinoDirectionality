@@ -953,7 +953,7 @@ void Directionality::PrintAngles()
     {
         float phiErrorTemp, thetaErrorTemp;
 
-        if (dataset == Sim || dataset == SimUnbiased || ANGLES_STATISTICS)
+        if (dataset == Sim || dataset == SimUnbiased || dataset == PerfSim || dataset == PerfSimUnbiased || ANGLES_STATISTICS)
         {
             phiErrorTemp = phiError[dataset];
             thetaErrorTemp = thetaError[dataset];

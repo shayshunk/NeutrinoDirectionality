@@ -199,6 +199,28 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     SimulationUncorrected.SetFillStyle(3001);
     SimulationUncorrected.Draw();
 
+    TEllipse PerfectSimulation(finalValues.theta[PerfSimUnbiased],
+                               finalValues.phi[PerfSimUnbiased],
+                               finalValues.thetaError[PerfSimUnbiased],
+                               finalValues.phiError[PerfSimUnbiased],
+                               0,
+                               360,
+                               finalValues.tilt[PerfSimUnbiased]);
+    PerfectSimulation.SetFillColor(kAzure + 7);
+    PerfectSimulation.SetFillStyle(3001);
+    PerfectSimulation.Draw();
+
+    TEllipse PerfectSimulationUncorrected(finalValues.theta[PerfSim],
+                                          finalValues.phi[PerfSim],
+                                          finalValues.thetaError[PerfSim],
+                                          finalValues.phiError[PerfSim],
+                                          0,
+                                          360,
+                                          finalValues.tilt[PerfSim]);
+    PerfectSimulationUncorrected.SetFillColor(kPink + 2);
+    PerfectSimulationUncorrected.SetFillStyle(3001);
+    PerfectSimulationUncorrected.Draw();
+
     TEllipse DataStatistics(finalValues.theta[SimUnbiased],
                             finalValues.phi[SimUnbiased],
                             finalValues.thetaError[DataUnbiased],
@@ -212,10 +234,10 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     DataStatistics.SetFillStyle(0);
     DataStatistics.Draw();
 
-    TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
+    /* TEllipse True(finalValues.thetaTrue, finalValues.phiTrue, finalValues.thetaTrueError, finalValues.phiTrueError);
     True.SetFillColor(kGreen + 2);
     True.SetFillStyle(3001);
-    True.Draw();
+    True.Draw(); */
 
     // Setting up data markers
     TMarker simPoint(finalValues.theta[SimUnbiased], finalValues.phi[SimUnbiased], 29);
@@ -227,6 +249,16 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     simUncorrectedPoint.SetMarkerSize(4.5);
     simUncorrectedPoint.SetMarkerColor(kMagenta + 3.25);
     simUncorrectedPoint.Draw();
+
+    TMarker perfSimPoint(finalValues.theta[PerfSimUnbiased], finalValues.phi[PerfSimUnbiased], 29);
+    perfSimPoint.SetMarkerSize(4.5);
+    perfSimPoint.SetMarkerColor(kAzure + 7.25);
+    perfSimPoint.Draw();
+
+    TMarker perfSimUncorrectedPoint(finalValues.theta[PerfSim], finalValues.phi[PerfSim], 43);
+    perfSimUncorrectedPoint.SetMarkerSize(4.5);
+    perfSimUncorrectedPoint.SetMarkerColor(kPink + 2.25);
+    perfSimUncorrectedPoint.Draw();
 
     TMarker truePoint(finalValues.thetaTrue, finalValues.phiTrue, 33);
     truePoint.SetMarkerSize(5);
@@ -244,6 +276,8 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     legend.SetTextSize(0.03);
     legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&simUncorrectedPoint, "Biased Sim", "p");
+    legend.AddEntry(&perfSimPoint, "Perf Sim", "p");
+    legend.AddEntry(&perfSimUncorrectedPoint, "Biased Perf Sim", "p");
     legend.AddEntry(&statsLine, "Data 1#sigma Statistics", "l");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
