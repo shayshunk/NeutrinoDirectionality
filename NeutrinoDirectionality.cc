@@ -338,7 +338,15 @@ void Directionality::FillHistogram()
 
         // Fill regular dataset with displacement but Z only takes same segment
         if (direction != Z)
+        {
+            // Correcting center to center displacment
+            if (displacement > 0)
+                displacement = segmentWidth;
+            else if (displacement < 0)
+                displacement = -segmentWidth;
+
             histogram[dataSet][signalSet][direction].Fill(displacement);
+        }
 
         // Fill dead segment correction dataset
         FillHistogramUnbiased(signalSet);
@@ -353,7 +361,15 @@ void Directionality::FillHistogram()
 
         // Fill regular dataset with displacement but Z only takes same segment
         if (direction != Z)
+        {
+            // Correcting center to center displacment
+            if (displacement > 0)
+                displacement = segmentWidth;
+            else if (displacement < 0)
+                displacement = -segmentWidth;
+
             histogram[dataSet][signalSet][direction].Fill(displacement, xRx);
+        }
 
         // Fill dead segment correction dataset
         FillHistogramUnbiased(signalSet);
@@ -1110,12 +1126,6 @@ int main(int argc, char* argv[])
 
     // Fill detector configuration
     FillDetectorConfig();
-
-    // Just some tests
-    cout << "Checking up neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'u') << '\n';
-    cout << "Checking down neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'd') << '\n';
-    cout << "Checking left neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'l') << '\n';
-    cout << "Checking right neighbor for 63 in period 6: " << CheckNeighbor(6, 63, 'r') << '\n';
 
     // Filling data histograms
     cout << "--------------------------------------------\n";

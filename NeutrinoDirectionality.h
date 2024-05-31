@@ -171,6 +171,8 @@ class Directionality
     // File list
     std::array<std::string, 4045> files;
 
+    // Debugging
+
     // Values grabbed from ROOT tree
     double Esmear;
     double nCaptTime;
@@ -190,7 +192,7 @@ class Directionality
     int const totalSimLines = 500;
     int const totalPerfSimLines = 20;
     float const histogramMax = 150.5;  // Maximum value of bin for histograms
-    float const segmentWidth = 145.7;  // Distance between segment centers in mm
+    float const segmentWidth = 146.05;  // Distance between segment centers in mm
     float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coefficient for background subtraction
     char const* dataPath = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/Period_%s_files.txt";
     char const* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
