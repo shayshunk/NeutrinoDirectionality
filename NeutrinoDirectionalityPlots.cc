@@ -20,6 +20,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
             TCanvas canvas(plotName.c_str(), plotName.c_str());
             canvas.SetCanvasSize(2000, 1700);
             canvas.SetTopMargin(0.05);
+            canvas.Update();
 
             // Temporary histogram for x and y because we want a 3 bin plot
             TH1F tempHist(histName.c_str(), histName.c_str(), 3, 0, 3);
@@ -28,16 +29,8 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
             int lowBin, highBin, mediumBin = 151;
 
             // These come from the main analysis code
-            if (dataset == Data || dataset == Sim)
-            {
-                lowBin = 6;
-                highBin = 296;
-            }
-            else
-            {
-                lowBin = 5;
-                highBin = 297;
-            }
+            lowBin = 5;
+            highBin = 297;
 
             // Grabbing values from the main histograms
             tempHist.SetBinContent(1, histogram[dataset][TotalDifference][direction]->GetBinContent(lowBin));
@@ -56,9 +49,6 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
                 tempHist.GetXaxis()->SetTitle("#bf{#it{s}}_{#it{y}}: Delayed - Prompt");
 
             tempHist.GetYaxis()->SetTitle("IBD Events");
-
-            tempHist.GetXaxis()->SetTitleSize(0.07);
-            tempHist.GetYaxis()->SetTitleSize(0.07);
 
             tempHist.SetLineColor(kRed);
             tempHist.SetLineWidth(9);
@@ -79,6 +69,9 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
 
             tempHist.Draw("HISTS ][");
 
+            tempHist.GetXaxis()->SetTitleSize(0.062);
+            tempHist.GetYaxis()->SetTitleSize(0.062);
+
             string fullPath = plotDirectory + "/" + plotName + ".png";
             canvas.SaveAs(fullPath.c_str());
         }
@@ -90,7 +83,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         // Setting up canvas, no top margin because no title
         TCanvas canvas(plotName.c_str(), plotName.c_str(), 2000, 1700);
         canvas.SetCanvasSize(2000, 1700);
-        canvas.SetTopMargin(0.05);
+        canvas.SetTopMargin(0.025);
 
         auto tempHist = std::unique_ptr<TH1F>(static_cast<TH1F*>(histogram[dataset][TotalDifference][Z]->Clone()));
 
@@ -120,29 +113,34 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         string zSigma = Form("%.2f", gaussian.GetParameter(2));
         float zChiSquare = gaussian.GetChisquare();
         float zNDF = gaussian.GetNDF();
-        float zChiSquareNDF = zChiSquare / zNDF;
-        string zChi2NDF = Form("%.2f", zChiSquareNDF);
+        string zChi2 = Form("%.2f", zChiSquare);
+        string zNDFText = Form("%.2f", zNDF);
+        string zChi2NDF = "#frac{" + zChi2 + "}{" + zNDFText + "}";
 
         tempHist->Draw("P E1 X0");
+
+        tempHist->GetXaxis()->SetTitleSize(0.062);
+        tempHist->GetYaxis()->SetTitleSize(0.062);
+        tempHist->GetYaxis()->SetRangeUser(0, 525);
 
         // Setting up legend
         float x_legend = 0.6;
         float y_legend = 0.7;
 
-        TLegend legend(0.65, 0.7, 0.95, 0.95);
+        TLegend legend(0.58, 0.725, 0.95, 0.975);
         legend.SetFillColor(0);
         legend.SetFillStyle(0);
         legend.SetTextFont(82);
-        legend.SetTextSize(0.03);
+        legend.SetTextSize(0.04);
 
         // legend->SetHeader("Fit Parameters", "C");
-        string meanText = "#mu: " + zMean + " #pm " + zError;
+        string meanText = "#mu:" + zMean + " #pm " + zError;
         legend.AddEntry(&gaussian, meanText.c_str(), "l");
 
         string sigmaText = "#sigma: " + zSigma;
         legend.AddEntry(&gaussian, sigmaText.c_str(), "l");
 
-        string chiSquareText = "#frac{#chi^{2}}{ndf}: " + zChi2NDF;
+        string chiSquareText = "#frac{#chi^{2}}{ndf}:  " + zChi2NDF;
         legend.AddEntry(&gaussian, chiSquareText.c_str(), "l");
 
         legend.Draw();
