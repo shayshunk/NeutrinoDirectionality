@@ -1,9 +1,11 @@
 #include "TCanvas.h"
 #include "TH1.h"
+#include "TLatex.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TROOT.h"
 #include "TStyle.h"
+#include "TText.h"
 
 void SetBasicPlotStyle()
 {

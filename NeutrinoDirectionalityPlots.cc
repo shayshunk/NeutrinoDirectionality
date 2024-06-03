@@ -160,7 +160,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     canvas.SetBottomMargin(0.125);
 
     // Need to draw a frame to set bounds
-    auto frame = canvas.DrawFrame(93.5, 33.5, 108.5, 48.5);
+    auto frame = canvas.DrawFrame(93, 36.3, 105, 49.3);
 
     // Setting up axis labels
     frame->GetXaxis()->SetTitle("#theta (deg)");
@@ -197,7 +197,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     SimulationUncorrected.SetFillStyle(3001);
     SimulationUncorrected.Draw();
 
-    TEllipse PerfectSimulation(finalValues.theta[PerfSimUnbiased],
+    /* TEllipse PerfectSimulation(finalValues.theta[PerfSimUnbiased],
                                finalValues.phi[PerfSimUnbiased],
                                finalValues.thetaError[PerfSimUnbiased],
                                finalValues.phiError[PerfSimUnbiased],
@@ -217,7 +217,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
                                           finalValues.tilt[PerfSim]);
     PerfectSimulationUncorrected.SetFillColor(kPink + 2);
     PerfectSimulationUncorrected.SetFillStyle(3001);
-    PerfectSimulationUncorrected.Draw();
+    PerfectSimulationUncorrected.Draw(); */
 
     TEllipse DataStatistics(finalValues.theta[SimUnbiased],
                             finalValues.phi[SimUnbiased],
@@ -248,7 +248,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     simUncorrectedPoint.SetMarkerColor(kMagenta + 3.25);
     simUncorrectedPoint.Draw();
 
-    TMarker perfSimPoint(finalValues.theta[PerfSimUnbiased], finalValues.phi[PerfSimUnbiased], 29);
+    /* TMarker perfSimPoint(finalValues.theta[PerfSimUnbiased], finalValues.phi[PerfSimUnbiased], 29);
     perfSimPoint.SetMarkerSize(4.5);
     perfSimPoint.SetMarkerColor(kAzure + 7.25);
     perfSimPoint.Draw();
@@ -256,7 +256,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     TMarker perfSimUncorrectedPoint(finalValues.theta[PerfSim], finalValues.phi[PerfSim], 43);
     perfSimUncorrectedPoint.SetMarkerSize(4.5);
     perfSimUncorrectedPoint.SetMarkerColor(kPink + 2.25);
-    perfSimUncorrectedPoint.Draw();
+    perfSimUncorrectedPoint.Draw(); */
 
     TMarker truePoint(finalValues.thetaTrue, finalValues.phiTrue, 33);
     truePoint.SetMarkerSize(5);
@@ -274,11 +274,21 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     legend.SetTextSize(0.03);
     legend.AddEntry(&simPoint, "Simulation", "p");
     legend.AddEntry(&simUncorrectedPoint, "Biased Sim", "p");
-    legend.AddEntry(&perfSimPoint, "Perf Sim", "p");
-    legend.AddEntry(&perfSimUncorrectedPoint, "Biased Perf Sim", "p");
+    /* legend.AddEntry(&perfSimPoint, "Perf Sim", "p");
+    legend.AddEntry(&perfSimUncorrectedPoint, "Biased Perf Sim", "p"); */
     legend.AddEntry(&statsLine, "Data 1#sigma Statistics", "l");
     legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
     legend.Draw();
+
+    TText simText(0.18, 0.85, "SIMULATION");
+    simText.SetNDC();
+    simText.SetTextAlign(12);
+    simText.SetTextFont(82);
+    simText.SetTextColor(kBlack);
+    simText.SetTextSize(0.06);
+    simText.Draw();
+
+    canvas.Update();
 
     string fullPath = plotDirectory + "/SimulationPlot.png";
     canvas.SaveAs(fullPath.c_str());
@@ -294,7 +304,7 @@ void MakeFinalPlot(FinalValues const& finalValues)
     canvas.SetBottomMargin(0.125);
 
     // Need to draw a frame to set bounds
-    auto frame = canvas.DrawFrame(93.5, 33.5, 108.5, 48.5);
+    auto frame = canvas.DrawFrame(90.5, 35.3, 103.5, 48.3);
 
     // Setting up axis labels
     frame->GetXaxis()->SetTitle("#theta (deg)");
@@ -389,8 +399,16 @@ void MakeFinalPlot(FinalValues const& finalValues)
     legend.AddEntry(&dataLine, "1#sigma", "l");
     legend.AddEntry(&statsLine, "1#sigma Statistics Only", "l");
     // legend.AddEntry(&simPoint, "Simulation", "p");
-    legend.AddEntry(&truePoint, "True Neutrino Direction", "p");
+    legend.AddEntry(&truePoint, "Est. Neutrino Direction", "p");
     legend.Draw();
+
+    TText dataText(0.22, 0.85, "DATA");
+    dataText.SetNDC();
+    dataText.SetTextAlign(12);
+    dataText.SetTextFont(82);
+    dataText.SetTextColor(kBlack);
+    dataText.SetTextSize(0.06);
+    dataText.Draw();
 
     string fullPath = plotDirectory + "/FinalPlot.png";
     canvas.SaveAs(fullPath.c_str());
