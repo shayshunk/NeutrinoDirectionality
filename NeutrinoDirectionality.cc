@@ -291,6 +291,9 @@ void Directionality::SetUpHistograms(int dataset, int periodNo)
                 if (promptSegment != delayedSegment && promptPosition == delayedPosition)
                     continue;
 
+                if (promptSegment == 32 || delayedSegment == 32)
+                    continue;
+
                 if (direction != Z)  // Cubical distance cuts in Z for X and Y
                 {
                     float zPromptPosition = rootTree->GetLeaf("xyz")->GetValue(Z);
@@ -416,11 +419,29 @@ void Directionality::FillHistogramUnbiased(int signalSet)
     if (!isDisplacement)
     {
         if (posDirection && !negDirection)
+        {
             histogram[dataSet + 1][signalSet][direction].Fill(1.0, weight);
+            if (dataSet == PerfSim && direction == X)
+                nxPlusPlusCounter[promptSegment]++;
+            else if (dataSet == PerfSim && direction == Y)
+                nyPlusPlusCounter[promptSegment]++;
+        }
         else if (!posDirection && negDirection)
+        {
             histogram[dataSet + 1][signalSet][direction].Fill(-1.0, weight);
+            if (dataSet == PerfSim && direction == X)
+                nxMinusMinusCounter[promptSegment]++;
+            else if (dataSet == PerfSim && direction == Y)
+                nyMinusMinusCounter[promptSegment]++;
+        }
         else if (posDirection && negDirection)
+        {
             histogram[dataSet + 1][signalSet][direction].Fill(0.0, weight);
+            if (dataSet == PerfSim && direction == X)
+                nxPlusMinusCounter[promptSegment]++;
+            else if (dataSet == PerfSim && direction == Y)
+                nyPlusMinusCounter[promptSegment]++;
+        }
     }
 }
 
@@ -1019,6 +1040,54 @@ void Directionality::PrintAngles()
     cout << resetFormats << greenOn << "ϕ: " << phiOffset << "\u00B0 or " << phiOffsetPercent << "%.\n";
     cout << "θ: " << thetaOffset << "\u00B0 or " << thetaOffsetPercent << "%.\n" << resetFormats;
     cout << "--------------------------------------------\n";
+
+    if (SEGMENT_VERBOSITY == 1)
+    {
+        cout << "Going to output counts for n0* purposes now:\n";
+        cout << "\n\n\nX: \n\n\n";
+        cout << "N++: \n";
+
+        for (int i = 0; i < 154; i++)
+        {
+            cout << "Segment " << i << " : " << nxPlusPlusCounter[i] << '\n';
+        }
+
+        cout << "N+-: \n";
+
+        for (int i = 0; i < 154; i++)
+        {
+            cout << "Segment " << i << " : " << nxPlusMinusCounter[i] << '\n';
+        }
+
+        cout << "N--: \n";
+
+        for (int i = 0; i < 154; i++)
+        {
+            cout << "Segment " << i << " : " << nxMinusMinusCounter[i] << '\n';
+        }
+
+        cout << "\n\n\nY: \n\n\n";
+        cout << "N++: \n";
+
+        for (int i = 0; i < 154; i++)
+        {
+            cout << "Segment " << i << " : " << nyPlusPlusCounter[i] << '\n';
+        }
+
+        cout << "N+-: \n";
+
+        for (int i = 0; i < 154; i++)
+        {
+            cout << "Segment " << i << " : " << nyPlusMinusCounter[i] << '\n';
+        }
+
+        cout << "N--: \n";
+
+        for (int i = 0; i < 154; i++)
+        {
+            cout << "Segment " << i << " : " << nyMinusMinusCounter[i] << '\n';
+        }
+    }
 }
 
 void Directionality::FillOutputFile()
@@ -1113,6 +1182,8 @@ int main(int argc, char* argv[])
             ANGLES_STATISTICS = 1;
         else if (string(argv[i]) == "-C")
             COVARIANCE_VERBOSITY = 1;
+        else if (string(argv[i]) == "-SG")
+            SEGMENT_VERBOSITY = 1;
     }
 
     // Take ownership of histograms
@@ -1126,6 +1197,12 @@ int main(int argc, char* argv[])
 
     // Fill detector configuration
     FillDetectorConfig();
+
+    // Testing detector config
+    /* cout << "Checking right neighbor for segment 25: " << CheckNeighbor(6, 25, 'r') << '\n';
+    cout << "Checking left neighbor for segment 25: " << CheckNeighbor(6, 25, 'l') << '\n';
+    cout << "Checking up neighbor for segment 25: " << CheckNeighbor(6, 25, 'u') << '\n';
+    cout << "Checking down neighbor for segment 25: " << CheckNeighbor(6, 25, 'd') << '\n'; */
 
     // Filling data histograms
     cout << "--------------------------------------------\n";
@@ -1184,7 +1261,6 @@ int main(int argc, char* argv[])
 
     cout << boldOn << cyanOn << "Successfully filled perfect simulation histogram!\n" << resetFormats;
     cout << "--------------------------------------------\n";
-
     // Should be self-explanatory
     neutrinoDirection.SubtractBackgrounds();
     neutrinoDirection.AddSystematics();

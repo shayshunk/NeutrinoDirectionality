@@ -26,6 +26,7 @@ bool MEAN_VERBOSITY = 0;
 bool SYSTEMATIC_MEAN_VERBOSITY = 0;
 bool ANGLES_STATISTICS = 0;
 bool COVARIANCE_VERBOSITY = 0;
+bool SEGMENT_VERBOSITY = 0;
 
 // Utilities to refer to parameters easily
 enum Directions
@@ -172,6 +173,12 @@ class Directionality
     std::array<std::string, 4045> files;
 
     // Debugging
+    std::array<int, 154> nxPlusPlusCounter = {0};
+    std::array<int, 154> nxPlusMinusCounter = {0};
+    std::array<int, 154> nxMinusMinusCounter = {0};
+    std::array<int, 154> nyPlusPlusCounter = {0};
+    std::array<int, 154> nyPlusMinusCounter = {0};
+    std::array<int, 154> nyMinusMinusCounter = {0};
 
     // Values grabbed from ROOT tree
     double Esmear;
@@ -190,7 +197,7 @@ class Directionality
     int const bins = 301;  // Number of bins for our histograms
     int const totalDataLines = 4040;
     int const totalSimLines = 500;
-    int const totalPerfSimLines = 20;
+    int const totalPerfSimLines = 100;
     float const histogramMax = 150.5;  // Maximum value of bin for histograms
     float const segmentWidth = 146.05;  // Distance between segment centers in mm
     float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coefficient for background subtraction
@@ -198,8 +205,8 @@ class Directionality
     char const* dataFileName = "/home/shay/Documents/PROSPECTData/IBD_Data/SEER_DS_period_%s/%s/AD1_IBD_2022_DS_SEER.root";
     char const* simPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/period_%s.txt";
     char const* simFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC/period_%s/%s/AD1_IBD_2022_DS_SEER.root";
-    char const* perfSimPath = "/home/shay/Documents/PROSPECTData/MC_Data/PerfectSimulation/SimFileGoodRunsList.txt";
-    char const* perfSimFileName = "/home/shay/Documents/PROSPECTData/MC_Data/PerfectSimulation/%s/Jun_Perfect_IBD_2020.root";
+    char const* perfSimPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC_PerfSim/List.txt";
+    char const* perfSimFileName = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC_PerfSim/%s/AD1_IBD_2022_DS_SEER.root";
 
     // Storing final counts
     std::array<std::array<float, DirectionSize>, DatasetSize> effectiveIBD;
