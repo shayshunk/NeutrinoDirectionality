@@ -160,7 +160,7 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     canvas.SetBottomMargin(0.125);
 
     // Need to draw a frame to set bounds
-    auto frame = canvas.DrawFrame(93, 36.3, 105, 49.3);
+    auto frame = canvas.DrawFrame(93, 34.8, 105, 47.8);
 
     // Setting up axis labels
     frame->GetXaxis()->SetTitle("#theta (deg)");
@@ -272,8 +272,8 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     TLegend legend(0.54, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
-    legend.AddEntry(&simPoint, "Simulation", "p");
-    legend.AddEntry(&simUncorrectedPoint, "Biased Sim", "p");
+    legend.AddEntry(&simPoint, "Reconstruction (Eq. 5)", "p");
+    legend.AddEntry(&simUncorrectedPoint, "Biased Recon. (Eq. 3)", "p");
     /* legend.AddEntry(&perfSimPoint, "Perf Sim", "p");
     legend.AddEntry(&perfSimUncorrectedPoint, "Biased Perf Sim", "p"); */
     legend.AddEntry(&statsLine, "Data 1#sigma Statistics", "l");
@@ -304,7 +304,7 @@ void MakeFinalPlot(FinalValues const& finalValues)
     canvas.SetBottomMargin(0.125);
 
     // Need to draw a frame to set bounds
-    auto frame = canvas.DrawFrame(90.5, 35.3, 103.5, 48.3);
+    auto frame = canvas.DrawFrame(93, 34.8, 105, 47.8);
 
     // Setting up axis labels
     frame->GetXaxis()->SetTitle("#theta (deg)");
