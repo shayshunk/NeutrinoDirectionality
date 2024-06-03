@@ -111,37 +111,37 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         string zMean = Form("%.2f", gaussian.GetParameter(1));
         string zError = Form("%.2f", gaussian.GetParError(1));
         string zSigma = Form("%.2f", gaussian.GetParameter(2));
-        float zChiSquare = gaussian.GetChisquare();
-        float zNDF = gaussian.GetNDF();
-        string zChi2 = Form("%.2f", zChiSquare);
-        string zNDFText = Form("%.2f", zNDF);
+        int zChiSquare = round(gaussian.GetChisquare());
+        int zNDF = gaussian.GetNDF();
+        string zChi2 = Form("%i", zChiSquare);
+        string zNDFText = Form("%i", zNDF);
         string zChi2NDF = "#frac{" + zChi2 + "}{" + zNDFText + "}";
 
         tempHist->Draw("P E1 X0");
 
         tempHist->GetXaxis()->SetTitleSize(0.062);
         tempHist->GetYaxis()->SetTitleSize(0.062);
-        tempHist->GetYaxis()->SetRangeUser(0, 525);
+        tempHist->GetYaxis()->SetRangeUser(0, 450);
 
         // Setting up legend
         float x_legend = 0.6;
         float y_legend = 0.7;
 
-        TLegend legend(0.58, 0.725, 0.95, 0.975);
+        TLegend legend(0.4, 0.9, 0.95, 0.975);
         legend.SetFillColor(0);
         legend.SetFillStyle(0);
-        legend.SetTextFont(82);
+        // legend.SetTextFont(82);
         legend.SetTextSize(0.04);
 
         // legend->SetHeader("Fit Parameters", "C");
-        string meanText = "#mu:" + zMean + " #pm " + zError;
+        string meanText = "Gaussian fit, #it{#mu} = " + zMean + " #pm " + zError;
         legend.AddEntry(&gaussian, meanText.c_str(), "l");
 
-        string sigmaText = "#sigma: " + zSigma;
+        /* string sigmaText = "#sigma: " + zSigma;
         legend.AddEntry(&gaussian, sigmaText.c_str(), "l");
 
         string chiSquareText = "#frac{#chi^{2}}{ndf}:  " + zChi2NDF;
-        legend.AddEntry(&gaussian, chiSquareText.c_str(), "l");
+        legend.AddEntry(&gaussian, chiSquareText.c_str(), "l"); */
 
         legend.Draw();
 
