@@ -392,14 +392,14 @@ void MakeFinalPlot(FinalValues const& finalValues)
     dataLine.SetLineStyle(1);
     dataLine.SetLineWidth(4);
 
-    TLegend legend(0.53, 0.75, 0.95, 0.95);
+    TLegend legend(0.44, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
-    legend.AddEntry(&dataPoint, "Best Fit", "p");
+    legend.AddEntry(&dataPoint, "Best Fit Neutrino Direction", "p");
     legend.AddEntry(&dataLine, "1#sigma", "l");
     legend.AddEntry(&statsLine, "1#sigma Statistics Only", "l");
     // legend.AddEntry(&simPoint, "Simulation", "p");
-    legend.AddEntry(&truePoint, "Est. Neutrino Direction", "p");
+    legend.AddEntry(&truePoint, "Reactor to Detector Direction", "p");
     legend.Draw();
 
     TText dataText(0.22, 0.85, "DATA");
@@ -477,6 +477,14 @@ int NeutrinoDirectionalityPlots()
     input = (TVector2*)rootFile->Get("True Theta");
     finalValues.thetaTrue = input->X();
     finalValues.thetaTrueError = input->Y();
+
+    // Shifting final values for Data Unbiased
+    finalValues.phi[DataUnbiased] -= 0.95;
+    finalValues.theta[DataUnbiased] += 0.11;
+
+    finalValues.phiErrorSystematics[DataUnbiased] = sqrt(pow(finalValues.phiErrorSystematics[DataUnbiased], 2) + pow(0.95, 2));
+    finalValues.thetaErrorSystematics[DataUnbiased]
+        = sqrt(pow(finalValues.thetaErrorSystematics[DataUnbiased], 2) + pow(0.11, 2));
 
     // Grabbing histograms
     for (int dataset = Data; dataset < DatasetSize; dataset++)
