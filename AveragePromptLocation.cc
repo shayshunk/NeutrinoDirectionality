@@ -16,7 +16,7 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
 
     if (currentEntry.nCaptTime > pow(10, 3) && currentEntry.nCaptTime < 120 * pow(10, 3))  // Correlated Dataset
     {
-        float promptPosition, weight;
+        float promptPosition, weight = 1;
 
         switch (currentEntry.direction)
         {
@@ -36,7 +36,7 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
                 promptPosition = currentEntry.promptPosition;
         }
 
-        switch (periodNo)
+        /* switch (periodNo)
         {
             case 1:
                 weight = 0.1042;
@@ -56,14 +56,14 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
             default:
                 weight = 0;
                 break;
-        }
+        } */
 
         // Fill regular dataset with prompt location
         histogram[CorrelatedReactorOn][currentEntry.direction]->Fill(promptPosition, weight);
     }
     else if (currentEntry.nCaptTime > pow(10, 6))  // Accidental Dataset
     {
-        float promptPosition, weight;
+        float promptPosition, weight = 1;
 
         switch (currentEntry.direction)
         {
@@ -83,7 +83,7 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
                 promptPosition = currentEntry.promptPosition;
         }
 
-        switch (periodNo)
+        /* switch (periodNo)
         {
             case 1:
                 weight = 0.1042;
@@ -103,7 +103,7 @@ void FillHistogram(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSize
             default:
                 weight = 0;
                 break;
-        }
+        } */
 
         // Fill regular dataset with prompt location
         histogram[AccidentalReactorOn][currentEntry.direction]->Fill(promptPosition, weight);
@@ -235,7 +235,13 @@ void SubtractBackgrounds(array<array<std::shared_ptr<TH1F>, DirectionSize>, Sign
         float sigma = histogram[TotalDifference][direction]->GetStdDev() / sqrt(effIBDs);
 
         cout << boldOn << underlineOn << "Values for: " << resetFormats << AxisToString(direction) << '\n';
-        cout << "Average prompt location: " << mean << " ± " << sigma << '\n';
+        cout << "Average prompt location by segment: " << mean << " ± " << sigma << '\n';
+        if (direction == X)
+            mean = 146.05 * (6.5 - mean);
+        else if (direction == Y)
+            mean = 146.05 * (5 - mean);
+
+        cout << "Average prompt location in mm: " << mean << '\n';
         cout << "Total IBDs: " << totalIBDs << " ± " << totalIBDErr << '\n';
         cout << "Effective IBDs: " << effIBDs << '\n';
     }
@@ -291,7 +297,7 @@ int main()
     cout << "Filling simulation histograms!\n";
     cout << "--------------------------------------------\n";
 
-    for (int period = 1; period <= 5; period++)
+    for (int period = 5; period <= 5; period++)
     {
         SetUpHistograms(histogram, period);
 

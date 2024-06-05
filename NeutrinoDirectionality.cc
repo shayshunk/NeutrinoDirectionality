@@ -1041,6 +1041,24 @@ void Directionality::PrintAngles()
     cout << "θ: " << thetaOffset << "\u00B0 or " << thetaOffsetPercent << "%.\n" << resetFormats;
     cout << "--------------------------------------------\n";
 
+    // Final adjusted data angles
+    phiOffset = phi[SimUnbiased] - phiTrue;
+    thetaOffset = theta[SimUnbiased] - thetaTrue;
+    float phiErrorFinal = sqrt(pow(phiErrorSystematics[DataUnbiased], 2) + pow(phiOffset, 2));
+    float thetaErrorFinal = sqrt(pow(thetaErrorSystematics[DataUnbiased], 2) + pow(thetaOffset, 2));
+
+    float phiFinal = phi[DataUnbiased] - phiOffset;
+    float thetaFinal = theta[DataUnbiased] - thetaOffset;
+
+    cout << "Adjusted Angle values for: " << boldOn << "Data Unbiased" << resetFormats << '\n';
+    cout << greenOn;
+    cout << boldOn << underlineOn << "ϕ:" << resetFormats << greenOn << " " << phiFinal << "\u00B0 ± " << phiErrorFinal
+         << "\u00B0.\n";
+    cout << boldOn << underlineOn << "θ:" << resetFormats << greenOn << " " << thetaFinal << "\u00B0 ± " << thetaErrorFinal
+         << "\u00B0.\n"
+         << resetFormats;
+    cout << "--------------------------------------------\n";
+
     if (SEGMENT_VERBOSITY == 1)
     {
         cout << "Going to output counts for n0* purposes now:\n";
