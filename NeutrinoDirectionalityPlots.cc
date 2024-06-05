@@ -272,8 +272,8 @@ void MakeSimulationPlot(FinalValues const& finalValues)
     TLegend legend(0.54, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
-    legend.AddEntry(&simPoint, "Reconstruction (Eq. 5)", "p");
-    legend.AddEntry(&simUncorrectedPoint, "Biased Recon. (Eq. 3)", "p");
+    legend.AddEntry(&simPoint, "Reconstruction", "p");
+    legend.AddEntry(&simUncorrectedPoint, "Biased Reconstruction", "p");
     /* legend.AddEntry(&perfSimPoint, "Perf Sim", "p");
     legend.AddEntry(&perfSimUncorrectedPoint, "Biased Perf Sim", "p"); */
     legend.AddEntry(&statsLine, "Data 1#sigma Statistics", "l");
@@ -392,10 +392,10 @@ void MakeFinalPlot(FinalValues const& finalValues)
     dataLine.SetLineStyle(1);
     dataLine.SetLineWidth(4);
 
-    TLegend legend(0.44, 0.75, 0.95, 0.95);
+    TLegend legend(0.38, 0.75, 0.95, 0.95);
     legend.SetTextFont(62);
     legend.SetTextSize(0.03);
-    legend.AddEntry(&dataPoint, "Best Fit Neutrino Direction", "p");
+    legend.AddEntry(&dataPoint, "Mean Reconstructed #bar{#nu}_{e} Direction", "p");
     legend.AddEntry(&dataLine, "1#sigma", "l");
     legend.AddEntry(&statsLine, "1#sigma Statistics Only", "l");
     // legend.AddEntry(&simPoint, "Simulation", "p");
