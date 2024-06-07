@@ -121,6 +121,9 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
     // Combining names into file list name
     string fileList = Form(dataPath, std::to_string(periodNo).c_str(), std::to_string(periodNo).c_str());
 
+    if (periodNo == 6)
+        fileList = perfSimPath;
+
     // Opening and checking file list
     ifstream file;
     file.open(fileList, ifstream::in);
@@ -148,6 +151,9 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
 
         // Combining names into root file name
         TString rootFilename = Form(dataFileName, period.c_str(), line.data());
+
+        if (periodNo == 6)
+            rootFilename = Form(perfSimFileName, line.data());
 
         // Open the root file
         auto rootFile = std::make_unique<TFile>(rootFilename);
@@ -194,12 +200,12 @@ void SetUpHistograms(array<array<std::shared_ptr<TH1F>, DirectionSize>, SignalSi
                 currentEntry.xRx = xRx;
                 currentEntry.direction = direction;
 
-                if (direction == X && correlatedxCounts == 200000)
+                /* if (direction == X && correlatedxCounts == 200000)
                     continue;
                 else if (direction == Y && correlatedyCounts == 200000)
                     continue;
                 if (direction == Z && correlatedzCounts == 200000)
-                    continue;
+                    continue; */
 
                 FillHistogram(histogram, currentEntry, periodNo);
             }
@@ -299,7 +305,7 @@ int main()
 
     for (int period = 5; period <= 5; period++)
     {
-        SetUpHistograms(histogram, period);
+        SetUpHistograms(histogram, 6);
 
         cout << "Correlated x counts for period " << period << " : " << correlatedxCounts << '\n';
         cout << "Accidental x counts for period " << period << " : " << accidentalxCounts << '\n';

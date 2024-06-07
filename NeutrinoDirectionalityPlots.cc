@@ -111,6 +111,7 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         string zMean = Form("%.2f", gaussian.GetParameter(1));
         string zError = Form("%.2f", gaussian.GetParError(1));
         string zSigma = Form("%.2f", gaussian.GetParameter(2));
+        string zSigmaError = Form("%.2f", gaussian.GetParError(2));
         int zChiSquare = round(gaussian.GetChisquare());
         int zNDF = gaussian.GetNDF();
         string zChi2 = Form("%i", zChiSquare);
@@ -127,14 +128,14 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
         float x_legend = 0.6;
         float y_legend = 0.7;
 
-        TLegend legend(0.4, 0.9, 0.95, 0.975);
+        TLegend legend(0.30, 0.9, 0.95, 0.975);
         legend.SetFillColor(0);
         legend.SetFillStyle(0);
         // legend.SetTextFont(82);
         legend.SetTextSize(0.04);
 
         // legend->SetHeader("Fit Parameters", "C");
-        string meanText = "Gaussian fit, #it{#mu} = " + zMean + " #pm " + zError;
+        string meanText = "Gaussian fit, #it{#mu} = " + zMean + " #pm " + zError + " mm";
         legend.AddEntry(&gaussian, meanText.c_str(), "l");
 
         /* string sigmaText = "#sigma: " + zSigma;
@@ -147,6 +148,10 @@ void MakeDisplacementPlots(array<array<array<std::shared_ptr<TH1F>, DirectionSiz
 
         string fullPath = plotDirectory + "/" + plotName + ".png";
         canvas.SaveAs(fullPath.c_str());
+
+        cout << "Z Mean for " << boldOn << DatasetToString(dataset) << " = " << zMean << " ± " << zError << resetFormats << '\n';
+        cout << "Z Sigma for " << boldOn << DatasetToString(dataset) << " = " << zSigma << " ± " << zSigmaError << resetFormats
+             << '\n';
     }
 }
 

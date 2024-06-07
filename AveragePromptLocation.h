@@ -27,6 +27,8 @@ float const atmosphericScaling = 1.00025443769309;  // Atmosphering scaling coef
 char const* dataPath = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC_HighStats/Period_%s/Period_%s.txt";
 char const* dataFileName
     = "/home/shay/Documents/PROSPECTData/MC_Data/DS_SEER_MC_HighStats/Period_%s/%s/AD1_IBD_2022_DS_SEER.root";
+char const* perfSimPath = "/home/shay/Documents/PROSPECTData/MC_Data/PerfectSimulation/SimFileGoodRunsList.txt";
+char const* perfSimFileName = "/home/shay/Documents/PROSPECTData/MC_Data/PerfectSimulation/%s/Jun_Perfect_IBD_2020.root";
 
 // Variables
 int lineCounter = 0;
