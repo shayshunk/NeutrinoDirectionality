@@ -27,7 +27,7 @@ void SetBasicPlotStyle()
 
 void SetPlotDirectory(std::string plotDirectory)
 {
-    if (0 != system(Form("test -d %s", plotDirectory.c_str())))
+    if (system(Form("test -d %s", plotDirectory.c_str())) != 0)
         system(Form("mkdir -m 755 -p %s", plotDirectory.c_str()));
 }
 
